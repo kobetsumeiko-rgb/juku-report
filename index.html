@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授業報告フォーム</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0}
+.wrap{max-width:780px;margin:0 auto;padding:1rem 1rem 3rem}
+h1{font-size:20px;font-weight:500;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid #ddd}
+.section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:#666;margin-bottom:.75rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select,input[type=text],input[type=date]{width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
+.grade-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.grade-tab{padding:6px 16px;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;background:#fff;color:#666;font-family:inherit}
+.grade-tab:hover{background:#f5f5f5}
+.grade-tab.active-j1{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:500}
+.grade-tab.active-j2{background:#E1F5EE;color:#085041;border-color:#5DCAA5;font-weight:500}
+.grade-tab.active-j3{background:#FAECE7;color:#712B13;border-color:#F0997B;font-weight:500}
+.unit-table{width:100%;border-collapse:collapse;margin-top:.5rem}
+.unit-table th{font-size:12px;font-weight:500;color:#666;padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+.unit-table td{padding:6px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:middle}
+.unit-table tr:last-child td{border-bottom:none}
+.unit-table tr:hover td{background:#fafafa}
+.radio-group{display:flex;gap:6px}
+.radio-group label{margin:0;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;color:#1a1a1a;white-space:nowrap}
+.radio-group input[type=radio]{width:14px;height:14px;margin:0;accent-color:#7F77DD}
+.badge-maru{background:#EAF3DE;color:#27500A;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.badge-circle{background:#E6F1FB;color:#0C447C;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.badge-tri{background:#FAEEDA;color:#633806;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.accuracy-group{display:flex;gap:4px}
+.acc-btn{font-size:11px;padding:3px 7px;border:1px solid #ccc;border-radius:4px;cursor:pointer;background:#fff;color:#666;font-family:inherit}
+.acc-btn:hover{background:#f5f5f5}
+.acc-btn.sel-low{background:#FCEBEB !important;color:#791F1F !important;border-color:#F09595 !important}
+.acc-btn.sel-mid{background:#FAEEDA !important;color:#633806 !important;border-color:#FAC775 !important}
+.acc-btn.sel-high{background:#EAF3DE !important;color:#27500A !important;border-color:#C0DD97 !important}
+.saved-badge{font-size:11px;background:#E1F5EE;color:#085041;border-radius:4px;padding:1px 7px;margin-left:6px}
+.empty-msg{text-align:center;padding:2rem;color:#999;font-size:13px}
+.submit-btn{display:block;width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:1.5rem;font-family:inherit}
+.submit-btn:hover{background:#7F77DD}
+.submit-btn:active{transform:scale(.98)}
+.preview-box{background:#f5f4f0;border:1px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-top:1rem;display:none}
+.preview-box pre{font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;white-space:pre-wrap;word-break:break-all}
+.unit-count{font-size:12px;color:#666;background:#f5f4f0;border-radius:4px;padding:2px 8px}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.hint{font-size:11px;color:#666;margin-bottom:.75rem;line-height:1.7}
+.copy-btn{margin-top:1rem;padding:8px 16px;background:#f5f4f0;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;color:#1a1a1a;font-family:inherit}
+.copy-btn:hover{background:#eee}
+@media(max-width:500px){.row{grid-template-columns:1fr}.accuracy-group{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>授業報告フォーム</h1>
+
+<div class="section">
+  <div class="section-title">基本情報</div>
+  <div class="row">
+    <div><label>授業日</label><input type="date" id="lessonDate"></div>
+    <div><label>担当講師</label><input type="text" id="teacherName" placeholder="講師名を入力"></div>
+  </div>
+  <div class="row">
+    <div>
+      <label>学年</label>
+      <select id="gradeSelect" onchange="onGradeChange()">
+        <option value="">-- 学年を選択 --</option>
+        <option value="小3">小学3年生</option><option value="小4">小学4年生</option>
+        <option value="小5">小学5年生</option><option value="小6">小学6年生</option>
+        <option value="中1">中学1年生</option><option value="中2">中学2年生</option>
+        <option value="中3">中学3年生</option>
+        <option value="高1">高校1年生</option><option value="高2">高校2年生</option><option value="高3">高校3年生</option>
+      </select>
+    </div>
+    <div>
+      <label>生徒名</label>
+      <select id="studentSelect"><option value="">-- 先に学年を選択 --</option></select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>授業への集中度</label>
+      <select id="focusSelect">
+        <option value="">-- 選択してください --</option>
+        <option value="非常によく集中できた">◎ 非常によく集中できた</option>
+        <option value="集中できていた">○ 集中できていた</option>
+        <option value="やや集中できていなかった">△ やや集中できていなかった</option>
+        <option value="集中できていなかった">▲ 集中できていなかった</option>
+        <option value="眠そうにしていた">眠そうにしていた</option>
+        <option value="2回以上席を離れた">2回以上席を離れた</option>
+        <option value="授業中ずっと落ち着かなかった">授業中ずっと落ち着かなかった</option>
+      </select>
+    </div>
+    <div>
+      <label>科目</label>
+      <select id="subjectSelect" onchange="onSubjectChange()">
+        <option value="">-- 先に学年を選択 --</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="unitSection" style="display:none">
+  <div class="section-header">
+    <div class="section-title" style="margin:0">単元・理解度の記録</div>
+    <span class="unit-count" id="unitCount"></span>
+  </div>
+  <div class="hint">
+    理解度：◎自力で解ける ／ ○教わってできるようになった ／ ▲まだできているとは言えない<br>
+    正答率：<span style="background:#FCEBEB;color:#791F1F;padding:1px 5px;border-radius:3px">50%未満</span>
+    <span style="background:#FAEEDA;color:#633806;padding:1px 5px;border-radius:3px;margin:0 3px">50〜75%</span>
+    <span style="background:#EAF3DE;color:#27500A;padding:1px 5px;border-radius:3px">75%以上</span>
+  </div>
+  <div id="mathGradeTabs" style="display:none">
+    <div style="font-size:12px;color:#666;margin-bottom:6px">実施単元の学年を選択（タブを切り替えても入力内容は保持されます）</div>
+    <div class="grade-tabs" id="gradeTabsInner"></div>
+  </div>
+  <div id="unitPanelsWrap"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">コメント・メモ</div>
+  <textarea id="commentBox" rows="4" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;resize:vertical" placeholder="保護者様への連絡事項、次回の課題など"></textarea>
+</div>
+
+<button class="submit-btn" onclick="submitReport()">授業報告をプレビューする</button>
+
+<div class="preview-box" id="previewBox">
+  <div style="font-size:13px;font-weight:500;margin-bottom:.5rem;color:#666">報告内容プレビュー</div>
+  <pre id="previewContent"></pre>
+  <button class="copy-btn" onclick="copyReport()">テキストをコピーする</button>
+</div>
+</div>
+
+<script>
+var STUDENTS={
+  "小3":["山田 太郎","佐藤 花子","鈴木 次郎"],
+  "小4":["高橋 美咲","田中 健太","伊藤 さくら"],
+  "小5":["渡辺 蓮","山本 陽菜","中村 大翔"],
+  "小6":["小林 結衣","加藤 海斗","吉田 莉子"],
+  "中1":["山田 あおい","松本 颯太","井上 このか","木村 悠斗"],
+  "中2":["林 ひまり","清水 陸","山口 さな","池田 蒼"],
+  "中3":["橋本 優花","阿部 昂","石川 柚葉","前田 翔"],
+  "高1":["藤田 凛","後藤 礼","西村 みく","岡田 隼"],
+  "高2":["長谷川 葵","近藤 遼","村田 ほのか","坂本 航"],
+  "高3":["三浦 彩","斎藤 匠","中島 七海","遠藤 拓海"]
+};
+var SUBJECTS={
+  "小3":["国語","算数","理科","社会","英語"],
+  "小4":["国語","算数","理科","社会","英語"],
+  "小5":["国語","算数","理科","社会","英語"],
+  "小6":["国語","算数","理科","社会","英語"],
+  "中1":["国語","数学","理科","社会","英語"],
+  "中2":["国語","数学","理科","社会","英語"],
+  "中3":["国語","数学","理科","社会","英語"],
+  "高1":["現代文","古文","漢文","数学Ⅰ","数学A","英語","物理","化学","生物","日本史","世界史","地理"],
+  "高2":["現代文","古文","漢文","数学Ⅱ","数学B","英語","物理","化学","生物","日本史","世界史","地理"],
+  "高3":["現代文","古文","漢文","数学Ⅱ","数学B","数学Ⅲ","数学C","英語","物理","化学","生物","日本史","世界史","地理"]
+};
+var MATH_J1=["正の数・負の数の意味","数直線","絶対値","反対の数","数の大小比較","符号の規則","加法（同符号）","加法（異符号）","減法","加減混合計算","乗法","除法","乗除混合計算","四則混合計算","累乗","累乗を含む四則計算","分配法則と正負","正負を使った数量","正負を使った文章題","文字式の意味","文字の表し方","文字式の省略ルール","項と係数","同類項","文字式の加法","文字式の減法","分配法則","カッコを外す計算","カッコを含む計算","文字式に数値代入","数量を文字式で表す","速さを文字式で表す","割合を文字式で表す","文字式による数量説明","図形の数量を式で表す","方程式の意味","等式の性質","方程式の解","移項の考え方","係数整理","一次方程式の基本","小数方程式","分数方程式","カッコを含む方程式","解の検算","数の文章題","年齢の文章題","速さの文章題","割合の文章題","代金の文章題","関数の意味","比例の意味","比例定数","比例の式","比例のグラフ","比例グラフの読み取り","比例の文章題","比例の利用","反比例の意味","反比例の式","反比例のグラフ","反比例グラフの特徴","比例と反比例の比較","比例・反比例の応用","基本図形（直線）","線分と半直線","角","垂直","平行","対頂角","作図の基本","垂直二等分線","角の二等分線","垂線の作図","平行線の作図","図形の移動（平行移動）","図形の移動（対称移動）","図形の移動（回転移動）","空間図形の基本","多面体","正多面体","柱体","錐体","球","展開図","投影図","見取図","表面積","体積","資料の整理","度数分布表","階級","ヒストグラム","相対度数","平均値","中央値","最頻値","代表値の比較"];
+var MATH_J2=["単項式の乗法","単項式の除法","単項式の指数計算","多項式の加法","多項式の減法","分配法則","多項式の乗法","乗法公式①","乗法公式②","乗法公式③","連立方程式の意味","解の意味","代入法","加減法","係数整理","小数の連立方程式","分数の連立方程式","数の文章題（連立）","速さの文章題（連立）","割合の文章題（連立）","食塩水の文章題","関数の意味（一次）","一次関数の式","傾き","切片","グラフの書き方","グラフの読み取り","変化の割合","二点から式を求める","グラフの交点","連立方程式との関係","一次関数の文章題","平行線と角","同位角","錯角","三角形の内角","三角形の外角","多角形の内角の和","合同の意味","合同条件SSS","合同条件SAS","合同条件ASA","合同証明の書き方","合同証明の応用","平行四辺形の定義","平行四辺形の性質","平行四辺形になる条件","長方形の性質","ひし形の性質","正方形の性質","同様に確からしい","場合の数","樹形図","確率の求め方","サイコロの確率","カードの確率","確率の文章題"];
+var MATH_J3=["分配法則の展開","公式展開①","公式展開②","公式展開③","共通因数","公式因数分解①","公式因数分解②","公式因数分解③","たすき掛け","平方根の意味","根号の基本","根号の大小","根号の加減","根号の乗法","根号の除法","有理化","二次方程式の意味","因数分解で解く","平方完成","解の公式","解の個数","判別式","二次方程式の文章題","二次関数の意味","y=ax²のグラフ","変化の割合（二次）","グラフの平行移動","頂点形式","最大値","最小値","二次関数の文章題","二次関数と図形","相似の意味","相似条件AAA","相似条件SAS","相似条件SSS","相似比","面積比","体積比","相似の応用","円周角","中心角","円周角の定理","接線","接弦定理","三平方の定理","定理の逆","辺の長さ","図形への利用","空間への利用","母集団","標本","無作為抽出"];
+var MATH_BY_GRADE={
+  "中1":[{label:"中1",units:MATH_J1,tag:"j1"}],
+  "中2":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"}],
+  "中3":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"},{label:"中3",units:MATH_J3,tag:"j3"}]
+};
+var GENERIC_UNITS={
+  "算数（小4）":["大きな数","整数の計算","わり算","小数","分数","面積","角","垂直・平行","四角形","表とグラフ","変わり方調べ"],
+  "算数（小5）":["整数と小数","小数のかけ算","小数のわり算","合同な図形","三角形・四角形の角","分数の大小","分数のたし算・ひき算","面積","体積","割合","百分率","円グラフ・帯グラフ","単位量あたりの大きさ","速さ","平均","四角形と三角形の面積"],
+  "算数（小6）":["分数のかけ算","分数のわり算","文字と式","比","比例と反比例","円の面積","立体の体積","拡大・縮小","場合の数","データの活用","対称な図形"],
+  "数学Ⅰ":["数と式","二次関数","図形と計量（三角比）","データの分析"],
+  "数学A":["場合の数と確率","図形の性質","数学と人間の活動"],
+  "数学Ⅱ":["式と証明","複素数と方程式","図形と方程式","三角関数","指数・対数関数","微分・積分の考え"],
+  "数学B":["数列","統計的な推測"],
+  "数学Ⅲ":["極限","微分法","積分法"],
+  "数学C":["ベクトル","平面上の曲線と複素数平面"],
+  "国語（中）":["漢字の読み書き","語彙","文法（品詞・活用）","文法（文の成分）","説明文の読解","物語文の読解","詩・短歌・俳句","古文の基礎","漢文の基礎","作文・表現"],
+  "国語（高）":["現代文（評論）","現代文（随筆）","現代語文法","古文文法","古文読解","漢文句法","漢文読解","小論文・記述"],
+  "英語（中）":["アルファベット・発音","基本文型","be動詞","一般動詞","疑問文・否定文","代名詞","三単現","過去形","進行形","未来形","助動詞","不定詞","動名詞","比較","受け身","現在完了","接続詞","関係代名詞","長文読解","英作文","リスニング"],
+  "英語（高）":["時制","助動詞","受動態","不定詞","動名詞","分詞","比較","関係詞","仮定法","話法","接続詞","前置詞","構文解釈","長文読解","英作文","リスニング"],
+  "理科（中）":["植物のからだ","動物のからだ","物質とその性質","状態変化","気体の性質","水溶液","化学変化","イオン","力とはたらき","光と音","電流と電圧","磁界","運動とエネルギー","地震と岩石","大気と天気","地球と宇宙"],
+  "社会（中）":["地理（地図・地形）","地理（気候・人口）","地理（日本各地）","地理（世界各地）","歴史（原始～古代）","歴史（中世）","歴史（近世）","歴史（近代）","歴史（現代）","公民（憲法・政治）","公民（経済・国際）"],
+  "物理":["力と運動","仕事とエネルギー","波動","電気と磁気","熱","原子・核"],
+  "化学":["物質の構成","化学結合","物質量","化学反応式","酸と塩基","酸化還元","無機化学","有機化学","高分子"],
+  "生物":["細胞と生命","遺伝と進化","体の調節（神経・ホルモン）","生態系","植物の反応","代謝"],
+  "日本史":["原始・古代","中世","近世","近代","現代"],
+  "世界史":["古代文明","中世ヨーロッパ・イスラム","近世（大航海時代）","近代（市民革命・産業革命）","帝国主義と世界大戦","冷戦と現代"],
+  "地理":["地図と地形","気候","人口と都市","産業（農業・工業）","日本の地誌","世界の地誌"]
+};
+
+var currentTag=null;
+
+function onGradeChange(){
+  var g=document.getElementById('gradeSelect').value;
+  var ss=document.getElementById('studentSelect');
+  var subj=document.getElementById('subjectSelect');
+  ss.innerHTML='<option value="">-- 生徒を選択 --</option>';
+  subj.innerHTML='<option value="">-- 科目を選択 --</option>';
+  document.getElementById('unitSection').style.display='none';
+  currentTag=null;
+  if(!g)return;
+  (STUDENTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
+  (SUBJECTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;subj.appendChild(o);});
+}
+
+function getSubjectKey(grade,subj){
+  if(subj==="算数"){if(grade==="小4")return"算数（小4）";if(grade==="小5")return"算数（小5）";if(grade==="小6")return"算数（小6）";}
+  if(subj==="国語")return grade.indexOf("高")===0?"国語（高）":"国語（中）";
+  if(subj==="英語")return grade.indexOf("高")===0?"英語（高）":"英語（中）";
+  if(subj==="理科")return"理科（中）";
+  if(subj==="社会")return"社会（中）";
+  return subj;
+}
+
+function onSubjectChange(){
+  var g=document.getElementById('gradeSelect').value;
+  var s=document.getElementById('subjectSelect').value;
+  var sec=document.getElementById('unitSection');
+  var tabsArea=document.getElementById('mathGradeTabs');
+  var wrap=document.getElementById('unitPanelsWrap');
+  if(!g||!s){sec.style.display='none';return;}
+  sec.style.display='block';
+  currentTag=null;
+  wrap.innerHTML='';
+  tabsArea.style.display='none';
+  if(s==="数学"&&MATH_BY_GRADE[g]){
+    tabsArea.style.display='block';
+    buildMathPanels(g);
+    document.getElementById('unitCount').textContent='学年タブを選択してください';
+  } else {
+    var key=getSubjectKey(g,s);
+    var units=GENERIC_UNITS[key];
+    if(units){var panel=buildUnitPanel(units,null);panel.style.display='block';wrap.appendChild(panel);}
+    else{wrap.innerHTML='<div class="empty-msg">この科目の単元は随時追加されます</div>';}
+    updateUnitCount();
+  }
+}
+
+function buildMathPanels(studentGrade){
+  var inner=document.getElementById('gradeTabsInner');
+  var wrap=document.getElementById('unitPanelsWrap');
+  inner.innerHTML='';
+  wrap.innerHTML='';
+  var groups=MATH_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.createElement('button');
+    btn.className='grade-tab';
+    btn.id='tab_'+g.tag;
+    btn.textContent=g.label+'の内容';
+    var panel=buildUnitPanel(g.units,g.tag);
+    panel.id='panel_'+g.tag;
+    wrap.appendChild(panel);
+    (function(tag){
+      btn.addEventListener('click',function(){switchMathTab(studentGrade,tag);});
+    })(g.tag);
+    inner.appendChild(btn);
+  });
+}
+
+function switchMathTab(studentGrade,tag){
+  var groups=MATH_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.getElementById('tab_'+g.tag);
+    if(!btn)return;
+    btn.style.opacity='1';
+    if(g.tag===tag){btn.className='grade-tab active-'+tag;}
+    else{btn.className='grade-tab';btn.style.opacity='0.45';}
+    var panel=document.getElementById('panel_'+g.tag);
+    if(panel)panel.style.display=(g.tag===tag)?'block':'none';
+  });
+  currentTag=tag;
+  updateUnitCount();
+}
+
+function buildUnitPanel(units,tag){
+  var panel=document.createElement('div');
+  panel.style.display='none';
+  var tbl=document.createElement('table');
+  tbl.className='unit-table';
+  tbl.innerHTML='<thead><tr><th style="width:36%">単元名</th><th style="width:36%">理解度</th><th>正答率</th></tr></thead>';
+  var tb=document.createElement('tbody');
+  units.forEach(function(u,i){
+    var uid='u_'+(tag||'g')+'_'+i;
+    var tr=document.createElement('tr');
+    var tdName=document.createElement('td');
+    tdName.style.fontSize='13px';
+    tdName.textContent=u;
+    var tdUnd=document.createElement('td');
+    var rg=document.createElement('div');
+    rg.className='radio-group';
+    [['◎','badge-maru'],['○','badge-circle'],['▲','badge-tri']].forEach(function(pair){
+      var lbl=document.createElement('label');
+      var inp=document.createElement('input');
+      inp.type='radio';inp.name=uid+'_und';inp.value=pair[0];
+      var badge=document.createElement('span');
+      badge.className=pair[1];badge.textContent=pair[0];
+      lbl.appendChild(inp);lbl.appendChild(badge);rg.appendChild(lbl);
+      inp.addEventListener('change',function(){updateTabBadge(tag);});
+    });
+    tdUnd.appendChild(rg);
+    var tdAcc=document.createElement('td');
+    var ag=document.createElement('div');
+    ag.className='accuracy-group';
+    [['50%未満','low'],['50〜75%','mid'],['75%以上','high']].forEach(function(pair){
+      var btn=document.createElement('button');
+      btn.className='acc-btn';btn.textContent=pair[0];
+      (function(b,level){
+        b.addEventListener('click',function(){
+          ag.querySelectorAll('.acc-btn').forEach(function(x){x.className='acc-btn';});
+          b.classList.add('sel-'+level);
+          updateTabBadge(tag);
+        });
+      })(btn,pair[1]);
+      ag.appendChild(btn);
+    });
+    tdAcc.appendChild(ag);
+    tr.appendChild(tdName);tr.appendChild(tdUnd);tr.appendChild(tdAcc);
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);panel.appendChild(tbl);
+  return panel;
+}
+
+function updateTabBadge(tag){
+  if(!tag)return;
+  var panel=document.getElementById('panel_'+tag);
+  var btn=document.getElementById('tab_'+tag);
+  if(!panel||!btn)return;
+  var count=0;
+  panel.querySelectorAll('tbody tr').forEach(function(tr){
+    if(tr.querySelector('input[type=radio]:checked')||tr.querySelector('.acc-btn.sel-low,.acc-btn.sel-mid,.acc-btn.sel-high'))count++;
+  });
+  var existing=btn.querySelector('.saved-badge');
+  if(existing)existing.remove();
+  if(count>0){var badge=document.createElement('span');badge.className='saved-badge';badge.textContent=count+'件入力済';btn.appendChild(badge);}
+}
+
+function updateUnitCount(){
+  var wrap=document.getElementById('unitPanelsWrap');
+  var visible=null;
+  wrap.querySelectorAll('div').forEach(function(d){if(d.style.display==='block')visible=d;});
+  if(visible){document.getElementById('unitCount').textContent=visible.querySelectorAll('tbody tr').length+'単元';}
+}
+
+function submitReport(){
+  var date=document.getElementById('lessonDate').value||'（未入力）';
+  var teacher=document.getElementById('teacherName').value||'（未入力）';
+  var grade=document.getElementById('gradeSelect').value||'（未選択）';
+  var student=document.getElementById('studentSelect').value||'（未選択）';
+  var focus=document.getElementById('focusSelect').value||'（未選択）';
+  var subj=document.getElementById('subjectSelect').value||'（未選択）';
+  var comment=document.getElementById('commentBox').value||'なし';
+  var wrap=document.getElementById('unitPanelsWrap');
+  var lines=[];
+  wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
+    var tag=panel.id.replace('panel_','');
+    var panelLines=[];
+    panel.querySelectorAll('tbody tr').forEach(function(tr){
+      var name=tr.cells[0].textContent.trim();
+      var checked=tr.querySelector('input[type=radio]:checked');
+      var accSel=tr.querySelector('.acc-btn.sel-low,.acc-btn.sel-mid,.acc-btn.sel-high');
+      if(checked||accSel){
+        var und=checked?checked.value:'（未記入）';
+        var acc=accSel?accSel.textContent.trim():'（未記入）';
+        panelLines.push('  ・'+name+'｜理解度：'+und+'｜正答率：'+acc);
+      }
+    });
+    if(panelLines.length>0){
+      var labelMap={j1:'【中1の内容】',j2:'【中2の内容】',j3:'【中3の内容】'};
+      if(labelMap[tag])lines.push(labelMap[tag]);
+      panelLines.forEach(function(l){lines.push(l);});
+    }
+  });
+  // 非数学科目（panel_なしのdiv）
+  var nonMath=wrap.querySelector('div:not([id])');
+  if(nonMath){
+    nonMath.querySelectorAll('tbody tr').forEach(function(tr){
+      var name=tr.cells[0].textContent.trim();
+      var checked=tr.querySelector('input[type=radio]:checked');
+      var accSel=tr.querySelector('.acc-btn.sel-low,.acc-btn.sel-mid,.acc-btn.sel-high');
+      if(checked||accSel){
+        var und=checked?checked.value:'（未記入）';
+        var acc=accSel?accSel.textContent.trim():'（未記入）';
+        lines.push('  ・'+name+'｜理解度：'+und+'｜正答率：'+acc);
+      }
+    });
+  }
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n集中度：'+focus+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+'\n─────────────────────\n【コメント】\n'+comment;
+  document.getElementById('previewContent').textContent=text;
+  var box=document.getElementById('previewBox');
+  box.style.display='block';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function copyReport(){
+  var text=document.getElementById('previewContent').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(function(){alert('コピーしました！');});
+  } else {
+    var ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    alert('コピーしました！');
+  }
+}
+
+var today=new Date();
+document.getElementById('lessonDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+</script>
+</body>
+</html>
