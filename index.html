@@ -1,89 +1,132 @@
-
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授業報告フォーム</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary)}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0}
 .wrap{max-width:780px;margin:0 auto;padding:1rem 1rem 3rem}
-h1{font-size:20px;font-weight:500;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:.5px solid var(--color-border-tertiary)}
-.section{background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
-.section-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.75rem}
+h1{font-size:20px;font-weight:500;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid #ddd}
+.section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:#666;margin-bottom:.75rem}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
-select,input[type=date]{width:100%;height:36px;padding:0 10px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;font-family:inherit}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select,input[type=text],input[type=date]{width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
 .grade-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.grade-tab{padding:6px 14px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;font-size:12px;background:var(--color-background-primary);color:var(--color-text-secondary);font-family:inherit}
-.grade-tab.active-j1,.grade-tab.active-e1,.grade-tab.active-h0{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:500}
-.grade-tab.active-j2,.grade-tab.active-e2,.grade-tab.active-h1{background:#E1F5EE;color:#085041;border-color:#5DCAA5;font-weight:500}
-.grade-tab.active-j3,.grade-tab.active-e3,.grade-tab.active-h2{background:#FAECE7;color:#712B13;border-color:#F0997B;font-weight:500}
-.grade-tab.active-h3{background:#E6F1FB;color:#0C447C;border-color:#85B7EB;font-weight:500}
-.grade-tab.active-h4{background:#FAEEDA;color:#633806;border-color:#FAC775;font-weight:500}
-.grade-tab.active-h5{background:#EAF3DE;color:#27500A;border-color:#97C459;font-weight:500}
-.unit-table{width:100%;border-collapse:collapse;margin-top:.5rem;table-layout:fixed}
-.unit-table th{font-size:12px;font-weight:500;color:var(--color-text-secondary);padding:6px 8px;border-bottom:.5px solid var(--color-border-tertiary);text-align:left}
-.unit-table td{padding:6px 8px;border-bottom:.5px solid var(--color-border-tertiary);font-size:12px;vertical-align:top}
+.grade-tab{padding:6px 16px;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;background:#fff;color:#666;font-family:inherit}
+.grade-tab:hover{background:#f5f5f5}
+.grade-tab.active-j1{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:500}
+.grade-tab.active-j2{background:#E1F5EE;color:#085041;border-color:#5DCAA5;font-weight:500}
+.grade-tab.active-j3{background:#FAECE7;color:#712B13;border-color:#F0997B;font-weight:500}
+.grade-tab.active-e1{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:500}
+.grade-tab.active-e2{background:#E1F5EE;color:#085041;border-color:#5DCAA5;font-weight:500}
+.grade-tab.active-e3{background:#FAECE7;color:#712B13;border-color:#F0997B;font-weight:500}
+.unit-table{width:100%;border-collapse:collapse;margin-top:.5rem}
+.unit-table th{font-size:12px;font-weight:500;color:#666;padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+.unit-table td{padding:6px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:middle}
 .unit-table tr:last-child td{border-bottom:none}
-.unit-table tr:hover td{background:var(--color-background-secondary)}
-.sel-btn{display:block;width:100%;font-size:11px;padding:3px 6px;border-radius:4px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:3px;opacity:.4;border:.5px solid transparent;transition:opacity .1s}
-.sel-btn.on{opacity:1;font-weight:500}
+.unit-table tr:hover td{background:#fafafa}
+.shidou-group{display:flex;gap:4px;margin-bottom:4px}
+.shidou-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#fff;color:#666;opacity:.5;transition:opacity .1s}
+.shidou-btn.on-nashi{opacity:1;font-weight:500;background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
+.shidou-btn.on-ari{opacity:1;font-weight:500;background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.sub-group{display:flex;flex-direction:column;gap:3px;margin-top:3px}
+.sub-btn{font-size:11px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit;text-align:left;border:1px solid transparent;opacity:.45;transition:opacity .1s}
+.sub-btn.on{opacity:1;font-weight:500}
+.sub-btn.nashi3{background:#EAF3DE;color:#27500A;border-color:#97C459}
+.sub-btn.nashi4{background:#F1EFE8;color:#444441;border-color:#B4B2A9}
+.sub-btn.ari5{background:#EAF3DE;color:#27500A;border-color:#97C459}
+.sub-btn.ari6{background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.sub-btn.ari7{background:#F1EFE8;color:#444441;border-color:#B4B2A9}
+.radio-group{display:flex;gap:6px}
+.radio-group label{margin:0;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;color:#1a1a1a;white-space:nowrap}
+.radio-group input[type=radio]{width:14px;height:14px;margin:0;accent-color:#7F77DD}
+.badge-maru{background:#EAF3DE;color:#27500A;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.badge-circle{background:#E6F1FB;color:#0C447C;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.badge-tri{background:#FAEEDA;color:#633806;border-radius:4px;padding:2px 6px;font-size:11px;white-space:nowrap}
+.accuracy-group{display:flex;gap:4px}
+.acc-btn{font-size:11px;padding:3px 7px;border:1px solid #ccc;border-radius:4px;cursor:pointer;background:#fff;color:#666;font-family:inherit}
+.acc-btn:hover{background:#f5f5f5}
+.acc-btn.sel-low{background:#FCEBEB !important;color:#791F1F !important;border-color:#F09595 !important}
+.acc-btn.sel-mid{background:#FAEEDA !important;color:#633806 !important;border-color:#FAC775 !important}
+.acc-btn.sel-high{background:#EAF3DE !important;color:#27500A !important;border-color:#C0DD97 !important}
 .saved-badge{font-size:11px;background:#E1F5EE;color:#085041;border-radius:4px;padding:1px 7px;margin-left:6px}
-.issue-section{display:none;margin-top:1rem;border-top:.5px solid var(--color-border-tertiary);padding-top:1rem}
-.issue-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.5rem}
-.issue-checks,.policy-checks{display:flex;flex-direction:column;gap:6px}
-.issue-checks label,.policy-checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-primary);cursor:pointer}
-.issue-checks input,.policy-checks input{width:15px;height:15px;accent-color:#7F77DD;flex-shrink:0}
-.empty-msg{text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:13px}
-.submit-btn{display:block;width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:var(--border-radius-lg);font-size:15px;font-weight:500;cursor:pointer;margin-top:1.5rem;font-family:inherit}
+.empty-msg{text-align:center;padding:2rem;color:#999;font-size:13px}
+.submit-btn{display:block;width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;margin-top:1.5rem;font-family:inherit}
 .submit-btn:hover{background:#7F77DD}
-.notion-btn{display:block;width:100%;padding:12px;background:#27500A;color:#fff;border:none;border-radius:var(--border-radius-lg);font-size:15px;font-weight:500;cursor:pointer;margin-top:.75rem;font-family:inherit}
-.notion-btn:hover{background:#3B6D11}
-.preview-box{background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-top:1rem;display:none}
-.preview-box pre{font-family:var(--font-mono);font-size:12px;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-all}
-.unit-count{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:4px;padding:2px 8px}
+.submit-btn:active{transform:scale(.98)}
+.preview-box{background:#f5f4f0;border:1px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-top:1rem;display:none}
+.preview-box pre{font-family:'Courier New',monospace;font-size:12px;color:#1a1a1a;white-space:pre-wrap;word-break:break-all}
+.unit-count{font-size:12px;color:#666;background:#f5f4f0;border-radius:4px;padding:2px 8px}
 .section-header{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
-.hint{font-size:11px;color:var(--color-text-secondary);margin-bottom:.75rem;line-height:1.7}
+.hint{font-size:11px;color:#666;margin-bottom:.75rem;line-height:1.7}
+.copy-btn{margin-top:1rem;padding:8px 16px;background:#f5f4f0;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;color:#1a1a1a;font-family:inherit}
+.copy-btn:hover{background:#eee}
+@media(max-width:500px){.row{grid-template-columns:1fr}.accuracy-group{flex-wrap:wrap}}
+.policy-checks{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.policy-checks label{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer}
+.policy-checks input[type=checkbox]{width:15px;height:15px;accent-color:#7F77DD;flex-shrink:0}
 </style>
+</head>
+<body>
 <div class="wrap">
 <h1>授業報告フォーム</h1>
+
 <div class="section">
   <div class="section-title">基本情報</div>
   <div class="row">
     <div><label>授業日</label><input type="date" id="lessonDate"></div>
-    <div><label>担当講師</label>
-      <select id="teacherName">
-        <option value="">-- 講師を選択 --</option>
-        <option>浅村 結良</option><option>小林 祐介</option><option>高澤 雅樹</option>
-        <option>藤田 雅子</option><option>原口 葵</option><option>水野 貴志</option>
-        <option>宮崎 久仁子</option><option>緑川 智洸</option>
-      </select>
-    </div>
+    <div><label>担当講師</label><select id="teacherName">
+      <option value="">-- 講師を選択 --</option>
+      <option value="浅村結良">浅村結良</option>
+      <option value="小林祐介">小林祐介</option>
+      <option value="高澤雅樹">高澤雅樹</option>
+      <option value="藤田雅子">藤田雅子</option>
+      <option value="原口葵">原口葵</option>
+      <option value="水野貴志">水野貴志</option>
+      <option value="宮崎久仁子">宮崎久仁子</option>
+      <option value="緑川智洸">緑川智洸</option>
+    </select></div>
   </div>
   <div class="row">
     <div>
       <label>学年</label>
       <select id="gradeSelect" onchange="onGradeChange()">
         <option value="">-- 学年を選択 --</option>
-        <option value="中1">中学1年生</option><option value="中2">中学2年生</option>
-        <option value="中3">中学3年生</option><option value="高1">高校1年生</option>
-        <option value="高2">高校2年生</option><option value="高3">高校3年生</option>
         <option value="小3">小学3年生</option><option value="小4">小学4年生</option>
         <option value="小5">小学5年生</option><option value="小6">小学6年生</option>
+        <option value="中1">中学1年生</option><option value="中2">中学2年生</option>
+        <option value="中3">中学3年生</option>
+        <option value="高1">高校1年生</option><option value="高2">高校2年生</option><option value="高3">高校3年生</option>
       </select>
     </div>
-    <div><label>生徒名</label><select id="studentSelect"><option value="">-- 先に学年を選択 --</option></select></div>
+    <div>
+      <label>生徒名</label>
+      <select id="studentSelect"><option value="">-- 先に学年を選択 --</option></select>
+    </div>
   </div>
   <div class="row">
     <div>
       <label>授業への集中度</label>
       <select id="focusSelect">
         <option value="">-- 選択してください --</option>
-        <option>○ 集中できていた</option>
-        <option>眠そうにしていた</option>
-        <option>ボーっとしてしまうことがあった</option>
-        <option>席を5分以上離れることがあった</option>
-        <option>2回以上席を離れた</option>
-        <option>文具や筆箱その他のもので勉強以外のことをしてしまう</option>
+        <option value="集中できていた">○ 集中できていた</option>
+        <option value="眠そうにしていた">眠そうにしていた</option>
+        <option value="ボーっとしてしまうことがあった">ボーっとしてしまうことがあった</option>
+        <option value="席を5分以上離れることがあった">席を5分以上離れることがあった</option>
+        <option value="2回以上席を離れた">2回以上席を離れた</option>
+        <option value="文具や筆箱その他のもので勉強以外のことをしてしまう">文具や筆箱その他のもので勉強以外のことをしてしまう</option>
       </select>
     </div>
-    <div><label>科目</label><select id="subjectSelect" onchange="onSubjectChange()"><option value="">-- 先に学年を選択 --</option></select></div>
+    <div>
+      <label>科目</label>
+      <select id="subjectSelect" onchange="onSubjectChange()">
+        <option value="">-- 先に学年を選択 --</option>
+      </select>
+    </div>
   </div>
   <div class="row">
     <div>
@@ -107,9 +150,9 @@ select,input[type=date]{width:100%;height:36px;padding:0 10px;border:.5px solid 
       </select>
     </div>
   </div>
-  <div style="margin-bottom:4px">
+  <div style="margin-bottom:12px">
     <label>授業方針（複数選択可）</label>
-    <div class="policy-checks" style="margin-top:6px">
+    <div class="policy-checks">
       <label><input type="checkbox" value="現行単元の補習"> 現行単元の補習</label>
       <label><input type="checkbox" value="既習単元のさかのぼり"> 既習単元のさかのぼり</label>
       <label><input type="checkbox" value="未習単元の先取り"> 未習単元の先取り</label>
@@ -126,41 +169,45 @@ select,input[type=date]{width:100%;height:36px;padding:0 10px;border:.5px solid 
     <span class="unit-count" id="unitCount"></span>
   </div>
   <div class="hint">
-    達成度：①理解も正答数も良好　②理解はしているが正答率はもう１歩　③理解があと１歩<br>
-    状況：①もともとできていた　②指導・要点確認後できるようになった　③以前と比べてよくできている　④今後の成長に期待
+    <b>Step1</b>　①指導なし　②指導あり　を選択<br>
+    <b>①指導なし のとき →</b>　③もともとよくできていた　④次回以降も要フォロー<br>
+    <b>②指導あり のとき →</b>　⑤よくできるようになった　⑥自力正答率はもう一歩　⑦次回以降も要フォロー
   </div>
-  <div id="tabsArea" style="display:none">
-    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">タブを選択してください（切り替えても入力内容は保持されます）</div>
+  <div id="mathGradeTabs" style="display:none">
+    <div style="font-size:12px;color:#666;margin-bottom:6px">実施単元の学年を選択（タブを切り替えても入力内容は保持されます）</div>
     <div class="grade-tabs" id="gradeTabsInner"></div>
   </div>
   <div id="unitPanelsWrap"></div>
-  <div id="engIssueSection" class="issue-section">
-    <div class="issue-title">英語の課題（該当するものをすべて選択）</div>
-    <div class="issue-checks" id="engIssueChecks"></div>
+  <div id="engIssueSection" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
+    <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">英語の課題（該当するものをすべて選択）</div>
+    <div id="engIssueChecks"></div>
   </div>
-  <div id="mathIssueSection" class="issue-section">
-    <div class="issue-title">数学の課題（該当するものをすべて選択）</div>
-    <div class="issue-checks" id="mathIssueChecks"></div>
+  <div id="mathIssueSection" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
+    <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">数学の課題（該当するものをすべて選択）</div>
+    <div id="mathIssueChecks"></div>
   </div>
 </div>
 
 <div class="section">
   <div class="section-title">コメント・メモ</div>
-  <textarea id="commentBox" rows="4" style="width:100%;padding:10px;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;font-family:inherit;resize:vertical" placeholder="保護者様への連絡事項、次回の課題など"></textarea>
+  <textarea id="commentBox" rows="4" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;resize:vertical" placeholder="保護者様への連絡事項、次回の課題など"></textarea>
 </div>
 
 <button class="submit-btn" onclick="submitReport()">授業報告をプレビューする</button>
-<button class="notion-btn" onclick="generateNotion()">Notion記録用文を生成する ↗</button>
 
 <div class="preview-box" id="previewBox">
-  <div style="font-size:13px;font-weight:500;margin-bottom:.5rem;color:var(--color-text-secondary)">報告内容プレビュー（確認用）</div>
+  <div style="font-size:13px;font-weight:500;margin-bottom:.5rem;color:#666">報告内容プレビュー</div>
   <pre id="previewContent"></pre>
+  <button class="copy-btn" onclick="generateNotion()">Notion記録用文を生成する ↗</button>
 </div>
 </div>
 
 <script>
 var STUDENTS={
-  "小3":[],"小4":[],"小5":[],"小6":[],
+  "小3":[],
+  "小4":[],
+  "小5":[],
+  "小6":[],
   "中1":["今藤 ほのか","小林 巧実"],
   "中2":["伊藤 優莉","太田 結翔","小林 泰晴","小林 龍世"],
   "中3":["荒井 春輝","尾芦 涼真","海沼 瑞香","笠井 美希","佐藤 秀宥","島田 陽太","長崎 聖也","山崎 愛結","湯川 智仁"],
@@ -169,56 +216,111 @@ var STUDENTS={
   "高3":["阿部 恵","笠井 望","瀧澤 春太朗","松本 怜","宮下 英晃"]
 };
 var SUBJECTS={
-  "小3":["国語","算数","理科","社会","英語"],"小4":["国語","算数","理科","社会","英語"],
-  "小5":["国語","算数","理科","社会","英語"],"小6":["国語","算数","理科","社会","英語"],
-  "中1":["国語","数学","理科","社会","英語"],"中2":["国語","数学","理科","社会","英語"],
+  "小3":["国語","算数","理科","社会","英語"],
+  "小4":["国語","算数","理科","社会","英語"],
+  "小5":["国語","算数","理科","社会","英語"],
+  "小6":["国語","算数","理科","社会","英語"],
+  "中1":["国語","数学","理科","社会","英語"],
+  "中2":["国語","数学","理科","社会","英語"],
   "中3":["国語","数学","理科","社会","英語"],
-  "高1":["現代文","古文","漢文","数学Ⅰ","数学A","英語","物理","化学","生物","日本史","世界史","地理"],
-  "高2":["現代文","古文","漢文","数学Ⅱ","数学B","英語","物理","化学","生物","日本史","世界史","地理"],
-  "高3":["現代文","古文","漢文","数学Ⅱ","数学B","数学Ⅲ","数学C","英語","物理","化学","生物","日本史","世界史","地理"]
+  "高1":["現代文","古文","漢文","数学Ⅰ","数学A","数学Ⅱ","数学B","数学Ⅲ","数学C","英語","物理","化学","生物","日本史","世界史","地理"],
+  "高2":["現代文","古文","漢文","数学Ⅰ","数学A","数学Ⅱ","数学B","数学Ⅲ","数学C","英語","物理","化学","生物","日本史","世界史","地理"],
+  "高3":["現代文","古文","漢文","数学Ⅰ","数学A","数学Ⅱ","数学B","数学Ⅲ","数学C","英語","物理","化学","生物","日本史","世界史","地理"]
 };
 var MATH_J1=["正の数・負の数の意味","数直線","絶対値","反対の数","数の大小比較","符号の規則","加法（同符号）","加法（異符号）","減法","加減混合計算","乗法","除法","乗除混合計算","四則混合計算","累乗","累乗を含む四則計算","分配法則と正負","正負を使った数量","正負を使った文章題","文字式の意味","文字の表し方","文字式の省略ルール","項と係数","同類項","文字式の加法","文字式の減法","分配法則","カッコを外す計算","カッコを含む計算","文字式に数値代入","数量を文字式で表す","速さを文字式で表す","割合を文字式で表す","文字式による数量説明","図形の数量を式で表す","方程式の意味","等式の性質","方程式の解","移項の考え方","係数整理","一次方程式の基本","小数方程式","分数方程式","カッコを含む方程式","解の検算","数の文章題","年齢の文章題","速さの文章題","割合の文章題","代金の文章題","関数の意味","比例の意味","比例定数","比例の式","比例のグラフ","比例グラフの読み取り","比例の文章題","比例の利用","反比例の意味","反比例の式","反比例のグラフ","反比例グラフの特徴","比例と反比例の比較","比例・反比例の応用","基本図形（直線）","線分と半直線","角","垂直","平行","対頂角","作図の基本","垂直二等分線","角の二等分線","垂線の作図","平行線の作図","図形の移動（平行移動）","図形の移動（対称移動）","図形の移動（回転移動）","空間図形の基本","多面体","正多面体","柱体","錐体","球","展開図","投影図","見取図","表面積","体積","資料の整理","度数分布表","階級","ヒストグラム","相対度数","平均値","中央値","最頻値","代表値の比較"];
 var MATH_J2=["単項式の乗法","単項式の除法","単項式の指数計算","多項式の加法","多項式の減法","分配法則","多項式の乗法","乗法公式①","乗法公式②","乗法公式③","連立方程式の意味","解の意味","代入法","加減法","係数整理","小数の連立方程式","分数の連立方程式","数の文章題（連立）","速さの文章題（連立）","割合の文章題（連立）","食塩水の文章題","関数の意味（一次）","一次関数の式","傾き","切片","グラフの書き方","グラフの読み取り","変化の割合","二点から式を求める","グラフの交点","連立方程式との関係","一次関数の文章題","平行線と角","同位角","錯角","三角形の内角","三角形の外角","多角形の内角の和","合同の意味","合同条件SSS","合同条件SAS","合同条件ASA","合同証明の書き方","合同証明の応用","平行四辺形の定義","平行四辺形の性質","平行四辺形になる条件","長方形の性質","ひし形の性質","正方形の性質","同様に確からしい","場合の数","樹形図","確率の求め方","サイコロの確率","カードの確率","確率の文章題"];
 var MATH_J3=["分配法則の展開","公式展開①","公式展開②","公式展開③","共通因数","公式因数分解①","公式因数分解②","公式因数分解③","たすき掛け","平方根の意味","根号の基本","根号の大小","根号の加減","根号の乗法","根号の除法","有理化","二次方程式の意味","因数分解で解く","平方完成","解の公式","解の個数","判別式","二次方程式の文章題","二次関数の意味","y=ax²のグラフ","変化の割合（二次）","グラフの平行移動","頂点形式","最大値","最小値","二次関数の文章題","二次関数と図形","相似の意味","相似条件AAA","相似条件SAS","相似条件SSS","相似比","面積比","体積比","相似の応用","円周角","中心角","円周角の定理","接線","接弦定理","三平方の定理","定理の逆","辺の長さ","図形への利用","空間への利用","母集団","標本","無作為抽出"];
-var MATH_BY_GRADE={"中1":[{label:"中1",units:MATH_J1,tag:"j1"}],"中2":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"}],"中3":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"},{label:"中3",units:MATH_J3,tag:"j3"}]};
-var MATH1_SUSHIKI=["単項式の次数と係数","多項式の次数と定数項","多項式の計算","累乗の計算","分配法則と展開","２次式の展開と乗法公式","３次式の展開","式の展開の工夫","２次式の因数分解","因数分解（たすき掛け）","３次式の因数分解","因数分解の工夫","文字式のたすき掛け","２種類以上の文字を含む式の因数分解①（１次式）","２種類以上の文字を含む式の因数分解②（２次式）","複２次式の因数分解","循環小数と分数","絶対値の計算","平方根の計算","分母の有理化","対称式","整数部分と小数部分","二重根号","１次不等式の解","連立不等式の解","不等式を満たす整数の解","１次不等式の文章問題","絶対値を含む方程式と不等式","場合分けの必要な絶対値を含む方程式と不等式"];
-var MATH1_SHUGOU=["集合の表し方と要素","集合の包含関係と部分集合","共通部分と和集合","補集合とド・モルガンの法則","数直線と集合","命題の真偽","条件の真偽","条件の否定①（かつ・または）","条件の否定②（すべて・ある・ともに）","必要条件と十分条件","逆・裏・対偶","対偶法","背理法"];
-var MATH1_NIKANN=["関数の値と象限","関数の値域と最大値・最小値","２次関数のグラフ","２次関数の平方完成","２次関数のグラフの平行移動","平行移動後のグラフ","グラフの対称移動","２次関数の決定①（頂点）","２次関数の決定②（３点を通る）","２次関数の最大値・最小値","２次関数の決定③（最大値・最小値）","最大値・最小値の文章問題","文字係数を含む２次関数の最大値・最小値","定義域が変化する２次関数の最大値・最小値","２次方程式の解","２次方程式の解の個数","２次方程式の解の条件","解が与えられた２次方程式","２次方程式の文章問題","２次方程式の共通解","２次関数とx軸との交点","２次関数とx軸との交点の条件","放物線と直線の交点","２次不等式の解①（因数分解）","２次不等式の解②（解の公式）","２次不等式の解②（x軸と接する）","２次不等式の解③（交点がない）","連立２次不等式の解","絶対不等式","２次不等式の文章問題","２次方程式の解の符号"];
-var MATH1_SANKAKU=["直角三角形と三角比","三角比の値（鋭角）","余角の公式","三角比の相互関係の公式（鋭角）","三角比の拡張","三角比と方程式","三角比と不等式","補角の公式","三角比の相互関係の公式（鈍角）","三角比の等式証明","直線の傾きと正接","三角比と２次方程式","三角比の式と値","正弦定理","余弦定理","余弦定理と２次方程式","三角形の辺と角の条件","三角形の面積（三角比）","内接円の半径","角の二等分線の長さ","円に内接する四角形","直方体の計量","正四面体の計量"];
-var MATH1_DATA=["平均値・中央値・最頻値","度数分布表","箱ひげ図","分散と標準偏差","度数分布表と分散","散布図と相関","相関係数"];
-var MATH_A_BAAI=["集合の要素の個数","補集合の要素の個数","３つの集合の要素の個数","和の法則と積の法則","約数の個数と展開式の項の個数","順列と階乗の記号","文字の順列","数字の順列","円順列とじゅず順列","条件付き円順列","重複を許す順列","２つのグループに分ける","組合せの記号","順列と組合せ","図形と組合せ","代表を選ぶ","３つのグループに分ける","同じものを含む順列","最短経路問題","重複組合せ","等式を満たす自然数の組合せ","確率の基本","さいころの確率","ボールを取り出す確率","一列に並べる確率","円形に並べる確率","和事象と排反事象","余事象の確率","独立試行の確率","反復試行の確率①（コイン）","反復試行の確率②（さいころ）","○勝先取の確率","点が動く確率","条件付き確率","確率の乗法定理"];
-var MATH_A_SEISU=["除法の性質","整数の分類と証明","約数と倍数","倍数判別法","素因数分解","約数の個数・平方数","等式を満たす整数の組","最大公約数と最小公倍数","最大公約数と最小公倍数の関係式","ユークリッドの互除法","不定方程式①","不定方程式②（互除法）","不定方程式の利用","n進法①（10進法で表す）","n進法②（n進法で表す）","n進法と小数","n進法のたし算","n進法のひき算","n進法のかけ算","分数と小数"];
-var MATH_A_ZUKEI=["内分点と外分点の位置","中点連結定理と平行線と比","角の二等分線と比","三角形の外心","三角形の内心","三角形の垂心","三角形の重心","チェバの定理","メネラウスの定理","三角形の辺と角の大小関係","三角形になるための条件","円周角と中心角","円に内接する四角形と角","接弦定理","内接円と接線の条件","方べきの定理","２つの円の位置関係と共通接線","共通接線の長さ","作図の基本","内分点と外分点の作図","分数倍の作図","平方根の値の作図","空間図形の位置関係"];
-var MATH2_SHIKI=["3次式の展開(数学I)","3次式の因数分解(数学I)","6次式の因数分解","二項定理","多項定理","二項定理の利用","整式の割り算","分数式の計算","通分を用いる分数式の計算","分母や分子に分数式を含む式","恒等式","等式の証明","条件付き等式の証明","比例式と等式の証明","不等式の証明1(条件付き)","不等式の証明2(2次式)","不等式の証明3(平方根)","不等式の証明4(絶対値)","相加平均と相乗平均"];
-var MATH2_FUKUSO=["複素数の相等","複素数の計算","共役な複素数と式の値","分数と複素数","負の数の平方根","2次方程式の虚数解","複素数範囲での2次方程式の解の条件","2次方程式の解と係数の関係","2つの解の条件と解と係数の関係","複素数範囲での因数分解","解が与えられた2次方程式","2次方程式の解の符号","剰余の定理","剰余の定理と余りの決定","因数定理を用いる因数分解","高次方程式の解1(3次方程式)","高次方程式の解2(4次方程式)","3次方程式の虚数解","1の3乗根"];
-var MATH2_ZUKEI=["直線上の線分の長さ・内分点・外分点","平面上の線分の長さ","平面上の三角形の形状","線分の長さの条件","平面上の内分点・外分点・重心","点に対して対称な点","平行四辺形を作る点の座標","座標を利用した等式の証明","直線の方程式","2点を通る直線の方程式","平行な直線と垂直な直線","直線に対して対称な点","垂直二等分線の方程式","3直線が1点で交わる","2直線の交点を通る直線","点と直線との距離","定点を通る直線の方程式","円の方程式","円の方程式の決定1(点の条件)","円の方程式の決定2(接する条件)","円の方程式を表す条件","円と直線との共有点","円と直線との位置関係","円によって切り取られる線分","円の接線の方程式","2つの円の位置関係","2つの円の共有点の座標","2つの円の交点を通る円・直線","軌跡1","軌跡2(動点を含む)","不等式の表す領域","連立不等式の表す領域1","連立不等式の表す領域2(積の形)","線形計画法","領域を用いた証明"];
-var MATH2_SANKAKU=["動径と一般角","弧度法と扇形","三角関数の値(単位円)","【問題演習】三角関数の値(単位円)","三角関数の相互関係の公式","三角関数の式の値","三角関数の等式の証明","三角関数の性質1","三角関数の性質2","三角関数のグラフ1","三角関数のグラフ2(縦幅の変化)","三角関数のグラフ3(周期の変化)","三角関数のグラフ4(平行移動)","三角関数のグラフ5(式変形)","三角関数を含む方程式1","【問題演習】三角関数を含む方程式","三角関数を含む方程式2(範囲変化)","三角関数を含む不等式1","三角関数を含む不等式2(範囲変化)","三角関数を含む2次方程式","三角関数を含む2次不等式","三角関数を含む2次関数","加法定理","加法定理と式の値","2直線のなす角","2倍角の公式","半角の公式","2倍角を含む方程式・不等式","三角関数の合成","合成を用いる方程式と不等式","三角関数の最大値・最小値"];
-var MATH2_SHISU=["指数法則の基本","累乗根","指数法則の拡張","指数法則を用いた計算","指数関数のグラフ","指数の大小比較","指数方程式","指数不等式","指数関数を含む2次方程式","指数関数を含む2次不等式","指数関数の最大値・最小値","指数と対数","対数の値","対数の計算","底の変換公式","対数関数の式の値","対数関数のグラフ","指数関数と対数関数のグラフの位置関係","対数の大小比較","対数方程式","対数不等式","対数を含む2次式","対数を含む関数の最大値・最小値","常用対数(桁数問題・小数第何位)"];
-var MATH2_BIBUN=["平均変化率","極限値","微分係数","導関数","微分の計算","2次関数の決定(微分係数の利用)","接線の方程式1","接線の方程式2(外部の点から引いた接線)","3次関数のグラフと増減表","3次関数の最大値・最小値","極値の条件と関数の決定","3次方程式の解の個数1","3次方程式の解の個数2(定数分離法)","3次不等式の証明","4次関数のグラフと増減表","不定積分","不定積分と関数の決定","接線の傾きの条件と関数の決定","定積分の計算","定積分を含む式","定積分で表された関数","定積分と面積1(x軸と囲まれた面積)","定積分と面積2(2つの関数で囲まれた面積)","定積分と面積3(区間付きの面積)","絶対値を含む関数の定積分"];
-var MATH_B_SUURETU=["一般項とそれぞれの項の求め方","数列の一般項の推測","等差数列と公差","等差数列の一般項","等差数列の項から一般項を求める","等差数列であることの証明","数列a,b,cが等差数列(等差中項)","等差数列の和","項数を調べる等差数列の和","等差数列の和から項数を求める","自然数の和と倍数の和","2桁の条件の自然数の和","等差数列の和の最大値・最小値","等差数列の部分和","等差数列の項と和から一般項を求める","2つの等差数列の共通項の数列","等比数列と公比","等比数列の一般項","等比数列の項から一般項を求める","等比数列であることの証明","数列a,b,cが等比数列(等比中項)","等比数列の和","等比数列の項と和から初項と公比を求める","等比数列の和から初項と公比を求める","等比数列のa1+a2とa3+a4の値","自然数の2乗の和と3乗の和","シグマ記号を項の和で表す","項の和をシグマ記号で表す","シグマ記号の書き換え","等比数列の和とシグマ記号","シグマ記号の公式","シグマ記号の性質と公式","シグマ記号で表し和を求める","一般項が数列の和となる数列の和","nから下がっていく数列の和","階差数列をもつ数列の一般項","隣り合う2つの項の差が等差数列または等比数列","数列の和の式から一般項を求める","部分分数に分ける分数数列の和","平方根を含む数列の和","3つの因数をもつ分数数列の和","等差数列×等比数列の数列の和","群数列の第n群の最初の項と第n群の和","分数タイプの群数列","自然数がn個続く群数列","漸化式で表された数列","等差数列と等比数列の漸化式","階差数列をもつ数列の漸化式","特性方程式を用いる漸化式","図形の性質と漸化式","確率と漸化式","bn=an+1-anと置き換える漸化式","bn=an/nと置き換える漸化式","bn=an/2^nと置き換える漸化式","bn=1/anと置き換える漸化式","SnとAnを含む漸化式","2つの解をもつ隣接3項間漸化式","解の1つが1の隣接3項間漸化式","重解をもつ隣接3項間漸化式","等比数列に式変形する連立漸化式","隣接3項間漸化式にする連立漸化式","数学的帰納法を用いる等式の証明","数学的帰納法を用いる整数の性質の証明","数学的帰納法を用いる不等式の証明","数学的帰納法を用いる一般項の証明","二項定理を用いた証明"];
-var MATH_B_HEIMENB=["ベクトルの基本","ベクトルの実数倍・加法・減法","ベクトルの等式証明","ベクトルの演算","ベクトルの分解(正六角形のベクトル)","ベクトルの成分と大きさ","ベクトルの成分と式変形","ベクトルの成分と平行条件","点の座標とベクトルの成分","平行四辺形とベクトル","ベクトルの内積1(基本)","ベクトルの内積2(成分利用)","ベクトルのなす角","ベクトルの垂直条件","内積を用いた等式証明","内積の性質の利用(ベクトルの大きさと内積)","内分点・外分点の位置ベクトル","重心の位置ベクトル","3点が同一直線上にある条件","2直線の交点とベクトル","ベクトルと三角形の面積","直線のベクトル方程式","ベクトルと点の存在範囲","法線ベクトル","円のベクトル方程式"];
-var MATH_B_KUUKANB=["空間の点の座標","空間ベクトルの基本と分解","空間ベクトルの成分と大きさ","空間ベクトルの成分と式変形","空間の点とベクトルの成分","空間ベクトルの内積1(基本)","空間ベクトルの内積2(成分利用)","空間ベクトルの垂直条件","空間の位置ベクトル","空間の3点が同一直線上にある条件","空間の4点が同一平面上にある条件","延長線が平面上にある条件","空間ベクトルの内積と証明","球面の方程式"];
-var MATH_3=["極限","微分法（積・商・合成）","微分の応用（増減・グラフ）","積分法（置換・部分）","積分の応用（面積・体積）"];
-var MATH_C=["ベクトルの基本","ベクトルの内積","空間ベクトル","平面上の曲線（放物線・楕円・双曲線）","複素数平面","極座標"];
+var MATH_BY_GRADE={
+  "中1":[{label:"中1",units:MATH_J1,tag:"j1"}],
+  "中2":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"}],
+  "中3":[{label:"中1",units:MATH_J1,tag:"j1"},{label:"中2",units:MATH_J2,tag:"j2"},{label:"中3",units:MATH_J3,tag:"j3"}]
+};
+var SUCHI1_SHIKI=["単項式の次数と係数", "多項式の次数と定数項", "多項式の計算", "累乗の計算", "分配法則と展開", "２次式の展開と乗法公式", "３次式の展開", "式の展開の工夫", "２次式の因数分解", "因数分解（たすき掛け）", "３次式の因数分解", "因数分解の工夫", "文字式のたすき掛け", "２種類以上の文字を含む式の因数分解①（１次式）", "２種類以上の文字を含む式の因数分解②（２次式）", "複２次式の因数分解", "循環小数と分数", "絶対値の計算", "平方根の計算", "分母の有理化", "対称式", "整数部分と小数部分", "二重根号", "１次不等式の解", "連立不等式の解", "不等式を満たす整数の解", "１次不等式の文章問題", "絶対値を含む方程式と不等式", "場合分けの必要な絶対値を含む方程式と不等式"];
+var SUCHI1_SHUGO=["集合の表し方と要素", "集合の包含関係と部分集合", "共通部分と和集合", "補集合とド・モルガンの法則", "数直線と集合", "命題の真偽", "条件の真偽", "条件の否定①（かつ・または）", "条件の否定②（すべて・ある・ともに）", "必要条件と十分条件", "逆・裏・対偶", "対偶法", "背理法"];
+var SUCHI1_NIJI=["関数の値と象限", "関数の値域と最大値・最小値", "２次関数のグラフ", "２次関数の平方完成", "２次関数のグラフの平行移動", "平行移動後のグラフ", "グラフの対称移動", "２次関数の決定①（頂点）", "２次関数の決定②（３点を通る）", "２次関数の最大値・最小値", "２次関数の決定③（最大値・最小値）", "最大値・最小値の文章問題", "文字係数を含む２次関数の最大値・最小値", "定義域が変化する２次関数の最大値・最小値", "２次方程式の解", "２次方程式の解の個数", "２次方程式の解の条件", "解が与えられた２次方程式", "２次方程式の文章問題", "２次方程式の共通解", "２次関数とx軸との交点", "２次関数とx軸との交点の条件", "放物線と直線の交点", "２次不等式の解①（因数分解）", "２次不等式の解②（解の公式）", "２次不等式の解②（x軸と接する）", "２次不等式の解③（交点がない）", "連立２次不等式の解", "絶対不等式", "２次不等式の文章問題", "２次方程式の解の符号"];
+var SUCHI1_SANKAKU=["直角三角形と三角比", "三角比の値（鋭角）", "余角の公式", "三角比の相互関係の公式（鋭角）", "三角比の拡張", "三角比と方程式", "三角比と不等式", "補角の公式", "三角比の相互関係の公式（鈍角）", "三角比の等式証明", "直線の傾きと正接", "三角比と２次方程式", "三角比の式と値", "正弦定理", "余弦定理", "余弦定理と２次方程式", "三角形の辺と角の条件", "三角形の面積（三角比）", "内接円の半径", "角の二等分線の長さ", "円に内接する四角形", "直方体の計量", "正四面体の計量"];
+var SUCHI1_DATA=["平均値・中央値・最頻値", "度数分布表", "箱ひげ図", "分散と標準偏差", "度数分布表と分散", "散布図と相関", "相関係数"];
+var MATH1_SUSHIKI=["単項式の次数と係数", "多項式の次数と定数項", "多項式の計算", "累乗の計算", "分配法則と展開", "２次式の展開と乗法公式", "３次式の展開", "式の展開の工夫", "２次式の因数分解", "因数分解（たすき掛け）", "３次式の因数分解", "因数分解の工夫", "文字式のたすき掛け", "２種類以上の文字を含む式の因数分解①（１次式）", "２種類以上の文字を含む式の因数分解②（２次式）", "複２次式の因数分解", "循環小数と分数", "絶対値の計算", "平方根の計算", "分母の有理化", "対称式", "整数部分と小数部分", "二重根号", "１次不等式の解", "連立不等式の解", "不等式を満たす整数の解", "１次不等式の文章問題", "絶対値を含む方程式と不等式", "場合分けの必要な絶対値を含む方程式と不等式"];
+var MATH1_SHUGOU=["集合の表し方と要素", "集合の包含関係と部分集合", "共通部分と和集合", "補集合とド・モルガンの法則", "数直線と集合", "命題の真偽", "条件の真偽", "条件の否定①（かつ・または）", "条件の否定②（すべて・ある・ともに）", "必要条件と十分条件", "逆・裏・対偶", "対偶法", "背理法"];
+var MATH1_NIKANN=["関数の値と象限", "関数の値域と最大値・最小値", "２次関数のグラフ", "２次関数の平方完成", "２次関数のグラフの平行移動", "平行移動後のグラフ", "グラフの対称移動", "２次関数の決定①（頂点）", "２次関数の決定②（３点を通る）", "２次関数の最大値・最小値", "２次関数の決定③（最大値・最小値）", "最大値・最小値の文章問題", "文字係数を含む２次関数の最大値・最小値", "定義域が変化する２次関数の最大値・最小値", "２次方程式の解", "２次方程式の解の個数", "２次方程式の解の条件", "解が与えられた２次方程式", "２次方程式の文章問題", "２次方程式の共通解", "２次関数とx軸との交点", "２次関数とx軸との交点の条件", "放物線と直線の交点", "２次不等式の解①（因数分解）", "２次不等式の解②（解の公式）", "２次不等式の解②（x軸と接する）", "２次不等式の解③（交点がない）", "連立２次不等式の解", "絶対不等式", "２次不等式の文章問題", "２次方程式の解の符号"];
+var MATH1_SANKAKU=["直角三角形と三角比", "三角比の値（鋭角）", "余角の公式", "三角比の相互関係の公式（鋭角）", "三角比の拡張", "三角比と方程式", "三角比と不等式", "補角の公式", "三角比の相互関係の公式（鈍角）", "三角比の等式証明", "直線の傾きと正接", "三角比と２次方程式", "三角比の式と値", "正弦定理", "余弦定理", "余弦定理と２次方程式", "三角形の辺と角の条件", "三角形の面積（三角比）", "内接円の半径", "角の二等分線の長さ", "円に内接する四角形", "直方体の計量", "正四面体の計量"];
+var MATH1_DATA=["平均値・中央値・最頻値", "度数分布表", "箱ひげ図", "分散と標準偏差", "度数分布表と分散", "散布図と相関", "相関係数"];
+var MATH_A_BAAI=["集合の要素の個数", "補集合の要素の個数", "３つの集合の要素の個数", "和の法則と積の法則", "約数の個数と展開式の項の個数", "順列と階乗の記号", "文字の順列", "数字の順列", "円順列とじゅず順列", "条件付き円順列", "重複を許す順列", "２つのグループに分ける", "組合せの記号", "順列と組合せ", "図形と組合せ", "代表を選ぶ", "３つのグループに分ける", "同じものを含む順列", "最短経路問題", "重複組合せ", "等式を満たす自然数の組合せ", "確率の基本", "さいころの確率", "ボールを取り出す確率", "一列に並べる確率", "円形に並べる確率", "和事象と排反事象", "余事象の確率", "独立試行の確率", "反復試行の確率①（コイン）", "反復試行の確率②（さいころ）", "○勝先取の確率", "点が動く確率", "条件付き確率", "確率の乗法定理"];
+var MATH_A_SEISU=["除法の性質", "整数の分類と証明", "約数と倍数", "倍数判別法", "素因数分解", "約数の個数・平方数", "等式を満たす整数の組", "最大公約数と最小公倍数", "最大公約数と最小公倍数の関係式", "ユークリッドの互除法", "不定方程式①", "不定方程式②（互除法）", "不定方程式の利用", "n進法①（10進法で表す）", "n進法②（n進法で表す）", "n進法と小数", "n進法のたし算", "n進法のひき算", "n進法のかけ算", "分数と小数"];
+var MATH_A_ZUKEI=["内分点と外分点の位置", "中点連結定理と平行線と比", "角の二等分線と比", "三角形の外心", "三角形の内心", "三角形の垂心", "三角形の重心", "チェバの定理", "メネラウスの定理", "三角形の辺と角の大小関係", "三角形になるための条件", "円周角と中心角", "円に内接する四角形と角", "接弦定理", "内接円と接線の条件", "方べきの定理", "２つの円の位置関係と共通接線", "共通接線の長さ", "作図の基本", "内分点と外分点の作図", "分数倍の作図", "平方根の値の作図", "空間図形の位置関係"];
+var MATH_A=MATH_A_BAAI;
+var MATH2_SHIKI=["3次式の展開(数学I)", "3次式の因数分解(数学I)", "6次式の因数分解", "二項定理", "多項定理", "二項定理の利用", "整式の割り算", "分数式の計算", "通分を用いる分数式の計算", "分母や分子に分数式を含む式", "恒等式", "等式の証明", "条件付き等式の証明", "比例式と等式の証明", "不等式の証明1(条件付き)", "不等式の証明2(2次式)", "不等式の証明3(平方根)", "不等式の証明4(絶対値)", "相加平均と相乗平均"];
+var MATH2_FUKUSO=["複素数の相等", "複素数の計算", "共役な複素数と式の値", "分数と複素数", "負の数の平方根", "2次方程式の虚数解", "複素数範囲での2次方程式の解の条件", "2次方程式の解と係数の関係", "2つの解の条件と解と係数の関係", "複素数範囲での因数分解", "解が与えられた2次方程式", "2次方程式の解の符号", "剰余の定理", "剰余の定理と余りの決定", "因数定理を用いる因数分解", "高次方程式の解1(3次方程式)", "高次方程式の解2(4次方程式)", "3次方程式の虚数解", "1の3乗根"];
+var MATH2_ZUKEI=["直線上の線分の長さ・内分点・外分点", "平面上の線分の長さ", "平面上の三角形の形状", "線分の長さの条件", "平面上の内分点・外分点・重心", "点に対して対称な点", "平行四辺形を作る点の座標", "座標を利用した等式の証明", "直線の方程式", "2点を通る直線の方程式", "平行な直線と垂直な直線", "直線に対して対称な点", "垂直二等分線の方程式", "3直線が1点で交わる", "2直線の交点を通る直線", "点と直線との距離", "定点を通る直線の方程式", "円の方程式", "円の方程式の決定1(点の条件)", "円の方程式の決定2(接する条件)", "円の方程式を表す条件", "円と直線との共有点", "円と直線との位置関係", "円によって切り取られる線分", "円の接線の方程式", "2つの円の位置関係", "2つの円の共有点の座標", "2つの円の交点を通る円・直線", "軌跡1", "軌跡2(動点を含む)", "不等式の表す領域", "連立不等式の表す領域1", "連立不等式の表す領域2(積の形)", "線形計画法", "領域を用いた証明"];
+var MATH2_SANKAKU=["動径と一般角", "弧度法と扇形", "三角関数の値(単位円)", "【問題演習】三角関数の値(単位円)", "三角関数の相互関係の公式", "三角関数の式の値", "三角関数の等式の証明", "三角関数の性質1", "三角関数の性質2", "三角関数のグラフ1", "三角関数のグラフ2(縦幅の変化)", "三角関数のグラフ3(周期の変化)", "三角関数のグラフ4(平行移動)", "三角関数のグラフ5(式変形)", "三角関数を含む方程式1", "【問題演習】三角関数を含む方程式", "三角関数を含む方程式2(範囲変化)", "三角関数を含む不等式1", "三角関数を含む不等式2(範囲変化)", "三角関数を含む2次方程式", "三角関数を含む2次不等式", "三角関数を含む2次関数", "加法定理", "加法定理と式の値", "2直線のなす角", "2倍角の公式", "半角の公式", "2倍角を含む方程式・不等式", "三角関数の合成", "合成を用いる方程式と不等式", "三角関数の最大値・最小値"];
+var MATH2_SHISU=["指数法則の基本", "累乗根", "指数法則の拡張", "指数法則を用いた計算", "指数関数のグラフ", "指数の大小比較", "指数方程式", "指数不等式", "指数関数を含む2次方程式", "指数関数を含む2次不等式", "指数関数の最大値・最小値", "指数と対数", "対数の値", "対数の計算", "底の変換公式", "対数関数の式の値", "対数関数のグラフ", "指数関数と対数関数のグラフの位置関係", "対数の大小比較", "対数方程式", "対数不等式", "対数を含む2次式", "対数を含む関数の最大値・最小値", "常用対数(桁数問題・小数第何位)"];
+var MATH2_BIBUN=["平均変化率", "極限値", "微分係数", "導関数", "微分の計算", "2次関数の決定(微分係数の利用)", "接線の方程式1", "接線の方程式2(外部の点から引いた接線)", "3次関数のグラフと増減表", "3次関数の最大値・最小値", "極値の条件と関数の決定", "3次方程式の解の個数1", "3次方程式の解の個数2(定数分離法)", "3次不等式の証明", "4次関数のグラフと増減表", "不定積分", "不定積分と関数の決定", "接線の傾きの条件と関数の決定", "定積分の計算", "定積分を含む式", "定積分で表された関数", "定積分と面積1(x軸と囲まれた面積)", "定積分と面積2(2つの関数で囲まれた面積)", "定積分と面積3(区間付きの面積)", "絶対値を含む関数の定積分"];
+var MATH_2=MATH2_SHIKI;
+var MATH_B_SUURETU=["一般項とそれぞれの項の求め方", "数列の一般項の推測", "等差数列と公差", "等差数列の一般項", "等差数列の項から一般項を求める", "等差数列であることの証明", "数列a,b,cが等差数列(等差中項)", "等差数列の和", "項数を調べる等差数列の和", "等差数列の和から項数を求める", "自然数の和と倍数の和", "2桁の条件の自然数の和", "等差数列の和の最大値・最小値", "等差数列の部分和", "等差数列の項と和から一般項を求める", "2つの等差数列の共通項の数列", "等比数列と公比", "等比数列の一般項", "等比数列の項から一般項を求める", "等比数列であることの証明", "数列a,b,cが等比数列(等比中項)", "等比数列の和", "等比数列の項と和から初項と公比を求める", "等比数列の和から初項と公比を求める", "等比数列のa1+a2とa3+a4の値", "自然数の2乗の和と3乗の和", "シグマ記号を項の和で表す", "項の和をシグマ記号で表す", "シグマ記号の書き換え", "等比数列の和とシグマ記号", "シグマ記号の公式", "シグマ記号の性質と公式", "シグマ記号で表し和を求める", "一般項が数列の和となる数列の和", "nから下がっていく数列の和", "階差数列をもつ数列の一般項", "隣り合う2つの項の差が等差数列または等比数列", "数列の和の式から一般項を求める", "部分分数に分ける分数数列の和", "平方根を含む数列の和", "3つの因数をもつ分数数列の和", "等差数列×等比数列の数列の和", "群数列の第n群の最初の項と第n群の和", "分数タイプの群数列", "自然数がn個続く群数列", "漸化式で表された数列", "等差数列と等比数列の漸化式", "階差数列をもつ数列の漸化式", "特性方程式を用いる漸化式", "図形の性質と漸化式", "確率と漸化式", "bn=an+1-anと置き換える漸化式", "bn=an/nと置き換える漸化式", "bn=an/2^nと置き換える漸化式", "bn=1/anと置き換える漸化式", "SnとAnを含む漸化式", "2つの解をもつ隣接3項間漸化式", "解の1つが1の隣接3項間漸化式", "重解をもつ隣接3項間漸化式", "等比数列に式変形する連立漸化式", "隣接3項間漸化式にする連立漸化式", "数学的帰納法を用いる等式の証明", "数学的帰納法を用いる整数の性質の証明", "数学的帰納法を用いる不等式の証明", "数学的帰納法を用いる一般項の証明", "二項定理を用いた証明"];
+var MATH_B_HEIMENB=["ベクトルの基本", "ベクトルの実数倍・加法・減法", "ベクトルの等式証明", "ベクトルの演算", "ベクトルの分解(正六角形のベクトル)", "ベクトルの成分と大きさ", "ベクトルの成分と式変形", "ベクトルの成分と平行条件", "点の座標とベクトルの成分", "平行四辺形とベクトル", "ベクトルの内積1(基本)", "ベクトルの内積2(成分利用)", "ベクトルのなす角", "ベクトルの垂直条件", "内積を用いた等式証明", "内積の性質の利用(ベクトルの大きさと内積)", "内分点・外分点の位置ベクトル", "重心の位置ベクトル", "3点が同一直線上にある条件", "2直線の交点とベクトル", "ベクトルと三角形の面積", "直線のベクトル方程式", "ベクトルと点の存在範囲", "法線ベクトル", "円のベクトル方程式"];
+var MATH_B_KUUKANB=["空間の点の座標", "空間ベクトルの基本と分解", "空間ベクトルの成分と大きさ", "空間ベクトルの成分と式変形", "空間の点とベクトルの成分", "空間ベクトルの内積1(基本)", "空間ベクトルの内積2(成分利用)", "空間ベクトルの垂直条件", "空間の位置ベクトル", "空間の3点が同一直線上にある条件", "空間の4点が同一平面上にある条件", "延長線が平面上にある条件", "空間ベクトルの内積と証明", "球面の方程式"];
+var MATH_B=MATH_B_SUURETU;
+var MATH_3=["極限", "微分法（積・商・合成）", "微分の応用（増減・グラフ）", "積分法（置換・部分）", "積分の応用（面積・体積）"];
+var MATH_C=["ベクトルの基本", "ベクトルの内積", "空間ベクトル", "平面上の曲線（放物線・楕円・双曲線）", "複素数平面", "極座標"];
 var HIGH_MATH={
-  "数学Ⅰ":[{label:"数と式",units:MATH1_SUSHIKI,tag:"h1a"},{label:"集合と論理",units:MATH1_SHUGOU,tag:"h1b"},{label:"２次関数",units:MATH1_NIKANN,tag:"h1c"},{label:"三角比",units:MATH1_SANKAKU,tag:"h1d"},{label:"データの分析",units:MATH1_DATA,tag:"h1e"}],
-  "数学A":[{label:"場合の数と確率",units:MATH_A_BAAI,tag:"ha1"},{label:"整数の性質",units:MATH_A_SEISU,tag:"ha2"},{label:"図形の性質",units:MATH_A_ZUKEI,tag:"ha3"}],
-  "数学Ⅱ":[{label:"式と証明",units:MATH2_SHIKI,tag:"h2a"},{label:"複素数と方程式",units:MATH2_FUKUSO,tag:"h2b"},{label:"図形と方程式",units:MATH2_ZUKEI,tag:"h2c"},{label:"三角関数",units:MATH2_SANKAKU,tag:"h2d"},{label:"指数・対数関数",units:MATH2_SHISU,tag:"h2e"},{label:"微分・積分",units:MATH2_BIBUN,tag:"h2f"}],
-  "数学B":[{label:"数列",units:MATH_B_SUURETU,tag:"hb1"},{label:"平面ベクトル",units:MATH_B_HEIMENB,tag:"hb2"},{label:"空間ベクトル",units:MATH_B_KUUKANB,tag:"hb3"}],
+  "数学Ⅰ":[
+    {label:"数と式",units:MATH1_SUSHIKI,tag:"h1a"},
+    {label:"集合と論理",units:MATH1_SHUGOU,tag:"h1b"},
+    {label:"２次関数",units:MATH1_NIKANN,tag:"h1c"},
+    {label:"三角比",units:MATH1_SANKAKU,tag:"h1d"},
+    {label:"データの分析",units:MATH1_DATA,tag:"h1e"}
+  ],
+  "数学A":[
+    {label:"場合の数と確率",units:MATH_A_BAAI,tag:"ha1"},
+    {label:"整数の性質",units:MATH_A_SEISU,tag:"ha2"},
+    {label:"図形の性質",units:MATH_A_ZUKEI,tag:"ha3"}
+  ],
+  "数学Ⅱ":[
+    {label:"式と証明",units:MATH2_SHIKI,tag:"h2a"},
+    {label:"複素数と方程式",units:MATH2_FUKUSO,tag:"h2b"},
+    {label:"図形と方程式",units:MATH2_ZUKEI,tag:"h2c"},
+    {label:"三角関数",units:MATH2_SANKAKU,tag:"h2d"},
+    {label:"指数・対数関数",units:MATH2_SHISU,tag:"h2e"},
+    {label:"微分・積分",units:MATH2_BIBUN,tag:"h2f"}
+  ],
+  "数学B":[
+    {label:"数列",units:MATH_B_SUURETU,tag:"hb1"},
+    {label:"平面ベクトル",units:MATH_B_HEIMENB,tag:"hb2"},
+    {label:"空間ベクトル",units:MATH_B_KUUKANB,tag:"hb3"}
+  ],
   "数学Ⅲ":[{label:"数学Ⅲ",units:MATH_3,tag:"h3"}],
   "数学C":[{label:"数学C",units:MATH_C,tag:"hc"}]
+};
+var KOUKO_MATH_BY_SUBJ={
+  "数学Ⅰ":[
+    {label:"数と式",units:MATH1_SUSHIKI,tag:"m1s"},
+    {label:"集合と論理",units:MATH1_SHUGOU,tag:"m1g"},
+    {label:"２次関数",units:MATH1_NIKANN,tag:"m1n"},
+    {label:"三角比",units:MATH1_SANKAKU,tag:"m1t"},
+    {label:"データ分析",units:MATH1_DATA,tag:"m1d"}
+  ],
+  "数学A":[{label:"数学A",units:MATH_A,tag:"ma"}],
+  "数学Ⅱ":[{label:"数学Ⅱ",units:MATH_2,tag:"m2"}],
+  "数学B":[{label:"数学B",units:MATH_B,tag:"mb"}],
+  "数学Ⅲ":[{label:"数学Ⅲ",units:MATH_3,tag:"m3"}],
+  "数学C":[{label:"数学C",units:MATH_C,tag:"mc"}]
 };
 var ENG_J1=["I am～の文","一般動詞の肯定文と否定文","canの肯定文と否定文","You are～の肯定文と疑問文","一般動詞の疑問文","canの疑問文","What do you～？の文","動詞の～ing形（動名詞）","want to～（不定詞名詞的用法）","He is～.とShe is～.の文","Who is～？の文","This is～.とHe is～.の疑問文と否定文","Whoseで始まる疑問文","代名詞（主格・所有格・目的格）","命令文","Whereで始まる疑問文","Whenで始まる疑問文","Can I～?/Which/How much(many)～？の疑問文","主語が３人称単数の一般動詞の文","３人称単数の疑問文と否定文","What time～？の文","How can I～？/How long～？の文","一般動詞の過去形","一般動詞の過去の疑問文と否定文","be動詞の過去形","現在進行形（肯定/疑問/否定）","過去進行形"];
 var ENG_J2=["一般動詞の過去形/be動詞の過去形","接続詞when","look(sound)+形容詞","This is～./Can you～？","動名詞","不定詞（名詞的用法）","接続詞that","be going to～の文","will～の文","接続詞if","Shall I～？/Would you like～？","There is（are）～の文","show+人+もの","不定詞（形容詞的用法）","must","have to/don't have to","It is～for+人+to+動詞の原形","助動詞を使った会話文/should/how to","不定詞（副詞的用法：目的～するために）","接続詞because","不定詞（副詞的用法：感情の原因～して）","比較級/最上級(er,est)","比較級/最上級(more,most)","as～asの文","want(tell,ask)+人+不定詞","make+人+形容詞/call+人+名詞","受け身の文"];
 var ENG_J3=["受け身の文","let(help)+人+もの+動詞の原形（原形不定詞）","tell+人+that+文","現在完了形（完了）","現在完了形（完了）の疑問文と否定文","現在完了形（経験）","現在完了進行形","疑問詞+to+動詞の原形","関係代名詞which（主格）","関係代名詞who（主格）","関係代名詞that（主格）","関係代名詞which（目的格）","関係代名詞that（目的格）","後置修飾（名詞+主語+動詞）","現在分詞の後置修飾","過去分詞の後置修飾","間接疑問文","仮定法（If I could～）","仮定法（I wish I could～）","付加疑問文/否定疑問文"];
-var ENG_BY_GRADE={"中1":[{label:"中1",units:ENG_J1,tag:"e1"}],"中2":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"}],"中3":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"},{label:"中3",units:ENG_J3,tag:"e3"}]};
+var ENG_BY_GRADE={
+  "中1":[{label:"中1",units:ENG_J1,tag:"e1"}],
+  "中2":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"}],
+  "中3":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"},{label:"中3",units:ENG_J3,tag:"e3"}]
+};
 var GENERIC_UNITS={
   "算数（小4）":["大きな数","整数の計算","わり算","小数","分数","面積","角","垂直・平行","四角形","表とグラフ","変わり方調べ"],
   "算数（小5）":["整数と小数","小数のかけ算","小数のわり算","合同な図形","三角形・四角形の角","分数の大小","分数のたし算・ひき算","面積","体積","割合","百分率","円グラフ・帯グラフ","単位量あたりの大きさ","速さ","平均","四角形と三角形の面積"],
   "算数（小6）":["分数のかけ算","分数のわり算","文字と式","比","比例と反比例","円の面積","立体の体積","拡大・縮小","場合の数","データの活用","対称な図形"],
   "国語（中）":["漢字の読み書き","語彙","文法（品詞・活用）","文法（文の成分）","説明文の読解","物語文の読解","詩・短歌・俳句","古文の基礎","漢文の基礎","作文・表現"],
   "国語（高）":["現代文（評論）","現代文（随筆）","現代語文法","古文文法","古文読解","漢文句法","漢文読解","小論文・記述"],
-  "英語（高）":["時制","助動詞","受動態","不定詞","動名詞","分詞","比較","関係詞","仮定法","話法","接続詞","前置詞","構文解釈","長文読解","英作文","リスニング"],
+  "英語（中）":["I am～の文","一般動詞の肯定文と否定文","canの肯定文と否定文","You are～の肯定文と疑問文","一般動詞の疑問文","canの疑問文","What do you～？の文","動詞の～ing形（動名詞）","want to～（不定詞名詞的用法）","He is～.とShe is～.の文","Who is～？の文","This is～.とHe is～.の疑問文と否定文","Whoseで始まる疑問文","代名詞（主格・所有格・目的格）","命令文","Whereで始まる疑問文","Whenで始まる疑問文","Can I～?/Which/How much(many)～？の疑問文","主語が３人称単数の一般動詞の文","３人称単数の疑問文と否定文","What time～？の文","How can I～？/How long～？の文","一般動詞の過去形","一般動詞の過去の疑問文と否定文","be動詞の過去形","現在進行形（肯定/疑問/否定）","過去進行形"],
+  "英語（高）":["品詞", "句", "節", "第1文型（SV）", "第2文型（SVC）", "第3文型（SVO）・自動詞と他動詞", "第4文型（SVOO）", "第5文型（SVOC）① 第5文型の基本", "第5文型（SVOC）② 使役動詞と知覚動詞", "基本時制", "進行形", "現在完了", "過去完了・未来完了", "完了進行形・時/条件を表す副詞節中の時制", "助動詞の基本", "助動詞+have+過去分詞", "その他の助動詞・助動詞の重要表現", "第3文型（SVO）の受動態", "第4文型（SVOO）の受動態", "第5文型（SVOC）の受動態", "句動詞の受動態・受動態の重要表現", "不定詞の名詞的用法", "不定詞の形式主語/目的語・意味上の主語", "不定詞を目的語にとる動詞・不定詞の否定/受身/完了形", "疑問詞/be動詞+to do", "不定詞の形容詞的用法", "不定詞の副詞的用法① 動詞修飾", "不定詞の副詞的用法② 形容詞修飾・重要表現", "動名詞の基本", "動名詞の意味上の主語", "動名詞の否定/受身/完了形", "動名詞の重要表現", "動名詞を目的語にとる動詞", "不定詞と動名詞の両方を目的語にとる動詞", "現在分詞と過去分詞・分詞の名詞修飾", "補語になる分詞・人の感情を表す分詞形容詞", "分詞構文の基本", "分詞構文の否定/受身/完了形・独立分詞構文", "付帯状況のwith・分詞構文の重要表現", "主格/目的格の関係代名詞", "所有格の関係代名詞・非制限用法", "関係代名詞what", "特殊な関係代名詞・関係代名詞+I think", "前置詞+関係代名詞", "関係副詞の基本", "関係副詞の非制限用法・先行詞の省略", "複合関係代名詞・複合関係形容詞", "複合関係副詞", "仮定法過去", "仮定法過去完了", "条件節と帰結節の時制が異なる仮定法・未来の仮定", "仮定法現在", "仮定法の重要表現", "「もし~がなければ」の表現・仮定法の倒置", "if節のない仮定法", "原級比較", "比較級", "最上級", "倍数・差・強調を表す比較表現", "比較の重要表現", "否定文・否定語", "部分否定と全体否定", "二重否定・否定の重要表現", "直接話法と間接話法・時制の一致", "時制の一致の例外・伝達動詞", "Yes/No疑問文・疑問詞の疑問文", "否定疑問・付加疑問", "間接疑問", "省略・倒置", "強調", "可算名詞と不可算名詞", "冠詞", "代名詞itとone", "otherとanother・代名詞の重要表現", "形容詞の限定用法と叙述用法", "数量・割合を表す表現", "時を表す表現", "場所を表す表現", "副詞節を導く接続詞", "文や節をつなぐ表現"],
   "理科（中）":["植物のからだ","動物のからだ","物質とその性質","状態変化","気体の性質","水溶液","化学変化","イオン","力とはたらき","光と音","電流と電圧","磁界","運動とエネルギー","地震と岩石","大気と天気","地球と宇宙"],
   "社会（中）":["地理（地図・地形）","地理（気候・人口）","地理（日本各地）","地理（世界各地）","歴史（原始～古代）","歴史（中世）","歴史（近世）","歴史（近代）","歴史（現代）","公民（憲法・政治）","公民（経済・国際）"],
   "物理":["力と運動","仕事とエネルギー","波動","電気と磁気","熱","原子・核"],
@@ -228,24 +330,22 @@ var GENERIC_UNITS={
   "世界史":["古代文明","中世ヨーロッパ・イスラム","近世（大航海時代）","近代（市民革命・産業革命）","帝国主義と世界大戦","冷戦と現代"],
   "地理":["地図と地形","気候","人口と都市","産業（農業・工業）","日本の地誌","世界の地誌"]
 };
-var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
-var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要"];
-var ACH_OPTS=[{val:"①理解も正答数も良好",bg:"#EAF3DE",col:"#27500A",bdr:"#97C459"},{val:"②理解はしているが正答率もう１歩",bg:"#FAEEDA",col:"#633806",bdr:"#EF9F27"},{val:"③理解があと１歩",bg:"#FCEBEB",col:"#791F1F",bdr:"#F09595"}];
-var SIT_OPTS=[{val:"①もともとできていた",bg:"#E6F1FB",col:"#0C447C",bdr:"#85B7EB"},{val:"②指導・要点確認後できるようになった",bg:"#EAF3DE",col:"#27500A",bdr:"#97C459"},{val:"③以前と比べてよくできている",bg:"#EEEDFE",col:"#3C3489",bdr:"#AFA9EC"},{val:"④今後の成長に期待",bg:"#F1EFE8",col:"#444441",bdr:"#B4B2A9"}];
-var TAB_COLORS=["active-h0","active-h1","active-h2","active-h3","active-h4","active-h5"];
-var LABEL_MAP={j1:"【中1の内容】",j2:"【中2の内容】",j3:"【中3の内容】",e1:"【中1の内容】",e2:"【中2の内容】",e3:"【中3の内容】",h1a:"【数と式】",h1b:"【集合と論理】",h1c:"【２次関数】",h1d:"【三角比】",h1e:"【データの分析】",ha1:"【場合の数と確率】",ha2:"【整数の性質】",ha3:"【図形の性質】",h2a:"【式と証明】",h2b:"【複素数と方程式】",h2c:"【図形と方程式】",h2d:"【三角関数】",h2e:"【指数・対数関数】",h2f:"【微分・積分】",hb1:"【数列】",hb2:"【平面ベクトル】",hb3:"【空間ベクトル】",h3:"【数学Ⅲ】",hc:"【数学C】"};
+
+var currentTag=null;
 
 function onGradeChange(){
-  var g=document.getElementById("gradeSelect").value;
-  var ss=document.getElementById("studentSelect");
-  var subj=document.getElementById("subjectSelect");
+  var g=document.getElementById('gradeSelect').value;
+  var ss=document.getElementById('studentSelect');
+  var subj=document.getElementById('subjectSelect');
   ss.innerHTML='<option value="">-- 生徒を選択 --</option>';
   subj.innerHTML='<option value="">-- 科目を選択 --</option>';
-  document.getElementById("unitSection").style.display="none";
+  document.getElementById('unitSection').style.display='none';
+  currentTag=null;
   if(!g)return;
-  (STUDENTS[g]||[]).forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;ss.appendChild(o);});
-  (SUBJECTS[g]||[]).forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;subj.appendChild(o);});
+  (STUDENTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
+  (SUBJECTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;subj.appendChild(o);});
 }
+
 function getSubjectKey(grade,subj){
   if(subj==="算数"){if(grade==="小4")return"算数（小4）";if(grade==="小5")return"算数（小5）";if(grade==="小6")return"算数（小6）";}
   if(subj==="国語")return grade.indexOf("高")===0?"国語（高）":"国語（中）";
@@ -254,150 +354,318 @@ function getSubjectKey(grade,subj){
   if(subj==="社会")return"社会（中）";
   return subj;
 }
-function buildIssueChecks(items,wrapId){
-  var wrap=document.getElementById(wrapId);wrap.innerHTML="";
-  items.forEach(function(item){var lbl=document.createElement("label");var cb=document.createElement("input");cb.type="checkbox";cb.value=item;lbl.appendChild(cb);lbl.appendChild(document.createTextNode(item));wrap.appendChild(lbl);});
+
+var SUB_NASHI=[
+  {val:"③もともとよくできていた",cls:"nashi3"},
+  {val:"④充分な指導時間がとれなかったため次回以降も要フォロー",cls:"nashi4"}
+];
+var SUB_ARI=[
+  {val:"⑤よくできるようになった",cls:"ari5"},
+  {val:"⑥できるようになったが自力での正答率はもう一歩",cls:"ari6"},
+  {val:"⑦充分な指導・演習時間がとれなかったため次回以降も要フォロー",cls:"ari7"}
+];
+var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
+var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要"];
+
+function buildIssueChecks(items,wrapId,prefix){
+  var wrap=document.getElementById(wrapId);
+  wrap.innerHTML='';
+  items.forEach(function(item,i){
+    var lbl=document.createElement('label');
+    lbl.style.cssText='display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer';
+    var cb=document.createElement('input');
+    cb.type='checkbox';cb.id=prefix+'_'+i;cb.value=item;
+    cb.style.cssText='width:15px;height:15px;accent-color:#7F77DD;flex-shrink:0';
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(item));
+    wrap.appendChild(lbl);
+  });
 }
+
 function onSubjectChange(){
-  var g=document.getElementById("gradeSelect").value;
-  var s=document.getElementById("subjectSelect").value;
-  var sec=document.getElementById("unitSection");
-  var tabsArea=document.getElementById("tabsArea");
-  var wrap=document.getElementById("unitPanelsWrap");
-  var engSec=document.getElementById("engIssueSection");
-  var mathSec=document.getElementById("mathIssueSection");
-  if(!g||!s){sec.style.display="none";return;}
-  sec.style.display="block";wrap.innerHTML="";tabsArea.style.display="none";
+  var g=document.getElementById('gradeSelect').value;
+  var s=document.getElementById('subjectSelect').value;
+  var sec=document.getElementById('unitSection');
+  var tabsArea=document.getElementById('mathGradeTabs');
+  var wrap=document.getElementById('unitPanelsWrap');
+  var engSec=document.getElementById('engIssueSection');
+  var mathSec=document.getElementById('mathIssueSection');
+  if(!g||!s){sec.style.display='none';return;}
+  sec.style.display='block';
+  currentTag=null;
+  wrap.innerHTML='';
+  tabsArea.style.display='none';
   var isEng=(s==="英語");
-  var isMath=(s==="数学"||HIGH_MATH[s]||s==="算数");
-  engSec.style.display=isEng?"block":"none";
-  mathSec.style.display=isMath?"block":"none";
-  if(isEng)buildIssueChecks(ENG_ISSUES,"engIssueChecks");
-  if(isMath)buildIssueChecks(MATH_ISSUES,"mathIssueChecks");
+  var isMath=(s==="数学"||s==="数学Ⅰ"||s==="数学A"||s==="数学Ⅱ"||s==="数学B"||s==="数学Ⅲ"||s==="数学C"||s==="算数");
+  var isEngTab=(isEng&&(g==="中2"||g==="中3"));
+  engSec.style.display=isEng?'block':'none';
+  mathSec.style.display=isMath?'block':'none';
+  if(isEng)buildIssueChecks(ENG_ISSUES,'engIssueChecks','eng_issue');
+  if(isMath)buildIssueChecks(MATH_ISSUES,'mathIssueChecks','math_issue');
   if(s==="数学"&&MATH_BY_GRADE[g]){
-    tabsArea.style.display="block";buildTabPanels(MATH_BY_GRADE[g]);
-    document.getElementById("unitCount").textContent="学年タブを選択してください";
-  } else if(isEng&&(g==="中2"||g==="中3")&&ENG_BY_GRADE[g]){
-    tabsArea.style.display="block";buildTabPanels(ENG_BY_GRADE[g]);
-    document.getElementById("unitCount").textContent="学年タブを選択してください";
-  } else if(HIGH_MATH[s]){
-    var groups=HIGH_MATH[s];
-    if(groups.length>1){tabsArea.style.display="block";buildTabPanels(groups);document.getElementById("unitCount").textContent="分野タブを選択してください";}
-    else{var panel=buildUnitPanel(groups[0].units,groups[0].tag);panel.style.display="block";wrap.appendChild(panel);updateUnitCount();}
+    tabsArea.style.display='block';
+    buildMathPanels(g);
+    document.getElementById('unitCount').textContent='学年タブを選択してください';
+  } else if(isEngTab&&ENG_BY_GRADE[g]){
+    tabsArea.style.display='block';
+    buildEngTabs(g);
+    document.getElementById('unitCount').textContent='学年タブを選択してください';
+  } else if(HIGH_MATH[s]&&HIGH_MATH[s].length>1){
+    tabsArea.style.display='block';
+    buildHighMathTabs(s);
+    document.getElementById('unitCount').textContent='単元を選択してください';
   } else {
     var key=getSubjectKey(g,s);
-    var units=isEng&&g==="中1"?ENG_J1:GENERIC_UNITS[key];
-    if(units&&units.length>0){var panel=buildUnitPanel(units,null);panel.style.display="block";wrap.appendChild(panel);}
+    var units;
+    if(HIGH_MATH[s]&&HIGH_MATH[s].length===1){
+      units=HIGH_MATH[s][0].units;
+    } else if(isEng&&g==="中1"){
+      units=ENG_J1;
+    } else {
+      units=GENERIC_UNITS[key];
+    }
+    if(units&&units.length>0){var panel=buildUnitPanel(units,null);panel.style.display='block';wrap.appendChild(panel);}
     else{wrap.innerHTML='<div class="empty-msg">この科目の単元は随時追加されます</div>';}
     updateUnitCount();
   }
 }
-function buildTabPanels(groups){
-  var inner=document.getElementById("gradeTabsInner");
-  var wrap=document.getElementById("unitPanelsWrap");
-  inner.innerHTML="";wrap.innerHTML="";
+
+function buildHighMathTabs(subj){
+  var inner=document.getElementById('gradeTabsInner');
+  var wrap=document.getElementById('unitPanelsWrap');
+  inner.innerHTML='';wrap.innerHTML='';
+  var groups=HIGH_MATH[subj]||[];
+  var colors=['active-j1','active-j2','active-j3','active-e1','active-e2'];
   groups.forEach(function(g,i){
-    var btn=document.createElement("button");
-    btn.className="grade-tab";btn.id="tab_"+g.tag;btn.textContent=g.label;
-    var panel=buildUnitPanel(g.units,g.tag);panel.id="panel_"+g.tag;wrap.appendChild(panel);
-    var col=TAB_COLORS[i%TAB_COLORS.length];
-    (function(tag,c,gs){btn.addEventListener("click",function(){
-      inner.querySelectorAll(".grade-tab").forEach(function(b){b.className="grade-tab";b.style.opacity="0.45";});
-      btn.className="grade-tab "+c;btn.style.opacity="1";
-      gs.forEach(function(gg){var p=document.getElementById("panel_"+gg.tag);if(p)p.style.display=gg.tag===tag?"block":"none";});
+    var btn=document.createElement('button');
+    btn.className='grade-tab';btn.id='tab_'+g.tag;btn.textContent=g.label;
+    var panel=buildUnitPanel(g.units,g.tag);panel.id='panel_'+g.tag;wrap.appendChild(panel);
+    var color=colors[i%colors.length];
+    (function(tag,col){btn.addEventListener('click',function(){
+      groups.forEach(function(gg){
+        var b=document.getElementById('tab_'+gg.tag);if(!b)return;
+        b.style.opacity='1';
+        b.className=gg.tag===tag?'grade-tab '+col:'grade-tab';
+        if(gg.tag!==tag)b.style.opacity='0.45';
+        var p=document.getElementById('panel_'+gg.tag);
+        if(p)p.style.display=gg.tag===tag?'block':'none';
+      });
       updateUnitCount();
-    });})(g.tag,col,groups);
+    });})(g.tag,color);
     inner.appendChild(btn);
   });
 }
-function buildUnitPanel(units,tag){
-  var panel=document.createElement("div");panel.style.display="none";
-  var tbl=document.createElement("table");tbl.className="unit-table";
-  tbl.innerHTML='<thead><tr><th style="width:28%">単元名</th><th style="width:36%">達成度</th><th>状況</th></tr></thead>';
-  var tb=document.createElement("tbody");
-  units.forEach(function(u,i){
-    var uid="u_"+(tag||"g")+"_"+i;
-    var tr=document.createElement("tr");
-    var tdName=document.createElement("td");tdName.style.fontSize="12px";tdName.textContent=u;
-    var tdAch=document.createElement("td");var achWrap=document.createElement("div");
-    ACH_OPTS.forEach(function(opt){
-      var btn=document.createElement("button");btn.className="sel-btn";btn.dataset.val=opt.val;
-      btn.textContent=opt.val;btn.style.background=opt.bg;btn.style.color=opt.col;btn.style.borderColor=opt.bdr;
-      btn.addEventListener("click",function(){achWrap.querySelectorAll(".sel-btn").forEach(function(b){b.classList.remove("on");});btn.classList.add("on");updateTabBadge(tag);});
-      achWrap.appendChild(btn);
-    });
-    tdAch.appendChild(achWrap);
-    var tdSit=document.createElement("td");var sitWrap=document.createElement("div");
-    SIT_OPTS.forEach(function(opt){
-      var btn=document.createElement("button");btn.className="sel-btn";btn.dataset.val=opt.val;
-      btn.textContent=opt.val;btn.style.background=opt.bg;btn.style.color=opt.col;btn.style.borderColor=opt.bdr;
-      btn.addEventListener("click",function(){sitWrap.querySelectorAll(".sel-btn").forEach(function(b){b.classList.remove("on");});btn.classList.add("on");updateTabBadge(tag);});
-      sitWrap.appendChild(btn);
-    });
-    tdSit.appendChild(sitWrap);
-    tr.appendChild(tdName);tr.appendChild(tdAch);tr.appendChild(tdSit);tb.appendChild(tr);
+
+function buildEngTabs(studentGrade){
+  var inner=document.getElementById('gradeTabsInner');
+  var wrap=document.getElementById('unitPanelsWrap');
+  inner.innerHTML='';wrap.innerHTML='';
+  var groups=ENG_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.createElement('button');
+    btn.className='grade-tab';btn.id='tab_'+g.tag;btn.textContent=g.label+'の内容';
+    var panel=buildUnitPanel(g.units,g.tag);panel.id='panel_'+g.tag;wrap.appendChild(panel);
+    (function(tag){btn.addEventListener('click',function(){switchEngTab(studentGrade,tag);});})(g.tag);
+    inner.appendChild(btn);
   });
-  tbl.appendChild(tb);panel.appendChild(tbl);return panel;
 }
+
+function switchEngTab(studentGrade,tag){
+  var groups=ENG_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.getElementById('tab_'+g.tag);if(!btn)return;
+    btn.style.opacity='1';
+    var eColor=tag==='e3'?'active-e3':tag==='e2'?'active-e2':'active-e1';
+    if(g.tag===tag){btn.className='grade-tab '+eColor;}else{btn.className='grade-tab';btn.style.opacity='0.45';}
+    var panel=document.getElementById('panel_'+g.tag);
+    if(panel)panel.style.display=(g.tag===tag)?'block':'none';
+  });
+  updateUnitCount();
+}
+
+function buildMathPanels(studentGrade){
+  var inner=document.getElementById('gradeTabsInner');
+  var wrap=document.getElementById('unitPanelsWrap');
+  inner.innerHTML='';
+  wrap.innerHTML='';
+  var groups=MATH_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.createElement('button');
+    btn.className='grade-tab';
+    btn.id='tab_'+g.tag;
+    btn.textContent=g.label+'の内容';
+    var panel=buildUnitPanel(g.units,g.tag);
+    panel.id='panel_'+g.tag;
+    wrap.appendChild(panel);
+    (function(tag){
+      btn.addEventListener('click',function(){switchMathTab(studentGrade,tag);});
+    })(g.tag);
+    inner.appendChild(btn);
+  });
+}
+
+function switchMathTab(studentGrade,tag){
+  var groups=MATH_BY_GRADE[studentGrade]||[];
+  groups.forEach(function(g){
+    var btn=document.getElementById('tab_'+g.tag);
+    if(!btn)return;
+    btn.style.opacity='1';
+    if(g.tag===tag){btn.className='grade-tab active-'+tag;}
+    else{btn.className='grade-tab';btn.style.opacity='0.45';}
+    var panel=document.getElementById('panel_'+g.tag);
+    if(panel)panel.style.display=(g.tag===tag)?'block':'none';
+  });
+  currentTag=tag;
+  updateUnitCount();
+}
+
+function buildUnitPanel(units,tag){
+  var panel=document.createElement('div');
+  panel.style.display='none';
+  var tbl=document.createElement('table');
+  tbl.className='unit-table';
+  tbl.innerHTML='<thead><tr><th style="width:30%">単元名</th><th style="width:25%">指導</th><th>評価</th></tr></thead>';
+  var tb=document.createElement('tbody');
+  units.forEach(function(u,i){
+    var tr=document.createElement('tr');
+    var tdName=document.createElement('td');
+    tdName.style.fontSize='12px';tdName.textContent=u;
+    var tdShidou=document.createElement('td');
+    var shidouGrp=document.createElement('div');shidouGrp.className='shidou-group';
+    var btnNashi=document.createElement('button');btnNashi.className='shidou-btn';btnNashi.textContent='①指導なし';
+    var btnAri=document.createElement('button');btnAri.className='shidou-btn';btnAri.textContent='②指導あり';
+    shidouGrp.appendChild(btnNashi);shidouGrp.appendChild(btnAri);
+    tdShidou.appendChild(shidouGrp);
+    var tdSub=document.createElement('td');
+    var subWrap=document.createElement('div');subWrap.className='sub-group';
+    tdSub.appendChild(subWrap);
+    (function(bn,ba,sw,t){
+      bn.addEventListener('click',function(){
+        bn.className='shidou-btn on-nashi';ba.className='shidou-btn';
+        sw.innerHTML='';
+        SUB_NASHI.forEach(function(opt){
+          var sb=document.createElement('button');
+          sb.className='sub-btn '+opt.cls;sb.dataset.val=opt.val;sb.textContent=opt.val;
+          sb.addEventListener('click',function(){
+            sw.querySelectorAll('.sub-btn').forEach(function(b){b.classList.remove('on');});
+            sb.classList.add('on');updateTabBadge(t);
+          });
+          sw.appendChild(sb);
+        });
+        updateTabBadge(t);
+      });
+      ba.addEventListener('click',function(){
+        ba.className='shidou-btn on-ari';bn.className='shidou-btn';
+        sw.innerHTML='';
+        SUB_ARI.forEach(function(opt){
+          var sb=document.createElement('button');
+          sb.className='sub-btn '+opt.cls;sb.dataset.val=opt.val;sb.textContent=opt.val;
+          sb.addEventListener('click',function(){
+            sw.querySelectorAll('.sub-btn').forEach(function(b){b.classList.remove('on');});
+            sb.classList.add('on');updateTabBadge(t);
+          });
+          sw.appendChild(sb);
+        });
+        updateTabBadge(t);
+      });
+    })(btnNashi,btnAri,subWrap,tag);
+    tr.appendChild(tdName);tr.appendChild(tdShidou);tr.appendChild(tdSub);
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);panel.appendChild(tbl);
+  return panel;
+}
+
 function updateTabBadge(tag){
   if(!tag)return;
-  var panel=document.getElementById("panel_"+tag);var btn=document.getElementById("tab_"+tag);
+  var panel=document.getElementById('panel_'+tag);
+  var btn=document.getElementById('tab_'+tag);
   if(!panel||!btn)return;
-  var count=0;panel.querySelectorAll("tbody tr").forEach(function(tr){if(tr.querySelector(".sel-btn.on"))count++;});
-  var ex=btn.querySelector(".saved-badge");if(ex)ex.remove();
-  if(count>0){var b=document.createElement("span");b.className="saved-badge";b.textContent=count+"件";btn.appendChild(b);}
+  var count=0;
+  panel.querySelectorAll('tbody tr').forEach(function(tr){
+    if(tr.querySelector('.shidou-btn.on-nashi,.shidou-btn.on-ari'))count++;
+  });
+  var existing=btn.querySelector('.saved-badge');
+  if(existing)existing.remove();
+  if(count>0){var badge=document.createElement('span');badge.className='saved-badge';badge.textContent=count+'件';btn.appendChild(badge);}
 }
+
 function updateUnitCount(){
-  var wrap=document.getElementById("unitPanelsWrap");var visible=null;
-  wrap.querySelectorAll("div").forEach(function(d){if(d.style.display==="block")visible=d;});
-  if(visible)document.getElementById("unitCount").textContent=visible.querySelectorAll("tbody tr").length+"単元";
+  var wrap=document.getElementById('unitPanelsWrap');
+  var visible=null;
+  wrap.querySelectorAll('div').forEach(function(d){if(d.style.display==='block')visible=d;});
+  if(visible){document.getElementById('unitCount').textContent=visible.querySelectorAll('tbody tr').length+'単元';}
 }
-function collectUnitLines(container){
-  var result=[];
-  container.querySelectorAll("tbody tr").forEach(function(tr){
-    var name=tr.cells[0].textContent.trim();
-    var achBtn=tr.cells[1]?tr.cells[1].querySelector(".sel-btn.on"):null;
-    var sitBtn=tr.cells[2]?tr.cells[2].querySelector(".sel-btn.on"):null;
-    if(achBtn||sitBtn)result.push("  ・"+name+"｜達成度："+(achBtn?achBtn.dataset.val:"未選択")+"｜状況："+(sitBtn?sitBtn.dataset.val:"未選択"));
-  });
-  return result;
-}
-function collectData(){
-  var date=document.getElementById("lessonDate").value||"（未入力）";
-  var teacher=document.getElementById("teacherName").value||"（未選択）";
-  var grade=document.getElementById("gradeSelect").value||"（未選択）";
-  var student=document.getElementById("studentSelect").value||"（未選択）";
-  var focus=document.getElementById("focusSelect").value||"（未選択）";
-  var subj=document.getElementById("subjectSelect").value||"（未選択）";
-  var homework=document.getElementById("homeworkStatus").value||"（未選択）";
-  var testCov=document.getElementById("testCoverage").value||"（未選択）";
-  var comment=document.getElementById("commentBox").value||"なし";
-  var policyArr=[];document.querySelectorAll(".policy-checks input:checked").forEach(function(cb){policyArr.push(cb.value);});
-  var policy=policyArr.length>0?policyArr.join("・"):"（未選択）";
-  var wrap=document.getElementById("unitPanelsWrap");var lines=[];
-  wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
-    var tag=panel.id.replace("panel_","");var pl=collectUnitLines(panel);
-    if(pl.length>0){if(LABEL_MAP[tag])lines.push(LABEL_MAP[tag]);pl.forEach(function(l){lines.push(l);});}
-  });
-  var nonPanel=wrap.querySelector("div:not([id])");
-  if(nonPanel)collectUnitLines(nonPanel).forEach(function(l){lines.push(l);});
-  var engArr=[];document.querySelectorAll("#engIssueChecks input:checked").forEach(function(cb){engArr.push(cb.value);});
-  var mathArr=[];document.querySelectorAll("#mathIssueChecks input:checked").forEach(function(cb){mathArr.push(cb.value);});
-  var engLine=engArr.length>0?"\n【英語の課題】\n"+engArr.map(function(e){return"  ・"+e;}).join("\n"):"";
-  var mathLine=mathArr.length>0?"\n【数学の課題】\n"+mathArr.map(function(e){return"  ・"+e;}).join("\n"):"";
-  return "■ 授業報告\n─────────────────────\n授業日："+date+"　担当："+teacher+"\n学年："+grade+"　生徒："+student+"\n科目："+subj+"\n授業方針："+policy+"\n集中度："+focus+"\n宿題の実施状況："+homework+"\nテスト範囲カバー率："+testCov+"\n─────────────────────\n【単元別記録】（記録した単元のみ）\n"+(lines.length>0?lines.join("\n"):"（記録なし）")+engLine+mathLine+"\n─────────────────────\n【コメント】\n"+comment;
-}
+
 function submitReport(){
-  var text=collectData();
-  document.getElementById("previewContent").textContent=text;
-  var box=document.getElementById("previewBox");box.style.display="block";
-  box.scrollIntoView({behavior:"smooth",block:"nearest"});
+  var date=document.getElementById('lessonDate').value||'（未入力）';
+  var teacher=document.getElementById('teacherName').value||'（未入力）';
+  var grade=document.getElementById('gradeSelect').value||'（未選択）';
+  var student=document.getElementById('studentSelect').value||'（未選択）';
+  var focus=document.getElementById('focusSelect').value||'（未選択）';
+  var homework=document.getElementById('homeworkStatus').value||'（未選択）';
+  var testCov=document.getElementById('testCoverage').value||'（未選択）';
+  var policyChecked=[];
+  document.querySelectorAll('.policy-checks input:checked').forEach(function(cb){policyChecked.push(cb.value);});
+  var policyLine=policyChecked.length>0?policyChecked.join('・'):'（未選択）';
+  var subj=document.getElementById('subjectSelect').value||'（未選択）';
+  var comment=document.getElementById('commentBox').value||'なし';
+  var wrap=document.getElementById('unitPanelsWrap');
+  var lines=[];
+  function collectUnitLines(container){
+    var result=[];
+    container.querySelectorAll('tbody tr').forEach(function(tr){
+      var name=tr.cells[0].textContent.trim();
+      var nashi=tr.querySelector('.shidou-btn.on-nashi');
+      var ari=tr.querySelector('.shidou-btn.on-ari');
+      var subBtn=tr.querySelector('.sub-btn.on');
+      if(nashi||ari){
+        var shidou=nashi?'①指導なし':'②指導あり';
+        var sub=subBtn?subBtn.dataset.val:'（未選択）';
+        result.push('  ・'+name+'｜'+shidou+'｜'+sub);
+      }
+    });
+    return result;
+  }
+  var labelMap={j1:'【中1の内容】',j2:'【中2の内容】',j3:'【中3の内容】',e1:'【中1の内容】',e2:'【中2の内容】',e3:'【中3の内容】',h1a:'【数と式】',h1b:'【集合と論理】',h1c:'【２次関数】',h1d:'【三角比】',h1e:'【データの分析】',ha1:'【場合の数と確率】',ha2:'【整数の性質】',ha3:'【図形の性質】',h2a:'【式と証明】',h2b:'【複素数と方程式】',h2c:'【図形と方程式】',h2d:'【三角関数】',h2e:'【指数・対数関数】',h2f:'【微分・積分】',hb1:'【数列】',hb2:'【平面ベクトル】',hb3:'【空間ベクトル】',h3:'【数学Ⅲ】',hc:'【数学C】'};
+  wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
+    var tag=panel.id.replace('panel_','');
+    var panelLines=collectUnitLines(panel);
+    if(panelLines.length>0){
+      if(labelMap[tag])lines.push(labelMap[tag]);
+      panelLines.forEach(function(l){lines.push(l);});
+    }
+  });
+  var nonMath=wrap.querySelector('div:not([id])');
+  if(nonMath){collectUnitLines(nonMath).forEach(function(l){lines.push(l);});}
+  var engChecked=[];
+  document.querySelectorAll('#engIssueChecks input[type=checkbox]:checked').forEach(function(cb){engChecked.push(cb.value);});
+  var engLine=engChecked.length>0?'\n【英語の課題】\n'+engChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
+  var mathChecked=[];
+  document.querySelectorAll('#mathIssueChecks input[type=checkbox]:checked').forEach(function(cb){mathChecked.push(cb.value);});
+  var mathLine=mathChecked.length>0?'\n【数学の課題】\n'+mathChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\nテスト範囲カバー率：'+testCov+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+engLine+mathLine+'\n─────────────────────\n【コメント】\n'+comment;
+  document.getElementById('previewContent').textContent=text;
+  var box=document.getElementById('previewBox');
+  box.style.display='block';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+
 function generateNotion(){
-  var text=collectData();
-  var prompt=text+"\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。以下の書式で作成してください。\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n【授業方針】\n[授業方針]\n\n【集中度】\n[集中度]\n\n【宿題の実施状況】\n[宿題の実施状況]\n\n【テスト範囲カバー率】\n[テスト範囲カバー率]\n\n【今日学んだこと】\n[単元名を箇条書き]\n\n【理解の状況】\n[達成度と状況を保護者向けに分かりやすく。凡例：達成度①良好②正答率もう１歩③理解もう１歩／状況①もともとできていた②指導後できた③以前より良くなった④今後の成長に期待]\n\n【これから意識してほしいこと】\n[課題項目を前向きな表現で。なければ省略]\n\n【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]";
-  sendPrompt(prompt);
+  var text=document.getElementById('previewContent').textContent;
+  var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。以下の書式で作成してください。\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n【授業方針】\n[授業方針]\n\n【集中度】\n[集中度]\n\n【宿題の実施状況】\n[宿題の実施状況]\n\n【テスト範囲カバー率】\n[テスト範囲カバー率]\n\n【今日学んだこと】\n[単元名を箇条書き]\n\n【理解の状況】\n[単元名と理解度・正答率を分かりやすく]\n\n【これから意識してほしいこと】\n[課題項目を前向きな表現で]\n\n【先生からのメッセージ】\n[保護者向けの丁寧で温かいメッセージ。専門用語を避けて分かりやすく。]';
+  window._notionPrompt=prompt;
+  if(window.sendPrompt){
+    sendPrompt(prompt);
+  } else {
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(prompt).then(function(){alert('プロンプトをコピーしました！Claudeのチャット欄に貼り付けてください。');});
+    }
+  }
 }
+
 var today=new Date();
-document.getElementById("lessonDate").value=today.getFullYear()+"-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
+document.getElementById('lessonDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 </script>
+</body>
+</html>
