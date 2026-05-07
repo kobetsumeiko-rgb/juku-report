@@ -137,6 +137,7 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
         <option value="50%以上">50%以上（半分以上やってきた）</option>
         <option value="50%未満">50%未満（あまりやってきていない）</option>
         <option value="0%">0%（やってきていない）</option>
+        <option value="ノート忘れのため確認できなかった">ノート忘れのため確認できなかった</option>
       </select>
     </div>
     <div>
@@ -189,8 +190,8 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 </div>
 
 <div class="section">
-  <div class="section-title">コメント・メモ</div>
-  <textarea id="commentBox" rows="4" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;resize:vertical" placeholder="保護者様への連絡事項、次回の課題など"></textarea>
+  <div class="section-title">具体的にできたこと・できるようになったこと・できないこと</div>
+  <textarea id="commentBox" rows="5" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit;resize:vertical" placeholder="例）比例のグラフは自力で書けるようになった。ヒストグラムの読み取りは正確にできる。応用問題での式の立て方がまだ難しい。"></textarea>
 </div>
 
 <button class="submit-btn" onclick="submitReport()">授業報告をプレビューする</button>
@@ -365,7 +366,7 @@ var SUB_ARI=[
   {val:"⑦充分な指導・演習時間がとれなかったため次回以降も要フォロー",cls:"ari7"}
 ];
 var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
-var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要"];
+var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要","既習単元のポイントを忘れているため広範囲の復習が必要"];
 
 function buildIssueChecks(items,wrapId,prefix){
   var wrap=document.getElementById(wrapId);
