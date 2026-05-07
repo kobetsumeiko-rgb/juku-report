@@ -41,6 +41,14 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 .sub-btn.ari5{background:#EAF3DE;color:#27500A;border-color:#97C459}
 .sub-btn.ari6{background:#FAEEDA;color:#633806;border-color:#EF9F27}
 .sub-btn.ari7{background:#F1EFE8;color:#444441;border-color:#B4B2A9}
+.kp-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #eee}
+.kp-row:last-child{border-bottom:none}
+.kp-text{font-size:12px;color:#1a1a1a;flex:1;line-height:1.5;padding-top:3px}
+.kp-btns{display:flex;gap:4px;flex-shrink:0}
+.kp-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#f5f5f5;color:#666;opacity:.5;transition:opacity .1s}
+.kp-btn.sel1{opacity:1;font-weight:500;background:#EAF3DE;color:#27500A;border-color:#97C459}
+.kp-btn.sel2{opacity:1;font-weight:500;background:#FAEEDA;color:#633806;border-color:#EF9F27}
+.kp-btn.sel3{opacity:1;font-weight:500;background:#F1EFE8;color:#444441;border-color:#B4B2A9}
 .radio-group{display:flex;gap:6px}
 .radio-group label{margin:0;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;color:#1a1a1a;white-space:nowrap}
 .radio-group input[type=radio]{width:14px;height:14px;margin:0;accent-color:#7F77DD}
@@ -187,6 +195,11 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">数学の課題（該当するものをすべて選択）</div>
     <div id="mathIssueChecks"></div>
   </div>
+  <div id="kokugoPointSection" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
+    <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.75rem">国語の記述ポイント確認</div>
+    <div style="font-size:11px;color:#666;margin-bottom:.5rem">①よくできていた（緑）　②今後できるようにしたい（黄）　③今回は該当なし（グレー）</div>
+    <div id="kokugoPointChecks"></div>
+  </div>
 </div>
 
 <div class="section">
@@ -319,13 +332,14 @@ var GENERIC_UNITS={
   "算数（小5）":["整数・小数のしくみの復習と拡張", "位取り（10倍・100倍・1/10など）", "小数の大小比較", "小数を使った表し方", "直方体・立方体の体積", "体積の公式（たて×横×高さ）", "体積の単位（㎤・㎥・Lなど）", "複合図形の体積", "一方が2倍→もう一方も2倍になる関係", "比例の式（y＝ax）", "表・グラフでの表現", "整数×小数", "小数×小数", "小数点の位置の考え方", "整数÷小数", "小数÷小数", "商の小数点の位置", "あまりの扱い", "○倍・□倍", "基準量・比較量の考え方（軽い導入）", "合同の意味（ぴったり重なる）", "三角形・四角形の角の性質", "作図（合同な図形のかき方）", "しきつめ（タイル的な発想）", "偶数・奇数", "倍数・公倍数", "約数・公約数", "素数", "通分・約分", "分数のたし算・ひき算", "分数と整数・小数の関係", "分数とわり算", "時間と分数", "三角形の面積", "平行四辺形の面積", "台形・ひし形の面積", "面積の工夫（分割・移動）", "平均（合計÷個数）", "単位量あたり（1あたり）", "比較の考え方", "速さ＝道のり÷時間", "単位変換（km/hなど）", "割合（％）", "割引・増加", "円グラフ・帯グラフ", "正多角形", "円周の長さ（円周率の導入）", "角柱・円柱", "条件整理問題", "複数の式を立てる問題", "実生活に近い課題"],
   "算数（小6）":["線対称（折ると重なる）", "点対称（180度回転）", "対称の軸・中心", "対称な図形の作図", "多角形と対称の関係", "x・y・aなどの文字の意味", "文章→式にする", "式の読み方", "公式の理解（言葉→式）", "分数に整数をかける", "分数を整数で割る", "図（面積モデル）での理解", "分数どうしのかけ算", "約分しながら計算", "面積図での意味理解", "「ひっくり返してかける」の意味", "逆数の理解", "文章題への応用", "○の□倍を分数で表現", "割合と分数の統合", "樹形図", "表を使った整理", "条件つきの数え上げ", "順序あり・なしの区別", "円の面積公式", "円周率（3.14）", "分割→長方形に変形して導く", "おうぎ形（発展）", "角柱の体積", "円柱の体積", "底面積×高さの一般化", "複合立体", "平均の活用", "度数分布（簡単な）", "グラフの読み取り", "比較・判断", "速さ＝道のり÷時間", "単位変換（m/s↔km/h）", "旅人算の基礎", "比の値", "比例との関係", "拡大・縮小", "縮尺", "相似の感覚", "図形の拡大・縮小", "組み合わせの発展", "条件付き問題", "規則性", "複数単元の融合", "条件整理", "思考力問題"],
   "国語（中）":["漢字の読み書き","語彙","文法（品詞・活用）","文法（文の成分）","説明文の読解","物語文の読解","詩・短歌・俳句","古文の基礎","漢文の基礎","作文・表現"],
+  "国語（中3）":["指示語・接続語", "要点・段落", "構成・要旨", "場面・情景", "心情・人物像", "主題", "随筆", "詩", "短歌・俳句", "古文の基本", "古文", "漢文・漢詩の基本", "漢文・漢詩", "漢字の成り立ち・部首・画数・筆順・書写", "送り仮名・形の似ている漢字・熟字訓", "熟語の構成・三字熟語・四字熟語", "同音異字・同訓異字・同音異義語", "類義語・対義語", "慣用句", "ことわざ・故事成語", "言葉の単位・文節の働き（主語・述語）", "文節の働き（修飾語・接続語・独立語）・文節と文節の関係・文の成分", "品詞分類", "活用しない自立語", "活用する自立語", "活用しない付属語", "活用する付属語", "敬語の基本", "コミュニケーション", "作文", "部活動", "家族と社会", "笑話", "説話", "随筆（古文）", "和歌を含む古文", "漢文・漢詩（応用）", "古文と漢文の融合問題", "漢字の読み書き", "漢字・語句", "文法", "紛らわしい語の識別", "コミュニケーション（応用）", "作文（応用）"],
   "国語（高）":["現代文（評論）","現代文（随筆）","現代語文法","古文文法","古文読解","漢文句法","漢文読解","小論文・記述"],
   "英語（中）":["I am～の文","一般動詞の肯定文と否定文","canの肯定文と否定文","You are～の肯定文と疑問文","一般動詞の疑問文","canの疑問文","What do you～？の文","動詞の～ing形（動名詞）","want to～（不定詞名詞的用法）","He is～.とShe is～.の文","Who is～？の文","This is～.とHe is～.の疑問文と否定文","Whoseで始まる疑問文","代名詞（主格・所有格・目的格）","命令文","Whereで始まる疑問文","Whenで始まる疑問文","Can I～?/Which/How much(many)～？の疑問文","主語が３人称単数の一般動詞の文","３人称単数の疑問文と否定文","What time～？の文","How can I～？/How long～？の文","一般動詞の過去形","一般動詞の過去の疑問文と否定文","be動詞の過去形","現在進行形（肯定/疑問/否定）","過去進行形"],
   "英語（高）":["品詞", "句", "節", "第1文型（SV）", "第2文型（SVC）", "第3文型（SVO）・自動詞と他動詞", "第4文型（SVOO）", "第5文型（SVOC）① 第5文型の基本", "第5文型（SVOC）② 使役動詞と知覚動詞", "基本時制", "進行形", "現在完了", "過去完了・未来完了", "完了進行形・時/条件を表す副詞節中の時制", "助動詞の基本", "助動詞+have+過去分詞", "その他の助動詞・助動詞の重要表現", "第3文型（SVO）の受動態", "第4文型（SVOO）の受動態", "第5文型（SVOC）の受動態", "句動詞の受動態・受動態の重要表現", "不定詞の名詞的用法", "不定詞の形式主語/目的語・意味上の主語", "不定詞を目的語にとる動詞・不定詞の否定/受身/完了形", "疑問詞/be動詞+to do", "不定詞の形容詞的用法", "不定詞の副詞的用法① 動詞修飾", "不定詞の副詞的用法② 形容詞修飾・重要表現", "動名詞の基本", "動名詞の意味上の主語", "動名詞の否定/受身/完了形", "動名詞の重要表現", "動名詞を目的語にとる動詞", "不定詞と動名詞の両方を目的語にとる動詞", "現在分詞と過去分詞・分詞の名詞修飾", "補語になる分詞・人の感情を表す分詞形容詞", "分詞構文の基本", "分詞構文の否定/受身/完了形・独立分詞構文", "付帯状況のwith・分詞構文の重要表現", "主格/目的格の関係代名詞", "所有格の関係代名詞・非制限用法", "関係代名詞what", "特殊な関係代名詞・関係代名詞+I think", "前置詞+関係代名詞", "関係副詞の基本", "関係副詞の非制限用法・先行詞の省略", "複合関係代名詞・複合関係形容詞", "複合関係副詞", "仮定法過去", "仮定法過去完了", "条件節と帰結節の時制が異なる仮定法・未来の仮定", "仮定法現在", "仮定法の重要表現", "「もし~がなければ」の表現・仮定法の倒置", "if節のない仮定法", "原級比較", "比較級", "最上級", "倍数・差・強調を表す比較表現", "比較の重要表現", "否定文・否定語", "部分否定と全体否定", "二重否定・否定の重要表現", "直接話法と間接話法・時制の一致", "時制の一致の例外・伝達動詞", "Yes/No疑問文・疑問詞の疑問文", "否定疑問・付加疑問", "間接疑問", "省略・倒置", "強調", "可算名詞と不可算名詞", "冠詞", "代名詞itとone", "otherとanother・代名詞の重要表現", "形容詞の限定用法と叙述用法", "数量・割合を表す表現", "時を表す表現", "場所を表す表現", "副詞節を導く接続詞", "文や節をつなぐ表現"],
   "理科（中）":["植物のからだ","動物のからだ","物質とその性質","状態変化","気体の性質","水溶液","化学変化","イオン","力とはたらき","光と音","電流と電圧","磁界","運動とエネルギー","地震と岩石","大気と天気","地球と宇宙"],
   "社会（中）":["地理（地図・地形）","地理（気候・人口）","地理（日本各地）","地理（世界各地）","歴史（原始～古代）","歴史（中世）","歴史（近世）","歴史（近代）","歴史（現代）","公民（憲法・政治）","公民（経済・国際）"],
-  "物理":["力と運動","仕事とエネルギー","波動","電気と磁気","熱","原子・核"],
-  "化学":["物質の構成","化学結合","物質量","化学反応式","酸と塩基","酸化還元","無機化学","有機化学","高分子"],
+  "物理":["物体の運動", "v-tグラフ", "等加速度運動", "自由落下・投げ上げ", "様々な力", "運動方程式", "仕事", "エネルギー（力学的）", "エネルギー（保存）", "波の基本式①", "波の基本式②", "縦波", "重ね合わせの原理・定常波", "波の反射", "音波", "弦の振動", "気柱の共鳴", "電荷・箔検電器", "電流", "オームの法則・回路を流れる電流①", "オームの法則・回路を流れる電流②", "抵抗からなる回路・消費電力", "電流と磁場", "電磁誘導", "交流", "エネルギー（電気）", "温度と熱", "比熱・熱容量・熱量保存則", "熱力学第一法則"],
+  "化学":["純物質と混合物", "物質の構成元素", "物質の三態", "原子の構造", "電子配置", "元素の周期表", "イオンとイオン結合", "分子と共有結合", "分子の形と極性", "分子結晶・共有結合の結晶・金属結晶", "原子量・分子量・式量", "物質量", "溶液の濃度", "化学反応式の表す量的関係", "酸と塩基", "水素イオン濃度とpH", "中和反応と塩", "中和滴定", "酸化と還元", "酸化剤と還元剤", "金属の酸化還元反応"],
   "生物":["細胞と生命","遺伝と進化","体の調節（神経・ホルモン）","生態系","植物の反応","代謝"],
   "日本史":["原始・古代","中世","近世","近代","現代"],
   "世界史":["古代文明","中世ヨーロッパ・イスラム","近世（大航海時代）","近代（市民革命・産業革命）","帝国主義と世界大戦","冷戦と現代"],
@@ -349,7 +363,7 @@ function onGradeChange(){
 
 function getSubjectKey(grade,subj){
   if(subj==="算数"){if(grade==="小4")return"算数（小4）";if(grade==="小5")return"算数（小5）";if(grade==="小6")return"算数（小6）";}
-  if(subj==="国語")return grade.indexOf("高")===0?"国語（高）":"国語（中）";
+  if(subj==="国語"){if(grade.indexOf("高")===0)return"国語（高）";if(grade==="中3")return"国語（中3）";return"国語（中）";}
   if(subj==="英語")return grade.indexOf("高")===0?"英語（高）":"英語（中）";
   if(subj==="理科")return"理科（中）";
   if(subj==="社会")return"社会（中）";
@@ -365,6 +379,7 @@ var SUB_ARI=[
   {val:"⑥できるようになったが自力での正答率はもう一歩",cls:"ari6"},
   {val:"⑦充分な指導・演習時間がとれなかったため次回以降も要フォロー",cls:"ari7"}
 ];
+var KOKUGO_POINTS=["指示語は直前から探し、なければどんどん遡って前文全体から探す", "接続語の補充は、前後の関係を判断する", "解答条件に合うように言い換え表現を探す", "段落の最初か最後から要点や筆者の主張を探す", "「なぜ」に対しては必ず「〜から」と理由で答える", "聞かれ方に合わせた答え方をする（～こと。～もの。など）", "設問のキーワードと同じ語を本文から探す", "本文にないことは書かない（想像NG）", "心情を行動・会話・情景から推測する", "「〜だ」「〜である」は主張、「〜と思う」は意見", "対比構造を見つけて内容を整理する", "具体例と抽象的な説明とを把握し、設問に合わせて解答する", "1段落＝1内容で要旨を把握する", "消去法で誤りの選択肢を削る", "「強すぎる表現（必ず・絶対）」は誤りになりやすい", "記述時の文末（述語の部分）を問いに対応させる", "書き抜きの際、重要な修飾語や主語を省略しない", "書き抜きの際、「一文」「部分」などの指示通りに答える", "作文時は具体的なエピソードを書くなど、具体性を持たせる"];
 var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
 var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要","既習単元のポイントを忘れているため広範囲の復習が必要"];
 
@@ -391,6 +406,7 @@ function onSubjectChange(){
   var wrap=document.getElementById('unitPanelsWrap');
   var engSec=document.getElementById('engIssueSection');
   var mathSec=document.getElementById('mathIssueSection');
+  var kpSec=document.getElementById('kokugoPointSection');
   if(!g||!s){sec.style.display='none';return;}
   sec.style.display='block';
   currentTag=null;
@@ -399,10 +415,13 @@ function onSubjectChange(){
   var isEng=(s==="英語");
   var isMath=(s==="数学"||s==="数学Ⅰ"||s==="数学A"||s==="数学Ⅱ"||s==="数学B"||s==="数学Ⅲ"||s==="数学C"||s==="算数");
   var isEngTab=(isEng&&(g==="中2"||g==="中3"));
+  var isKokugoJ=(s==="国語"&&(g==="中1"||g==="中2"||g==="中3"));
   engSec.style.display=isEng?'block':'none';
   mathSec.style.display=isMath?'block':'none';
+  kpSec.style.display=isKokugoJ?'block':'none';
   if(isEng)buildIssueChecks(ENG_ISSUES,'engIssueChecks','eng_issue');
   if(isMath)buildIssueChecks(MATH_ISSUES,'mathIssueChecks','math_issue');
+  if(isKokugoJ)buildKokugoPoints();
   if(s==="数学"&&MATH_BY_GRADE[g]){
     tabsArea.style.display='block';
     buildMathPanels(g);
@@ -518,6 +537,27 @@ function switchMathTab(studentGrade,tag){
   });
   currentTag=tag;
   updateUnitCount();
+}
+
+function buildKokugoPoints(){
+  var wrap=document.getElementById('kokugoPointChecks');
+  wrap.innerHTML='';
+  KOKUGO_POINTS.forEach(function(point,i){
+    var row=document.createElement('div');row.className='kp-row';
+    var txt=document.createElement('div');txt.className='kp-text';txt.textContent=point;
+    var btns=document.createElement('div');btns.className='kp-btns';
+    [['①',1],['②',2],['③',3]].forEach(function(pair){
+      var btn=document.createElement('button');
+      btn.className='kp-btn';btn.dataset.val=pair[0];btn.dataset.idx=i;btn.textContent=pair[0];
+      btn.addEventListener('click',function(){
+        btns.querySelectorAll('.kp-btn').forEach(function(b){b.className='kp-btn';});
+        btn.classList.add('sel'+pair[1]);
+      });
+      btns.appendChild(btn);
+    });
+    row.appendChild(txt);row.appendChild(btns);
+    wrap.appendChild(row);
+  });
 }
 
 function buildUnitPanel(units,tag){
@@ -639,13 +679,20 @@ function submitReport(){
   });
   var nonMath=wrap.querySelector('div:not([id])');
   if(nonMath){collectUnitLines(nonMath).forEach(function(l){lines.push(l);});}
+  var kpLines=[];
+  document.querySelectorAll('#kokugoPointChecks .kp-row').forEach(function(row){
+    var txt=row.querySelector('.kp-text').textContent.trim();
+    var sel=row.querySelector('.kp-btn.sel1,.kp-btn.sel2');
+    if(sel)kpLines.push('  ・'+txt+'｜'+(sel.classList.contains('sel1')?'①よくできていた':'②今後できるようにしたい'));
+  });
+  var kpLine=kpLines.length>0?'\n【国語の記述ポイント】\n'+kpLines.join('\n'):'';
   var engChecked=[];
   document.querySelectorAll('#engIssueChecks input[type=checkbox]:checked').forEach(function(cb){engChecked.push(cb.value);});
   var engLine=engChecked.length>0?'\n【英語の課題】\n'+engChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
   var mathChecked=[];
   document.querySelectorAll('#mathIssueChecks input[type=checkbox]:checked').forEach(function(cb){mathChecked.push(cb.value);});
   var mathLine=mathChecked.length>0?'\n【数学の課題】\n'+mathChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\nテスト範囲カバー率：'+testCov+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+engLine+mathLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\nテスト範囲カバー率：'+testCov+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
   var box=document.getElementById('previewBox');
   box.style.display='block';
