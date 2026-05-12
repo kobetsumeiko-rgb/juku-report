@@ -113,7 +113,8 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     </div>
     <div>
       <label>生徒名</label>
-      <select id="studentSelect"><option value="">-- 先に学年を選択 --</option></select>
+      <select id="studentSelect" onchange="onStudentSelectChange()"><option value="">-- 先に学年を選択 --</option></select>
+      <input type="text" id="studentManual" placeholder="未登録の場合はこちらに入力" style="display:none;margin-top:6px;width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit;color:#1a1a1a;box-sizing:border-box">
     </div>
   </div>
   <div class="row">
@@ -439,10 +440,26 @@ function onGradeChange(){
   ss.innerHTML='<option value="">-- 生徒を選択 --</option>';
   subj.innerHTML='<option value="">-- 科目を選択 --</option>';
   document.getElementById('unitSection').style.display='none';
+  document.getElementById('studentManual').style.display='none';
+  document.getElementById('studentManual').value='';
   currentTag=null;
   if(!g)return;
   (STUDENTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
+  var other=document.createElement('option');other.value='__other__';other.textContent='その他（手入力）';ss.appendChild(other);
   (SUBJECTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;subj.appendChild(o);});
+}
+
+function onStudentSelectChange(){
+  var val=document.getElementById('studentSelect').value;
+  var manual=document.getElementById('studentManual');
+  manual.style.display=(val==='__other__')?'block':'none';
+  if(val!=='__other__')manual.value='';
+}
+
+function getStudentName(){
+  var val=document.getElementById('studentSelect').value;
+  if(val==='__other__')return document.getElementById('studentManual').value.trim()||'（未入力）';
+  return val||'（未選択）';
 }
 
 function getSubjectKey(grade,subj){
@@ -745,7 +762,7 @@ function submitReport(){
   var date=document.getElementById('lessonDate').value||'（未入力）';
   var teacher=document.getElementById('teacherName').value||'（未入力）';
   var grade=document.getElementById('gradeSelect').value||'（未選択）';
-  var student=document.getElementById('studentSelect').value||'（未選択）';
+  var student=getStudentName();
   var focus=document.getElementById('focusSelect').value||'（未選択）';
   var homework=document.getElementById('homeworkStatus').value||'（未選択）';
   var testCov=document.getElementById('testCoverage').value||'（未選択）';
