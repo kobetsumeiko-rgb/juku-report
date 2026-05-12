@@ -26,15 +26,15 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 .grade-tab.active-e3{background:#FAECE7;color:#712B13;border-color:#F0997B;font-weight:500}
 .unit-table{width:100%;border-collapse:collapse;margin-top:.5rem}
 .unit-table th{font-size:12px;font-weight:500;color:#666;padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
-.unit-table td{padding:6px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:middle}
+.unit-table td{padding:6px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:middle;color:#111}
 .unit-table tr:last-child td{border-bottom:none}
 .unit-table tr:hover td{background:#fafafa}
 .shidou-group{display:flex;gap:4px;margin-bottom:4px}
-.shidou-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#fff;color:#666;opacity:.5;transition:opacity .1s}
+.shidou-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#fff;color:#444;opacity:.6;transition:opacity .1s}
 .shidou-btn.on-nashi{opacity:1;font-weight:500;background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
 .shidou-btn.on-ari{opacity:1;font-weight:500;background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
 .sub-group{display:flex;flex-direction:column;gap:3px;margin-top:3px}
-.sub-btn{font-size:11px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit;text-align:left;border:1px solid transparent;opacity:.45;transition:opacity .1s}
+.sub-btn{font-size:11px;padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit;text-align:left;border:1px solid transparent;opacity:.55;transition:opacity .1s;color:#333}
 .sub-btn.on{opacity:1;font-weight:500}
 .sub-btn.nashi3{background:#EAF3DE;color:#27500A;border-color:#97C459}
 .sub-btn.nashi4{background:#F1EFE8;color:#444441;border-color:#B4B2A9}
@@ -45,7 +45,7 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 .kp-row:last-child{border-bottom:none}
 .kp-text{font-size:12px;color:#1a1a1a;flex:1;line-height:1.5;padding-top:3px}
 .kp-btns{display:flex;gap:4px;flex-shrink:0}
-.kp-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#f5f5f5;color:#666;opacity:.5;transition:opacity .1s}
+.kp-btn{font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit;border:1px solid #ccc;background:#f5f5f5;color:#444;opacity:.6;transition:opacity .1s}
 .kp-btn.sel1{opacity:1;font-weight:500;background:#EAF3DE;color:#27500A;border-color:#97C459}
 .kp-btn.sel2{opacity:1;font-weight:500;background:#FAEEDA;color:#633806;border-color:#EF9F27}
 .kp-btn.sel3{opacity:1;font-weight:500;background:#F1EFE8;color:#444441;border-color:#B4B2A9}
@@ -149,7 +149,18 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
       </select>
     </div>
     <div>
-      <label>テスト範囲のカバー率</label>
+      <label>宿題の正答率</label>
+      <select id="homeworkAccuracy">
+        <option value="">-- 選択してください --</option>
+        <option value="90%以上">90%以上</option>
+        <option value="50%以上">50%以上</option>
+        <option value="50%未満">50%未満</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
+      <label>テスト範囲カバー率①現学年範囲</label>
       <select id="testCoverage">
         <option value="">-- 選択してください --</option>
         <option value="100%">100%（全範囲カバーできた）</option>
@@ -158,8 +169,30 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
         <option value="テスト範囲不明">テスト範囲不明</option>
       </select>
     </div>
+    <div>
+      <label>テスト範囲カバー率②前学年以前範囲</label>
+      <select id="testCoveragePrev">
+        <option value="">-- 選択してください --</option>
+        <option value="100%">100%（全範囲カバーできた）</option>
+        <option value="75%">75%（おおよそカバーできた）</option>
+        <option value="50%未満">50%未満（半分以下）</option>
+        <option value="テスト範囲不明">テスト範囲不明</option>
+        <option value="該当なし">該当なし</option>
+      </select>
+    </div>
   </div>
-  <div style="margin-bottom:12px">
+  <div class="row">
+    <div>
+      <label>次回予定</label>
+      <select id="nextPlan">
+        <option value="">-- 選択してください --</option>
+        <option value="同単元の復習メイン">同単元の復習メイン</option>
+        <option value="復習後次単元へ進む">復習後次単元へ進む</option>
+        <option value="テスト対策">テスト対策</option>
+      </select>
+    </div>
+  </div>
+  <div style="margin-bottom:12px" id="basicInfoSection">
     <label>授業方針（複数選択可）</label>
     <div class="policy-checks">
       <label><input type="checkbox" value="現行単元の補習"> 現行単元の補習</label>
@@ -195,10 +228,59 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">数学の課題（該当するものをすべて選択）</div>
     <div id="mathIssueChecks"></div>
   </div>
+  <div id="rikaIssueSection" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
+    <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">理科の課題（該当するものをすべて選択）</div>
+    <div id="rikaIssueChecks"></div>
+  </div>
   <div id="kokugoPointSection" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
     <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.75rem">国語の記述ポイント確認</div>
     <div style="font-size:11px;color:#666;margin-bottom:.5rem">①よくできていた（緑）　②今後できるようにしたい（黄）　③今回は該当なし（グレー）</div>
     <div id="kokugoPointChecks"></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">前回からの変化（複数選択可）</div>
+  <div class="policy-checks" id="changeChecks">
+    <label><input type="checkbox" value="基本問題の解法に気づけるようになった"> 基本問題の解法に気づけるようになった</label>
+    <label><input type="checkbox" value="応用問題の解法に気づけるようになった"> 応用問題の解法に気づけるようになった</label>
+    <label><input type="checkbox" value="以前のミスポイントに気づけるようになった"> 以前のミスポイントに気づけるようになった</label>
+    <label><input type="checkbox" value="解答スピードが速くなった"> 解答スピードが速くなった</label>
+    <label><input type="checkbox" value="試行できるようになった"> 試行できるようになった</label>
+    <label><input type="checkbox" value="思考できるようになった"> 思考できるようになった</label>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">全体を通してのつまづきの傾向（複数選択可）</div>
+  <div class="policy-checks" id="tsumazukiChecks">
+    <label><input type="checkbox" value="符号ミス"> 符号ミス</label>
+    <label><input type="checkbox" value="計算手順"> 計算手順</label>
+    <label><input type="checkbox" value="ケアレスミス"> ケアレスミス</label>
+    <label><input type="checkbox" value="問題の読み取り"> 問題の読み取り</label>
+    <label><input type="checkbox" value="基本概念の理解不足"> 基本概念の理解不足</label>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">今日の良かった点（複数選択可）</div>
+  <div class="policy-checks" id="goodPointChecks">
+    <label><input type="checkbox" value="自分から質問できた"> 自分から質問できた</label>
+    <label><input type="checkbox" value="ミスに気づけて修正できた"> ミスに気づけて修正できた</label>
+    <label><input type="checkbox" value="わからないところを自分から調べられた"> わからないところを自分から調べられた</label>
+    <label><input type="checkbox" value="指導されたことをすぐに理解できた"> 指導されたことをすぐに理解できた</label>
+    <label><input type="checkbox" value="教わったことを他の問題でも利用できた"> 教わったことを他の問題でも利用できた</label>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">家庭でのサポートのお願い（複数選択可）</div>
+  <div class="policy-checks" id="supportChecks">
+    <label><input type="checkbox" value="計算時の符号確認声かけ"> 計算時の符号確認声かけ</label>
+    <label><input type="checkbox" value="宿題の実施確認"> 宿題の実施確認</label>
+    <label><input type="checkbox" value="宿題ノート持参確認"> 宿題ノート持参確認</label>
+    <label><input type="checkbox" value="解き方の手順や考え方を説明させる"> 解き方の手順や考え方を説明させる</label>
+    <label><input type="checkbox" value="特に不要"> 特に不要</label>
   </div>
 </div>
 
@@ -322,10 +404,11 @@ var KOUKO_MATH_BY_SUBJ={
 var ENG_J1=["I am～の文","一般動詞の肯定文と否定文","canの肯定文と否定文","You are～の肯定文と疑問文","一般動詞の疑問文","canの疑問文","What do you～？の文","動詞の～ing形（動名詞）","want to～（不定詞名詞的用法）","He is～.とShe is～.の文","Who is～？の文","This is～.とHe is～.の疑問文と否定文","Whoseで始まる疑問文","代名詞（主格・所有格・目的格）","命令文","Whereで始まる疑問文","Whenで始まる疑問文","Can I～?/Which/How much(many)～？の疑問文","主語が３人称単数の一般動詞の文","３人称単数の疑問文と否定文","What time～？の文","How can I～？/How long～？の文","一般動詞の過去形","一般動詞の過去の疑問文と否定文","be動詞の過去形","現在進行形（肯定/疑問/否定）","過去進行形"];
 var ENG_J2=["一般動詞の過去形/be動詞の過去形","接続詞when","look(sound)+形容詞","This is～./Can you～？","動名詞","不定詞（名詞的用法）","接続詞that","be going to～の文","will～の文","接続詞if","Shall I～？/Would you like～？","There is（are）～の文","show+人+もの","不定詞（形容詞的用法）","must","have to/don't have to","It is～for+人+to+動詞の原形","助動詞を使った会話文/should/how to","不定詞（副詞的用法：目的～するために）","接続詞because","不定詞（副詞的用法：感情の原因～して）","比較級/最上級(er,est)","比較級/最上級(more,most)","as～asの文","want(tell,ask)+人+不定詞","make+人+形容詞/call+人+名詞","受け身の文"];
 var ENG_J3=["受け身の文","let(help)+人+もの+動詞の原形（原形不定詞）","tell+人+that+文","現在完了形（完了）","現在完了形（完了）の疑問文と否定文","現在完了形（経験）","現在完了進行形","疑問詞+to+動詞の原形","関係代名詞which（主格）","関係代名詞who（主格）","関係代名詞that（主格）","関係代名詞which（目的格）","関係代名詞that（目的格）","後置修飾（名詞+主語+動詞）","現在分詞の後置修飾","過去分詞の後置修飾","間接疑問文","仮定法（If I could～）","仮定法（I wish I could～）","付加疑問文/否定疑問文"];
+var ENG_MATOME=["英文のしくみ・名詞・冠詞","代名詞（人称代名詞、所有代名詞、指示代名詞）","代名詞（it、不定代名詞、something、anyone）","形容詞・副詞","前置詞","接続詞（and,when,if,because,that）","be動詞（現在・過去）/There is(are)～.の文","一般動詞（現在）","一般動詞（過去）","進行形（現在・過去）","未来の文","助動詞","命令文・感嘆文","疑問詞で始まる疑問文","接続詞（and,but,or,so,when,if,because,that,so-that他）","不定詞（名詞・副詞・形容詞的用法）","動名詞","比較（比較級・最上級,more,most）","比較（as～as,疑問詞の文、比較表現）","文構造(文型)","受け身（受動態）","現在完了形（経験、完了・結果用法）","現在完了形（継続用法、完了進行形）","不定詞（疑問詞＋不定詞、tell 人 to do、原形不定詞,too～to）","分詞・名詞を修飾する文","関係代名詞","★後置修飾の重点演習","間接疑問文・付加疑問文・否定疑問文","仮定法","入試実戦　連語・文法　基本","入試実戦　連語・文法　標準","入試実戦　連語・文法　発展","入試実戦　会話表現　基本","入試実戦　会話表現　標準","入試実戦　会話表現　発展","入試実戦　条件・自由作文　基本","入試実戦　条件・自由作文　標準","入試実戦　条件・自由作文　発展","入試実戦　読解　基本","入試実戦　読解①～⑤　標準・発展"];
 var ENG_BY_GRADE={
   "中1":[{label:"中1",units:ENG_J1,tag:"e1"}],
   "中2":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"}],
-  "中3":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"},{label:"中3",units:ENG_J3,tag:"e3"}]
+  "中3":[{label:"中1",units:ENG_J1,tag:"e1"},{label:"中2",units:ENG_J2,tag:"e2"},{label:"中3",units:ENG_J3,tag:"e3"},{label:"中学まとめ",units:ENG_MATOME,tag:"em"}]
 };
 var GENERIC_UNITS={
   "算数（小4）":["大きな数","整数の計算","わり算","小数","分数","面積","角","垂直・平行","四角形","表とグラフ","変わり方調べ"],
@@ -336,7 +419,7 @@ var GENERIC_UNITS={
   "国語（高）":["現代文（評論）","現代文（随筆）","現代語文法","古文文法","古文読解","漢文句法","漢文読解","小論文・記述"],
   "英語（中）":["I am～の文","一般動詞の肯定文と否定文","canの肯定文と否定文","You are～の肯定文と疑問文","一般動詞の疑問文","canの疑問文","What do you～？の文","動詞の～ing形（動名詞）","want to～（不定詞名詞的用法）","He is～.とShe is～.の文","Who is～？の文","This is～.とHe is～.の疑問文と否定文","Whoseで始まる疑問文","代名詞（主格・所有格・目的格）","命令文","Whereで始まる疑問文","Whenで始まる疑問文","Can I～?/Which/How much(many)～？の疑問文","主語が３人称単数の一般動詞の文","３人称単数の疑問文と否定文","What time～？の文","How can I～？/How long～？の文","一般動詞の過去形","一般動詞の過去の疑問文と否定文","be動詞の過去形","現在進行形（肯定/疑問/否定）","過去進行形"],
   "英語（高）":["品詞", "句", "節", "第1文型（SV）", "第2文型（SVC）", "第3文型（SVO）・自動詞と他動詞", "第4文型（SVOO）", "第5文型（SVOC）① 第5文型の基本", "第5文型（SVOC）② 使役動詞と知覚動詞", "基本時制", "進行形", "現在完了", "過去完了・未来完了", "完了進行形・時/条件を表す副詞節中の時制", "助動詞の基本", "助動詞+have+過去分詞", "その他の助動詞・助動詞の重要表現", "第3文型（SVO）の受動態", "第4文型（SVOO）の受動態", "第5文型（SVOC）の受動態", "句動詞の受動態・受動態の重要表現", "不定詞の名詞的用法", "不定詞の形式主語/目的語・意味上の主語", "不定詞を目的語にとる動詞・不定詞の否定/受身/完了形", "疑問詞/be動詞+to do", "不定詞の形容詞的用法", "不定詞の副詞的用法① 動詞修飾", "不定詞の副詞的用法② 形容詞修飾・重要表現", "動名詞の基本", "動名詞の意味上の主語", "動名詞の否定/受身/完了形", "動名詞の重要表現", "動名詞を目的語にとる動詞", "不定詞と動名詞の両方を目的語にとる動詞", "現在分詞と過去分詞・分詞の名詞修飾", "補語になる分詞・人の感情を表す分詞形容詞", "分詞構文の基本", "分詞構文の否定/受身/完了形・独立分詞構文", "付帯状況のwith・分詞構文の重要表現", "主格/目的格の関係代名詞", "所有格の関係代名詞・非制限用法", "関係代名詞what", "特殊な関係代名詞・関係代名詞+I think", "前置詞+関係代名詞", "関係副詞の基本", "関係副詞の非制限用法・先行詞の省略", "複合関係代名詞・複合関係形容詞", "複合関係副詞", "仮定法過去", "仮定法過去完了", "条件節と帰結節の時制が異なる仮定法・未来の仮定", "仮定法現在", "仮定法の重要表現", "「もし~がなければ」の表現・仮定法の倒置", "if節のない仮定法", "原級比較", "比較級", "最上級", "倍数・差・強調を表す比較表現", "比較の重要表現", "否定文・否定語", "部分否定と全体否定", "二重否定・否定の重要表現", "直接話法と間接話法・時制の一致", "時制の一致の例外・伝達動詞", "Yes/No疑問文・疑問詞の疑問文", "否定疑問・付加疑問", "間接疑問", "省略・倒置", "強調", "可算名詞と不可算名詞", "冠詞", "代名詞itとone", "otherとanother・代名詞の重要表現", "形容詞の限定用法と叙述用法", "数量・割合を表す表現", "時を表す表現", "場所を表す表現", "副詞節を導く接続詞", "文や節をつなぐ表現"],
-  "理科（中）":["植物のからだ","動物のからだ","物質とその性質","状態変化","気体の性質","水溶液","化学変化","イオン","力とはたらき","光と音","電流と電圧","磁界","運動とエネルギー","地震と岩石","大気と天気","地球と宇宙"],
+  "理科（中）":["生物の観察","植物の分類","動物の分類","物質のすがた","気体の性質","水溶液","状態変化","光","音","力のはたらき","火山","地震","地層","大地の変化","細胞","植物のからだのつくりとはたらき","消化と吸収","血液の循環と排出","刺激と反応","原子と分子","化学変化","酸化と還元","化学変化と質量","化学変化と熱","回路と電流・電圧","オームの法則","電力と熱量","電流と磁界","静電気と電子","気象観測","圧力","湿度","雲","前線と天気の変化","日本の天気","生物の成長","生殖","遺伝の規則性","進化","水溶液とイオン","電池","酸・アルカリと中和","力の合成と分解","物体の運動","仕事","運動とエネルギー","天体の日周運動","天体の年周運動","太陽系と銀河系","月・惑星の動き","自然界のつり合い","自然と人間","科学技術と人間","実験・観察方法の問題","計算問題","作図問題","記述問題","思考力問題","化学式"],
   "社会（中）":["地理（地図・地形）","地理（気候・人口）","地理（日本各地）","地理（世界各地）","歴史（原始～古代）","歴史（中世）","歴史（近世）","歴史（近代）","歴史（現代）","公民（憲法・政治）","公民（経済・国際）"],
   "物理":["物体の運動", "v-tグラフ", "等加速度運動", "自由落下・投げ上げ", "様々な力", "運動方程式", "仕事", "エネルギー（力学的）", "エネルギー（保存）", "波の基本式①", "波の基本式②", "縦波", "重ね合わせの原理・定常波", "波の反射", "音波", "弦の振動", "気柱の共鳴", "電荷・箔検電器", "電流", "オームの法則・回路を流れる電流①", "オームの法則・回路を流れる電流②", "抵抗からなる回路・消費電力", "電流と磁場", "電磁誘導", "交流", "エネルギー（電気）", "温度と熱", "比熱・熱容量・熱量保存則", "熱力学第一法則"],
   "化学":["純物質と混合物", "物質の構成元素", "物質の三態", "原子の構造", "電子配置", "元素の周期表", "イオンとイオン結合", "分子と共有結合", "分子の形と極性", "分子結晶・共有結合の結晶・金属結晶", "原子量・分子量・式量", "物質量", "溶液の濃度", "化学反応式の表す量的関係", "酸と塩基", "水素イオン濃度とpH", "中和反応と塩", "中和滴定", "酸化と還元", "酸化剤と還元剤", "金属の酸化還元反応"],
@@ -381,7 +464,8 @@ var SUB_ARI=[
 ];
 var KOKUGO_POINTS=["指示語は直前から探し、なければどんどん遡って前文全体から探す", "接続語の補充は、前後の関係を判断する", "解答条件に合うように言い換え表現を探す", "段落の最初か最後から要点や筆者の主張を探す", "「なぜ」に対しては必ず「〜から」と理由で答える", "聞かれ方に合わせた答え方をする（～こと。～もの。など）", "設問のキーワードと同じ語を本文から探す", "本文にないことは書かない（想像NG）", "心情を行動・会話・情景から推測する", "「〜だ」「〜である」は主張、「〜と思う」は意見", "対比構造を見つけて内容を整理する", "具体例と抽象的な説明とを把握し、設問に合わせて解答する", "1段落＝1内容で要旨を把握する", "消去法で誤りの選択肢を削る", "「強すぎる表現（必ず・絶対）」は誤りになりやすい", "記述時の文末（述語の部分）を問いに対応させる", "書き抜きの際、重要な修飾語や主語を省略しない", "書き抜きの際、「一文」「部分」などの指示通りに答える", "作文時は具体的なエピソードを書くなど、具体性を持たせる"];
 var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
-var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要","既習単元のポイントを忘れているため広範囲の復習が必要"];
+var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要","既習単元のポイントを忘れているため広範囲の復習が必要","基本問題の定着","応用問題への対応力"];
+var RIKA_ISSUES=["基本用語の定着が不十分なため、反復学習を行い確実に覚える必要がある。","現象の理解が浅いため、「なぜそうなるか」を説明できる力を養う必要がある。","計算問題において公式、単位合わせ、小数点の処理に安定感がないので練習が必要。","記述問題での得点力向上のため、教科書表現を用いた解答練習を行います。"];
 
 function buildIssueChecks(items,wrapId,prefix){
   var wrap=document.getElementById(wrapId);
@@ -406,6 +490,7 @@ function onSubjectChange(){
   var wrap=document.getElementById('unitPanelsWrap');
   var engSec=document.getElementById('engIssueSection');
   var mathSec=document.getElementById('mathIssueSection');
+  var rikaSec=document.getElementById('rikaIssueSection');
   var kpSec=document.getElementById('kokugoPointSection');
   if(!g||!s){sec.style.display='none';return;}
   sec.style.display='block';
@@ -414,22 +499,25 @@ function onSubjectChange(){
   tabsArea.style.display='none';
   var isEng=(s==="英語");
   var isMath=(s==="数学"||s==="数学Ⅰ"||s==="数学A"||s==="数学Ⅱ"||s==="数学B"||s==="数学Ⅲ"||s==="数学C"||s==="算数");
-  var isEngTab=(isEng&&(g==="中2"||g==="中3"));
+  var isRika=(s==="理科");
+  var isEngTab=(isEng&&(g==="中2"||g==="中3"||g==="高1"||g==="高2"||g==="高3"));
   var isKokugoJ=(s==="国語"&&(g==="中1"||g==="中2"||g==="中3"));
   engSec.style.display=isEng?'block':'none';
   mathSec.style.display=isMath?'block':'none';
+  rikaSec.style.display=isRika?'block':'none';
   kpSec.style.display=isKokugoJ?'block':'none';
   if(isEng)buildIssueChecks(ENG_ISSUES,'engIssueChecks','eng_issue');
   if(isMath)buildIssueChecks(MATH_ISSUES,'mathIssueChecks','math_issue');
+  if(isRika)buildIssueChecks(RIKA_ISSUES,'rikaIssueChecks','rika_issue');
   if(isKokugoJ)buildKokugoPoints();
   if(s==="数学"&&MATH_BY_GRADE[g]){
     tabsArea.style.display='block';
     buildMathPanels(g);
     document.getElementById('unitCount').textContent='学年タブを選択してください';
-  } else if(isEngTab&&ENG_BY_GRADE[g]){
+  } else if(isEngTab){
     tabsArea.style.display='block';
     buildEngTabs(g);
-    document.getElementById('unitCount').textContent='学年タブを選択してください';
+    document.getElementById('unitCount').textContent='タブを選択してください';
   } else if(HIGH_MATH[s]&&HIGH_MATH[s].length>1){
     tabsArea.style.display='block';
     buildHighMathTabs(s);
@@ -480,22 +568,35 @@ function buildEngTabs(studentGrade){
   var inner=document.getElementById('gradeTabsInner');
   var wrap=document.getElementById('unitPanelsWrap');
   inner.innerHTML='';wrap.innerHTML='';
-  var groups=ENG_BY_GRADE[studentGrade]||[];
+  var isKouko=(studentGrade==='高1'||studentGrade==='高2'||studentGrade==='高3');
+  var groups;
+  if(isKouko){
+    groups=[
+      {label:"中学まとめ",units:ENG_MATOME,tag:"em"},
+      {label:"高校英語",units:GENERIC_UNITS["英語（高）"],tag:"eh"}
+    ];
+  } else {
+    groups=ENG_BY_GRADE[studentGrade]||[];
+  }
   groups.forEach(function(g){
     var btn=document.createElement('button');
-    btn.className='grade-tab';btn.id='tab_'+g.tag;btn.textContent=g.label+'の内容';
+    btn.className='grade-tab';btn.id='tab_'+g.tag;
+    btn.textContent=(g.label==='中学まとめ'||g.label==='高校英語')?g.label:g.label+'の内容';
     var panel=buildUnitPanel(g.units,g.tag);panel.id='panel_'+g.tag;wrap.appendChild(panel);
-    (function(tag){btn.addEventListener('click',function(){switchEngTab(studentGrade,tag);});})(g.tag);
+    (function(tag){btn.addEventListener('click',function(){switchEngTab(studentGrade,tag,groups);});})(g.tag);
     inner.appendChild(btn);
   });
 }
 
-function switchEngTab(studentGrade,tag){
-  var groups=ENG_BY_GRADE[studentGrade]||[];
+function switchEngTab(studentGrade,tag,groups){
+  if(!groups){
+    var isKouko=(studentGrade==='高1'||studentGrade==='高2'||studentGrade==='高3');
+    groups=isKouko?[{tag:"em"},{tag:"eh"}]:ENG_BY_GRADE[studentGrade]||[];
+  }
   groups.forEach(function(g){
     var btn=document.getElementById('tab_'+g.tag);if(!btn)return;
     btn.style.opacity='1';
-    var eColor=tag==='e3'?'active-e3':tag==='e2'?'active-e2':'active-e1';
+    var eColor=g.tag==='em'?'active-j1':g.tag==='eh'?'active-j2':g.tag==='e3'?'active-e3':g.tag==='e2'?'active-e2':'active-e1';
     if(g.tag===tag){btn.className='grade-tab '+eColor;}else{btn.className='grade-tab';btn.style.opacity='0.45';}
     var panel=document.getElementById('panel_'+g.tag);
     if(panel)panel.style.display=(g.tag===tag)?'block':'none';
@@ -646,11 +747,26 @@ function submitReport(){
   var focus=document.getElementById('focusSelect').value||'（未選択）';
   var homework=document.getElementById('homeworkStatus').value||'（未選択）';
   var testCov=document.getElementById('testCoverage').value||'（未選択）';
+  var testCovPrev=document.getElementById('testCoveragePrev').value||'（未選択）';
+  var nextPlan=document.getElementById('nextPlan').value||'（未選択）';
   var policyChecked=[];
-  document.querySelectorAll('.policy-checks input:checked').forEach(function(cb){policyChecked.push(cb.value);});
+  document.querySelectorAll('#basicInfoSection .policy-checks input:checked').forEach(function(cb){policyChecked.push(cb.value);});
   var policyLine=policyChecked.length>0?policyChecked.join('・'):'（未選択）';
   var subj=document.getElementById('subjectSelect').value||'（未選択）';
+  var homeworkAcc=document.getElementById('homeworkAccuracy').value||'（未選択）';
   var comment=document.getElementById('commentBox').value||'なし';
+  var changeChecked=[];
+  document.querySelectorAll('#changeChecks input:checked').forEach(function(cb){changeChecked.push(cb.value);});
+  var changeLine=changeChecked.length>0?changeChecked.join('・'):'（なし）';
+  var tsumazukiChecked=[];
+  document.querySelectorAll('#tsumazukiChecks input:checked').forEach(function(cb){tsumazukiChecked.push(cb.value);});
+  var tsumazukiLine=tsumazukiChecked.length>0?tsumazukiChecked.join('・'):'（なし）';
+  var goodChecked=[];
+  document.querySelectorAll('#goodPointChecks input:checked').forEach(function(cb){goodChecked.push(cb.value);});
+  var goodLine=goodChecked.length>0?goodChecked.join('・'):'（なし）';
+  var supportChecked=[];
+  document.querySelectorAll('#supportChecks input:checked').forEach(function(cb){supportChecked.push(cb.value);});
+  var supportLine=supportChecked.length>0?supportChecked.join('・'):'（なし）';
   var wrap=document.getElementById('unitPanelsWrap');
   var lines=[];
   function collectUnitLines(container){
@@ -692,7 +808,10 @@ function submitReport(){
   var mathChecked=[];
   document.querySelectorAll('#mathIssueChecks input[type=checkbox]:checked').forEach(function(cb){mathChecked.push(cb.value);});
   var mathLine=mathChecked.length>0?'\n【数学の課題】\n'+mathChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\nテスト範囲カバー率：'+testCov+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var rikaChecked=[];
+  document.querySelectorAll('#rikaIssueChecks input[type=checkbox]:checked').forEach(function(cb){rikaChecked.push(cb.value);});
+  var rikaLine=rikaChecked.length>0?'\n【理科の課題】\n'+rikaChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n次回予定：'+nextPlan+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
   var box=document.getElementById('previewBox');
   box.style.display='block';
@@ -701,7 +820,7 @@ function submitReport(){
 
 function generateNotion(){
   var text=document.getElementById('previewContent').textContent;
-  var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況]\n\n📊【テスト範囲カバー率】\n[テスト範囲カバー率]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー]\n\n💡【これから意識してほしいこと】\n[課題項目を前向きな表現で。なければ省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
+  var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n📅【次回予定】\n[次回予定]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
   window._notionPrompt=prompt;
   if(window.sendPrompt){
     sendPrompt(prompt);
