@@ -182,17 +182,6 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
       </select>
     </div>
   </div>
-  <div class="row">
-    <div>
-      <label>次回予定</label>
-      <select id="nextPlan">
-        <option value="">-- 選択してください --</option>
-        <option value="同単元の復習メイン">同単元の復習メイン</option>
-        <option value="復習後次単元へ進む">復習後次単元へ進む</option>
-        <option value="テスト対策">テスト対策</option>
-      </select>
-    </div>
-  </div>
   <div style="margin-bottom:12px" id="basicInfoSection">
     <label>授業方針（複数選択可）</label>
     <div class="policy-checks">
@@ -203,6 +192,18 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
       <label><input type="checkbox" value="検定対策"> 検定対策</label>
       <label><input type="checkbox" value="学校課題のフォロー"> 学校課題のフォロー</label>
     </div>
+  </div>
+  <div style="margin-bottom:12px">
+    <label>テスト実施の有無</label>
+    <div style="display:flex;gap:12px;margin-top:4px">
+      <label style="display:flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer"><input type="radio" name="testDone" value="なし" checked onchange="onTestDoneChange()"> なし</label>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:normal;cursor:pointer"><input type="radio" name="testDone" value="あり" onchange="onTestDoneChange()"> あり</label>
+    </div>
+  </div>
+  <div id="testResultsSection" style="display:none;margin-bottom:12px">
+    <label>テスト結果</label>
+    <div id="testResultsList"></div>
+    <button type="button" onclick="addTestResult()" style="margin-top:8px;font-size:12px;padding:4px 12px;border-radius:6px;border:1px solid #aaa;background:#f5f5f5;color:#333;cursor:pointer">＋ テストを追加</button>
   </div>
 </div>
 
@@ -260,6 +261,8 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     <label><input type="checkbox" value="ケアレスミス"> ケアレスミス</label>
     <label><input type="checkbox" value="問題の読み取り"> 問題の読み取り</label>
     <label><input type="checkbox" value="基本概念の理解不足"> 基本概念の理解不足</label>
+    <label><input type="checkbox" value="教科書レベル知識の不足"> 教科書レベル知識の不足</label>
+    <label><input type="checkbox" value="応用レベルの解法知識の不足"> 応用レベルの解法知識の不足</label>
   </div>
 </div>
 
@@ -272,6 +275,16 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     <label><input type="checkbox" value="指導されたことをすぐに理解できた"> 指導されたことをすぐに理解できた</label>
     <label><input type="checkbox" value="教わったことを他の問題でも利用できた"> 教わったことを他の問題でも利用できた</label>
   </div>
+</div>
+
+<div class="section">
+  <div class="section-title">次回予定</div>
+  <select id="nextPlan" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit;color:#1a1a1a">
+    <option value="">-- 選択してください --</option>
+    <option value="同単元の復習メイン">同単元の復習メイン</option>
+    <option value="復習後次単元へ進む">復習後次単元へ進む</option>
+    <option value="テスト対策">テスト対策</option>
+  </select>
 </div>
 
 <div class="section">
@@ -456,6 +469,46 @@ function onStudentSelectChange(){
   if(val!=='__other__')manual.value='';
 }
 
+function onTestDoneChange(){
+  var val=document.querySelector('input[name="testDone"]:checked').value;
+  var sec=document.getElementById('testResultsSection');
+  var list=document.getElementById('testResultsList');
+  sec.style.display=(val==='あり')?'block':'none';
+  if(val==='あり'&&list.children.length===0)addTestResult();
+}
+
+function addTestResult(){
+  var list=document.getElementById('testResultsList');
+  var idx=list.children.length+1;
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap';
+  row.innerHTML='<input type="text" placeholder="テスト名" style="flex:2;min-width:120px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:13px;font-family:inherit">'
+    +'<input type="number" placeholder="得点" min="0" style="width:70px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:13px;font-family:inherit;text-align:right">'
+    +'<span style="font-size:13px;color:#555">／</span>'
+    +'<input type="number" placeholder="満点" min="1" style="width:70px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:13px;font-family:inherit;text-align:right">'
+    +'<button type="button" onclick="this.parentNode.remove()" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;background:#fff;color:#888;font-size:12px;cursor:pointer">削除</button>';
+  list.appendChild(row);
+}
+
+function getTestResults(){
+  var val=document.querySelector('input[name="testDone"]:checked').value;
+  if(val!=='あり')return'なし';
+  var rows=document.getElementById('testResultsList').children;
+  var results=[];
+  Array.from(rows).forEach(function(row){
+    var inputs=row.querySelectorAll('input');
+    var name=inputs[0].value.trim();
+    var score=inputs[1].value.trim();
+    var total=inputs[2].value.trim();
+    if(name||score||total){
+      var line=name||'（名称未入力）';
+      if(score||total)line+='：'+( score||'?')+' ／ '+(total||'?');
+      results.push(line);
+    }
+  });
+  return results.length>0?results.join('、'):'（未入力）';
+}
+
 function getStudentName(){
   var val=document.getElementById('studentSelect').value;
   if(val==='__other__')return document.getElementById('studentManual').value.trim()||'（未入力）';
@@ -481,7 +534,7 @@ var SUB_ARI=[
   {val:"⑦充分な指導・演習時間がとれなかったため次回以降も要フォロー",cls:"ari7"}
 ];
 var KOKUGO_POINTS=["指示語は直前から探し、なければどんどん遡って前文全体から探す", "接続語の補充は、前後の関係を判断する", "解答条件に合うように言い換え表現を探す", "段落の最初か最後から要点や筆者の主張を探す", "「なぜ」に対しては必ず「〜から」と理由で答える", "聞かれ方に合わせた答え方をする（～こと。～もの。など）", "設問のキーワードと同じ語を本文から探す", "本文にないことは書かない（想像NG）", "心情を行動・会話・情景から推測する", "「〜だ」「〜である」は主張、「〜と思う」は意見", "対比構造を見つけて内容を整理する", "具体例と抽象的な説明とを把握し、設問に合わせて解答する", "1段落＝1内容で要旨を把握する", "消去法で誤りの選択肢を削る", "「強すぎる表現（必ず・絶対）」は誤りになりやすい", "記述時の文末（述語の部分）を問いに対応させる", "書き抜きの際、重要な修飾語や主語を省略しない", "書き抜きの際、「一文」「部分」などの指示通りに答える", "作文時は具体的なエピソードを書くなど、具体性を持たせる"];
-var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる"];
+var ENG_ISSUES=["語彙力がかなり不足している","語彙力がやや不足している","主な単語のスペル練習が必要","時制に気を付ける","主語（３人称単数や複数）に気を付ける","be動詞と一般動詞が混ざる","英文を見て、そこに含まれる文法に気づける","長文を読みスピードが遅い"];
 var MATH_ISSUES=["計算がやや遅い","計算ミスがやや多い","途中式を後で振り返れるように残す","公式の覚え直しが必要","既習単元のポイントを忘れているため広範囲の復習が必要","基本問題の定着","応用問題への対応力"];
 var RIKA_ISSUES=["基本用語の定着が不十分なため、反復学習を行い確実に覚える必要がある。","現象の理解が浅いため、「なぜそうなるか」を説明できる力を養う必要がある。","計算問題において公式、単位合わせ、小数点の処理に安定感がないので練習が必要。","記述問題での得点力向上のため、教科書表現を用いた解答練習を行います。"];
 
@@ -773,6 +826,7 @@ function submitReport(){
   var policyLine=policyChecked.length>0?policyChecked.join('・'):'（未選択）';
   var subj=document.getElementById('subjectSelect').value||'（未選択）';
   var homeworkAcc=document.getElementById('homeworkAccuracy').value||'（未選択）';
+  var testResults=getTestResults();
   var comment=document.getElementById('commentBox').value||'なし';
   var changeChecked=[];
   document.querySelectorAll('#changeChecks input:checked').forEach(function(cb){changeChecked.push(cb.value);});
@@ -830,7 +884,7 @@ function submitReport(){
   var rikaChecked=[];
   document.querySelectorAll('#rikaIssueChecks input[type=checkbox]:checked').forEach(function(cb){rikaChecked.push(cb.value);});
   var rikaLine=rikaChecked.length>0?'\n【理科の課題】\n'+rikaChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n次回予定：'+nextPlan+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\nテスト実施：'+testResults+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
   var box=document.getElementById('previewBox');
   box.style.display='block';
@@ -839,7 +893,7 @@ function submitReport(){
 
 function generateNotion(){
   var text=document.getElementById('previewContent').textContent;
-  var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n📅【次回予定】\n[次回予定]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
+  var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n📝【テスト実施】\n[テスト実施が「なし」なら省略。あれば「テスト名：得点／満点」の形で箇条書き]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n📅【次回予定】\n[次回予定]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n📅【次回予定】\n[次回予定]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
   window._notionPrompt=prompt;
   if(window.sendPrompt){
     sendPrompt(prompt);
