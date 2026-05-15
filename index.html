@@ -985,12 +985,13 @@ function postToNotion(){
   var text=window._notionGeneratedText||'';
   if(!text){alert('先に記録文を生成してください。');return;}
   var student=getStudentName();
-  var pageId=NOTION_PAGES[student];
-  if(!pageId||pageId==='ページIDをここに入力'){
+  var parentPageId=NOTION_PAGES[student];
+  if(!parentPageId||parentPageId==='ページIDをここに入力'){
     alert('「'+student+'」さんのNotionページIDが設定されていません。');
     return;
   }
 
+  var subject=document.getElementById('subjectSelect').value||'';
   var lines=text.split('\n');
   var headerIdx=lines.findIndex(function(l){return l.startsWith('▶');});
   var headerLine=headerIdx>=0?lines[headerIdx]:'授業報告';
@@ -1018,18 +1019,29 @@ function postToNotion(){
 
   var statusEl=document.getElementById('notionStatus');
   var btn=document.getElementById('postNotionBtn');
-  btn.textContent='投稿中…';
+  btn.textContent='投稿先を検索中…';
   btn.disabled=true;
   statusEl.textContent='';
 
-  fetch(WORKER_URL+'/notion',{
+  // まず子ページを検索して科目ページIDを取得
+  fetch(WORKER_URL+'/find-page',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({pageId:pageId,blocks:blocks})
+    body:JSON.stringify({pageId:parentPageId,subject:subject})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.error)throw new Error(data.error);
+    var targetPageId=data.pageId;
+    btn.textContent='投稿中…';
+    // 見つかった科目ページに投稿
+    return fetch(WORKER_URL+'/notion',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pageId:targetPageId,blocks:blocks})
+    });
   }).then(function(r){return r.json();}).then(function(data){
     if(data.results){
       statusEl.style.color='green';
-      statusEl.textContent='✅ Notionへの投稿が完了しました！';
+      statusEl.textContent='✅ Notionへの投稿が完了しました！（'+subject+'レポートページ）';
     } else {
       throw new Error(JSON.stringify(data));
     }
