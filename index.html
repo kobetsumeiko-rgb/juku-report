@@ -308,7 +308,16 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 <div class="preview-box" id="previewBox">
   <div style="font-size:13px;font-weight:500;margin-bottom:.5rem;color:#666">報告内容プレビュー</div>
   <pre id="previewContent"></pre>
-  <button class="copy-btn" onclick="generateNotion()">Notion記録用文を生成する ↗</button>
+  <button class="copy-btn" onclick="generateNotion()" id="generateBtn">Notion記録用文を生成する ↗</button>
+  <div id="notionGeneratedBox" style="display:none;margin-top:1.2rem;border-top:1px solid #eee;padding-top:1rem">
+    <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">生成された記録文</div>
+    <pre id="notionGeneratedText" style="white-space:pre-wrap;font-size:13px;color:#1a1a1a;background:#f9f8f5;border-radius:8px;padding:12px;max-height:400px;overflow-y:auto"></pre>
+    <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
+      <button class="copy-btn" onclick="copyLineText()" id="copyLineBtn">📋 LINE用テキストをコピー</button>
+      <button class="copy-btn" onclick="postToNotion()" id="postNotionBtn" style="background:#f0f7ff;border-color:#9ac">📤 Notionに投稿する</button>
+    </div>
+    <div id="notionStatus" style="margin-top:.5rem;font-size:12px"></div>
+  </div>
 </div>
 </div>
 
@@ -891,18 +900,145 @@ function submitReport(){
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
+var NOTION_PAGES={
+  '小林 鷹聖':'ページIDをここに入力',
+  '伊藤 祐基':'ページIDをここに入力',
+  '今藤 ほのか':'ページIDをここに入力',
+  '小林 巧実':'ページIDをここに入力',
+  '伊藤 優莉':'ページIDをここに入力',
+  '太田 結翔':'ページIDをここに入力',
+  '小林 泰晴':'ページIDをここに入力',
+  '小林 龍世':'ページIDをここに入力',
+  '荒井 春輝':'ページIDをここに入力',
+  '尾芦 涼真':'ページIDをここに入力',
+  '海沼 瑞香':'ページIDをここに入力',
+  '笠井 美希':'ページIDをここに入力',
+  '佐藤 秀宥':'ページIDをここに入力',
+  '島田 陽太':'ページIDをここに入力',
+  '長崎 聖也':'ページIDをここに入力',
+  '山崎 愛結':'ページIDをここに入力',
+  '湯川 智仁':'ページIDをここに入力',
+  '嶌田 柊吾':'ページIDをここに入力',
+  '小林 依知可':'35b9977afea2805caac6eb695f2734d0',
+  '小林 千華':'ページIDをここに入力',
+  '小林 美李':'ページIDをここに入力',
+  '北村 健琉':'ページIDをここに入力',
+  '米澤 咲希子':'ページIDをここに入力',
+  '宮本 歩和':'ページIDをここに入力',
+  '宮本 光史郎':'ページIDをここに入力',
+  '山岸 華穂':'ページIDをここに入力',
+  '原 貴一':'ページIDをここに入力',
+  '相澤 千尋':'ページIDをここに入力',
+  '剱持 春人':'ページIDをここに入力',
+  '後藤 花梨':'ページIDをここに入力',
+  '阿部 恵':'ページIDをここに入力',
+  '笠井 望':'ページIDをここに入力',
+  '瀧澤 春太朗':'ページIDをここに入力',
+  '松本 怜':'ページIDをここに入力',
+  '宮下 英晃':'ページIDをここに入力'
+};
+
 function generateNotion(){
   var text=document.getElementById('previewContent').textContent;
   if(!text.trim()){alert('先にプレビューを生成してください。');return;}
   var prompt=text+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n📝【テスト実施】\n[テスト実施が「なし」なら省略。あれば「テスト名：得点／満点」の形で箇条書き]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n📅【次回予定】\n[次回予定]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語・理科の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
-  window._notionPrompt=prompt;
-  if(window.sendPrompt){
-    sendPrompt(prompt);
-  } else {
-    if(navigator.clipboard){
-      navigator.clipboard.writeText(prompt).then(function(){alert('プロンプトをコピーしました！Claudeのチャット欄に貼り付けてください。');});
-    }
+
+  var btn=document.getElementById('generateBtn');
+  btn.textContent='生成中…';
+  btn.disabled=true;
+  document.getElementById('notionGeneratedBox').style.display='none';
+  document.getElementById('notionStatus').textContent='';
+
+  fetch(WORKER_URL+'/generate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:prompt})
+  }).then(function(r){return r.json();}).then(function(data){
+    var generated=data.content&&data.content[0]&&data.content[0].text;
+    if(!generated)throw new Error('生成失敗');
+    window._notionGeneratedText=generated;
+    document.getElementById('notionGeneratedText').textContent=generated;
+    document.getElementById('notionGeneratedBox').style.display='block';
+    btn.textContent='Notion記録用文を生成する ↗';
+    btn.disabled=false;
+  }).catch(function(e){
+    alert('生成に失敗しました。時間をおいて再試行してください。\n'+e.message);
+    btn.textContent='Notion記録用文を生成する ↗';
+    btn.disabled=false;
+  });
+}
+
+function copyLineText(){
+  var text=window._notionGeneratedText||'';
+  if(!text){alert('先に記録文を生成してください。');return;}
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.getElementById('copyLineBtn');
+    btn.textContent='✅ コピーしました';
+    setTimeout(function(){btn.textContent='📋 LINE用テキストをコピー';},2000);
+  });
+}
+
+function postToNotion(){
+  var text=window._notionGeneratedText||'';
+  if(!text){alert('先に記録文を生成してください。');return;}
+  var student=getStudentName();
+  var pageId=NOTION_PAGES[student];
+  if(!pageId||pageId==='ページIDをここに入力'){
+    alert('「'+student+'」さんのNotionページIDが設定されていません。');
+    return;
   }
+
+  var lines=text.split('\n');
+  var headerIdx=lines.findIndex(function(l){return l.startsWith('▶');});
+  var headerLine=headerIdx>=0?lines[headerIdx]:'授業報告';
+  var bodyLines=headerIdx>=0?lines.slice(headerIdx+1):lines;
+
+  var blocks=[{
+    object:'block',
+    type:'heading_2',
+    heading_2:{
+      rich_text:[{type:'text',text:{content:headerLine}}],
+      color:'pink_background'
+    }
+  }];
+
+  var chunk='';
+  bodyLines.forEach(function(line){
+    if(chunk.length+line.length>1900){
+      if(chunk.trim())blocks.push({object:'block',type:'paragraph',paragraph:{rich_text:[{type:'text',text:{content:chunk.trim()}}]}});
+      chunk=line+'\n';
+    } else {
+      chunk+=line+'\n';
+    }
+  });
+  if(chunk.trim())blocks.push({object:'block',type:'paragraph',paragraph:{rich_text:[{type:'text',text:{content:chunk.trim()}}]}});
+
+  var statusEl=document.getElementById('notionStatus');
+  var btn=document.getElementById('postNotionBtn');
+  btn.textContent='投稿中…';
+  btn.disabled=true;
+  statusEl.textContent='';
+
+  fetch(WORKER_URL+'/notion',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({pageId:pageId,blocks:blocks})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.results){
+      statusEl.style.color='green';
+      statusEl.textContent='✅ Notionへの投稿が完了しました！';
+    } else {
+      throw new Error(JSON.stringify(data));
+    }
+    btn.textContent='📤 Notionに投稿する';
+    btn.disabled=false;
+  }).catch(function(e){
+    statusEl.style.color='red';
+    statusEl.textContent='❌ 投稿に失敗しました。（'+e.message+')';
+    btn.textContent='📤 Notionに投稿する';
+    btn.disabled=false;
+  });
 }
 
 var today=new Date();
