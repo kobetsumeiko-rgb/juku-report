@@ -900,6 +900,17 @@ function submitReport(){
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+var SUBJECT_KEYWORD={
+  '数学Ⅰ':'数学','数学A':'数学','数学Ⅱ':'数学','数学B':'数学','数学Ⅲ':'数学','数学C':'数学','数学':'数学',
+  '算数':'算数',
+  '現代文':'国語','古文':'国語','漢文':'国語','国語':'国語',
+  '英語':'英語',
+  '理科':'理科',
+  '社会':'社会',
+  '物理':'物理','化学':'化学','生物':'生物',
+  '日本史':'日本史','世界史':'世界史','地理':'地理'
+};
+
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
 var NOTION_PAGES={
   '小林 鷹聖':'ページIDをここに入力',
@@ -1023,11 +1034,13 @@ function postToNotion(){
   btn.disabled=true;
   statusEl.textContent='';
 
+  var searchKeyword=SUBJECT_KEYWORD[subject]||subject;
+
   // まず子ページを検索して科目ページIDを取得
   fetch(WORKER_URL+'/find-page',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({pageId:parentPageId,subject:subject})
+    body:JSON.stringify({pageId:parentPageId,subject:searchKeyword})
   }).then(function(r){return r.json();}).then(function(data){
     if(data.error)throw new Error(data.error);
     var targetPageId=data.pageId;
