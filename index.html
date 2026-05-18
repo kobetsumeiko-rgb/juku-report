@@ -85,18 +85,19 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 
 <div class="section">
   <div class="section-title">基本情報</div>
+  <div style="margin-bottom:12px">
+    <label>教室</label>
+    <select id="kyoshitsuSelect" onchange="onKyoshitsuChange()" style="width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit">
+      <option value="">-- 教室を選択 --</option>
+      <option value="安茂里駅前">安茂里駅前</option>
+      <option value="屋代">屋代</option>
+      <option value="長野青木島">長野青木島</option>
+    </select>
+  </div>
   <div class="row">
     <div><label>授業日</label><input type="date" id="lessonDate"></div>
     <div><label>担当講師</label><select id="teacherName">
-      <option value="">-- 講師を選択 --</option>
-      <option value="浅村結良">浅村結良</option>
-      <option value="小林祐介">小林祐介</option>
-      <option value="高澤雅樹">高澤雅樹</option>
-      <option value="藤田雅子">藤田雅子</option>
-      <option value="原口葵">原口葵</option>
-      <option value="水野貴志">水野貴志</option>
-      <option value="宮崎久仁子">宮崎久仁子</option>
-      <option value="緑川智洸">緑川智洸</option>
+      <option value="">-- 先に教室を選択 --</option>
     </select></div>
   </div>
   <div class="row">
@@ -322,17 +323,121 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 </div>
 
 <script>
-var STUDENTS={
-  "小3":[],
-  "小4":[],
-  "小5":["小林 鷹聖"],
-  "小6":["伊藤 祐基"],
-  "中1":["今藤 ほのか","小林 巧実"],
-  "中2":["伊藤 優莉","太田 結翔","小林 泰晴","小林 龍世"],
-  "中3":["荒井 春輝","尾芦 涼真","海沼 瑞香","笠井 美希","佐藤 秀宥","島田 陽太","長崎 聖也","山崎 愛結","湯川 智仁"],
-  "高1":["嶌田 柊吾","小林 依知可","小林 千華","小林 美李","北村 健琉","米澤 咲希子","宮本 歩和","宮本 光史郎","山岸 華穂","原 貴一"],
-  "高2":["相澤 千尋","剱持 春人","後藤 花梨"],
-  "高3":["阿部 恵","笠井 望","瀧澤 春太朗","松本 怜","宮下 英晃"]
+var TEACHERS_BY_KYOSHITSU={
+  "安茂里駅前":["小林祐介","高澤雅樹","水野貴志","原口葵","浅村結良","小山陽樹","藤田雅子"],
+  "屋代":["小林祐介","高澤雅樹","水野貴志","原口葵","浅村結良","小山陽樹","藤田雅子","宮崎久仁子","緑川智洸"],
+  "長野青木島":["小林祐介","高澤雅樹","水野貴志","原口葵","浅村結良","小山陽樹","藤田雅子"]
+};
+var STUDENTS_BY_KYOSHITSU={
+  "安茂里駅前":{
+    "小3":[],"小4":[],"小5":["小林 鷹聖"],"小6":["伊藤 祐基"],
+    "中1":["今藤 ほのか","小林 巧実"],
+    "中2":["伊藤 優莉","小林 泰晴","小林 龍世","太田 結翔","酒井 文芽","黒柳 颯真"],
+    "中3":["湯川 智仁","山崎 愛結","海沼 瑞香","長崎 聖也","島田 陽太","笠井 美希","荒井 春輝","佐藤 秀宥","尾芦 涼真"],
+    "高1":["原 貴一","宮本 光史郎","小林 千華","小林 美李","米澤 咲希子","嶌田 柊吾","北村 健琉","山岸 華穂","宮本 歩和","小林 依知可"],
+    "高2":["相澤 千尋","後藤 花梨","剱持 春人"],
+    "高3":["阿部 恵","宮下 英晃","瀧澤 春太朗","松本 怜","笠井 望"]
+  },
+  "屋代":{
+    "小3":["原 橙和","丸山 智大"],"小4":[],"小5":[],"小6":["宮澤 周佑","油井 航","若林 さくら"],
+    "中1":["近藤 花音"],"中2":["佐伯 雷虎"],
+    "中3":["中澤 心梛","古家 陽向","小林 真優","西沢 結菜","寺沢 聖","近藤 蒼一郎","塚田 未來","近藤 夕姫","徳嵩 那生","大日方 妃奈"],
+    "高1":[],"高2":["掛川 大緒","白鳥 天翔","目須田 悠斗","武井 彩恵","島田 唯花","若林 穂澄","宮川 凛","宮川 結衣"],
+    "高3":["和田 咲南","鎌田 陽斗","井本 美緒"]
+  },
+  "長野青木島":{
+    "小3":[],"小4":[],"小5":[],"小6":["野池 涼介"],
+    "中1":[],"中2":["松本 蒼太","佐藤 羅奈","藤池 紗矢","木野 薫"],
+    "中3":["傳田 花奈","野池 悠太郎","宮田 悠真"],
+    "高1":["松本 結衣"],"高2":["馬場 啓太郎"],
+    "高3":["口丸 隆正","西川 七瑚","宮田 あすか"]
+  }
+};
+var NOTION_PAGES_BY_KYOSHITSU={
+  "安茂里駅前":{
+    '小林 鷹聖':'3539977afea280d8a5efd1ea35fa5d08',
+    '伊藤 祐基':'3609977afea280a9a255d49ebd1e5847',
+    '今藤 ほのか':'3599977afea28016bdace0b36c7caae5',
+    '小林 巧実':'35e9977afea2806db349ce0756a170e8',
+    '伊藤 優莉':'3599977afea280beb6abc29d7c3904d3',
+    '太田 結翔':'3599977afea2807cb441fed91f8f6f15',
+    '小林 泰晴':'3609977afea280899b00e7e50926b0f8',
+    '小林 龍世':'35e9977afea280d4b890fa93aa006ad5',
+    '酒井 文芽':'ページIDをここに入力',
+    '黒柳 颯真':'ページIDをここに入力',
+    '荒井 春輝':'3599977afea280d48fe8dcd6f712101e',
+    '尾芦 涼真':'3599977afea28008a02ec66c54d914aa',
+    '海沼 瑞香':'35e9977afea2808ab225c7027692b748',
+    '笠井 美希':'35d9977afea280879c69e1648a1201ee',
+    '佐藤 秀宥':'35e9977afea280cf80bcf6465924c5d3',
+    '島田 陽太':'35e9977afea2809baea6e14078753b4c',
+    '長崎 聖也':'3599977afea28052a188e701c445b9b5',
+    '山崎 愛結':'35e9977afea28000b787c7a2510fd0f6',
+    '湯川 智仁':'3599977afea280469699c21ef388ff18',
+    '嶌田 柊吾':'3609977afea2805fa69fee05ec2bdb38',
+    '小林 依知可':'35b9977afea2805caac6eb695f2734d0',
+    '小林 千華':'3609977afea2806eb44cf499d046c782',
+    '小林 美李':'3599977afea280069950cb1ebf3de74c',
+    '北村 健琉':'ページIDをここに入力',
+    '米澤 咲希子':'35e9977afea28047a22ec668c0245703',
+    '宮本 歩和':'3619977afea2808cb0a3d7b46629d826',
+    '宮本 光史郎':'3599977afea280e2a5e8c35d4d1fe121',
+    '山岸 華穂':'3599977afea2801c8484d63ec307d588',
+    '原 貴一':'35e9977afea2809ca9f6d9eb06292ddd',
+    '相澤 千尋':'35e9977afea280c1bda8f1d5bd703506',
+    '剱持 春人':'35e9977afea28089b992cee455962bba',
+    '後藤 花梨':'3599977afea2806dbd90e8a8a0135a4a',
+    '阿部 恵':'3609977afea28092a603d7c7fcbca2e6',
+    '笠井 望':'35e9977afea2806dbe00e29d27880b62',
+    '瀧澤 春太朗':'3609977afea280cb9c5fd0fd86841e89',
+    '松本 怜':'35e9977afea280d9bb96d428b7de09e1',
+    '宮下 英晃':'35e9977afea280e49667ec48d249419c'
+  },
+  "屋代":{
+    '原 橙和':'ページIDをここに入力',
+    '丸山 智大':'ページIDをここに入力',
+    '宮澤 周佑':'ページIDをここに入力',
+    '油井 航':'3649977afea280aba8c9dc64d20171d4',
+    '若林 さくら':'ページIDをここに入力',
+    '近藤 花音':'ページIDをここに入力',
+    '佐伯 雷虎':'ページIDをここに入力',
+    '中澤 心梛':'3649977afea28003b564f210f60fc3d1',
+    '古家 陽向':'ページIDをここに入力',
+    '小林 真優':'3649977afea280d680b5f4cc57f2ca33',
+    '西沢 結菜':'ページIDをここに入力',
+    '寺沢 聖':'3649977afea280d7b5d8c61cf59e8e2e',
+    '近藤 蒼一郎':'ページIDをここに入力',
+    '塚田 未來':'ページIDをここに入力',
+    '近藤 夕姫':'ページIDをここに入力',
+    '徳嵩 那生':'ページIDをここに入力',
+    '大日方 妃奈':'ページIDをここに入力',
+    '掛川 大緒':'ページIDをここに入力',
+    '白鳥 天翔':'ページIDをここに入力',
+    '目須田 悠斗':'ページIDをここに入力',
+    '武井 彩恵':'ページIDをここに入力',
+    '島田 唯花':'ページIDをここに入力',
+    '若林 穂澄':'ページIDをここに入力',
+    '宮川 凛':'ページIDをここに入力',
+    '宮川 結衣':'ページIDをここに入力',
+    '和田 咲南':'ページIDをここに入力',
+    '鎌田 陽斗':'ページIDをここに入力',
+    '井本 美緒':'ページIDをここに入力'
+  },
+  "長野青木島":{
+    '野池 涼介':'ページIDをここに入力',
+    '松本 蒼太':'3649977afea2805b985ada965894142a',
+    '佐藤 羅奈':'ページIDをここに入力',
+    '藤池 紗矢':'ページIDをここに入力',
+    '木野 薫':'ページIDをここに入力',
+    '傳田 花奈':'ページIDをここに入力',
+    '野池 悠太郎':'ページIDをここに入力',
+    '宮田 悠真':'ページIDをここに入力',
+    '松本 結衣':'ページIDをここに入力',
+    '馬場 啓太郎':'ページIDをここに入力',
+    '口丸 隆正':'ページIDをここに入力',
+    '西川 七瑚':'3649977afea280adb39ce0770528e4c9',
+    '宮田 あすか':'ページIDをここに入力'
+  }
 };
 var SUBJECTS={
   "小3":["国語","算数","理科","社会","英語"],
@@ -455,7 +560,27 @@ var GENERIC_UNITS={
 
 var currentTag=null;
 
+function onKyoshitsuChange(){
+  var k=document.getElementById('kyoshitsuSelect').value;
+  var tn=document.getElementById('teacherName');
+  var ss=document.getElementById('studentSelect');
+  var subj=document.getElementById('subjectSelect');
+  var grade=document.getElementById('gradeSelect');
+  tn.innerHTML='<option value="">-- 講師を選択 --</option>';
+  ss.innerHTML='<option value="">-- 先に学年を選択 --</option>';
+  subj.innerHTML='<option value="">-- 科目を選択 --</option>';
+  grade.value='';
+  document.getElementById('unitSection').style.display='none';
+  document.getElementById('studentManual').style.display='none';
+  currentTag=null;
+  if(!k)return;
+  (TEACHERS_BY_KYOSHITSU[k]||[]).forEach(function(t){
+    var o=document.createElement('option');o.value=t;o.textContent=t;tn.appendChild(o);
+  });
+}
+
 function onGradeChange(){
+  var k=document.getElementById('kyoshitsuSelect').value;
   var g=document.getElementById('gradeSelect').value;
   var ss=document.getElementById('studentSelect');
   var subj=document.getElementById('subjectSelect');
@@ -466,7 +591,8 @@ function onGradeChange(){
   document.getElementById('studentManual').value='';
   currentTag=null;
   if(!g)return;
-  (STUDENTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
+  var students=(STUDENTS_BY_KYOSHITSU[k]||{})[g]||[];
+  students.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
   var other=document.createElement('option');other.value='__other__';other.textContent='その他（手入力）';ss.appendChild(other);
   (SUBJECTS[g]||[]).forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;subj.appendChild(o);});
 }
@@ -822,6 +948,7 @@ function updateUnitCount(){
 
 function submitReport(){
   var date=document.getElementById('lessonDate').value||'（未入力）';
+  var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'（未選択）';
   var teacher=document.getElementById('teacherName').value||'（未入力）';
   var grade=document.getElementById('gradeSelect').value||'（未選択）';
   var student=getStudentName();
@@ -893,7 +1020,7 @@ function submitReport(){
   var rikaChecked=[];
   document.querySelectorAll('#rikaIssueChecks input[type=checkbox]:checked').forEach(function(cb){rikaChecked.push(cb.value);});
   var rikaLine=rikaChecked.length>0?'\n【理科の課題】\n'+rikaChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\nテスト実施：'+testResults+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n教室：'+kyoshitsu+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\nテスト実施：'+testResults+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
   var box=document.getElementById('previewBox');
   box.style.display='block';
@@ -912,43 +1039,6 @@ var SUBJECT_KEYWORD={
 };
 
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
-var NOTION_PAGES={
-  '小林 鷹聖':'3539977afea280d8a5efd1ea35fa5d08',
-  '伊藤 祐基':'3609977afea280a9a255d49ebd1e5847',
-  '今藤 ほのか':'3599977afea28016bdace0b36c7caae5',
-  '小林 巧実':'35e9977afea2806db349ce0756a170e8',
-  '伊藤 優莉':'3599977afea280beb6abc29d7c3904d3',
-  '太田 結翔':'3599977afea2807cb441fed91f8f6f15',
-  '小林 泰晴':'3609977afea280899b00e7e50926b0f8',
-  '小林 龍世':'35e9977afea280d4b890fa93aa006ad5',
-  '荒井 春輝':'3599977afea280d48fe8dcd6f712101e',
-  '尾芦 涼真':'3599977afea28008a02ec66c54d914aa',
-  '海沼 瑞香':'35e9977afea2808ab225c7027692b748',
-  '笠井 美希':'35d9977afea280879c69e1648a1201ee',
-  '佐藤 秀宥':'35e9977afea280cf80bcf6465924c5d3',
-  '島田 陽太':'35e9977afea2809baea6e14078753b4c',
-  '長崎 聖也':'3599977afea28052a188e701c445b9b5',
-  '山崎 愛結':'35e9977afea28000b787c7a2510fd0f6',
-  '湯川 智仁':'3599977afea280469699c21ef388ff18',
-  '嶌田 柊吾':'3609977afea2805fa69fee05ec2bdb38',
-  '小林 依知可':'35b9977afea2805caac6eb695f2734d0',
-  '小林 千華':'3609977afea2806eb44cf499d046c782',
-  '小林 美李':'3599977afea280069950cb1ebf3de74c',
-  '北村 健琉':'ページIDをここに入力',
-  '米澤 咲希子':'35e9977afea28047a22ec668c0245703',
-  '宮本 歩和':'3619977afea2808cb0a3d7b46629d826',
-  '宮本 光史郎':'3599977afea280e2a5e8c35d4d1fe121',
-  '山岸 華穂':'3599977afea2801c8484d63ec307d588',
-  '原 貴一':'35e9977afea2809ca9f6d9eb06292ddd',
-  '相澤 千尋':'35e9977afea280c1bda8f1d5bd703506',
-  '剱持 春人':'35e9977afea28089b992cee455962bba',
-  '後藤 花梨':'3599977afea2806dbd90e8a8a0135a4a',
-  '阿部 恵':'3609977afea28092a603d7c7fcbca2e6',
-  '笠井 望':'35e9977afea2806dbe00e29d27880b62',
-  '瀧澤 春太朗':'3609977afea280cb9c5fd0fd86841e89',
-  '松本 怜':'35e9977afea280d9bb96d428b7de09e1',
-  '宮下 英晃':'35e9977afea280e49667ec48d249419c'
-};
 
 function generateNotion(){
   var text=document.getElementById('previewContent').textContent;
@@ -996,7 +1086,8 @@ function postToNotion(){
   var text=window._notionGeneratedText||'';
   if(!text){alert('先に記録文を生成してください。');return;}
   var student=getStudentName();
-  var parentPageId=NOTION_PAGES[student];
+  var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'';
+  var parentPageId=(NOTION_PAGES_BY_KYOSHITSU[kyoshitsu]||{})[student];
   if(!parentPageId||parentPageId==='ページIDをここに入力'){
     alert('「'+student+'」さんのNotionページIDが設定されていません。');
     return;
