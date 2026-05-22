@@ -71,7 +71,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 <div class="wrap">
   <h1>授業スコアダッシュボード</h1>
   <div class="subtitle">
-    <span id="kyoshitsuLabel"></span>
     <select id="kyoshitsuSelect" onchange="loadData()" style="width:auto;display:inline-block">
       <option value="">全教室</option>
       <option value="安茂里駅前">安茂里駅前</option>
@@ -80,12 +79,10 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     </select>
     <span id="lastUpdate" style="margin-left:12px;font-size:12px;color:#aaa"></span>
   </div>
-
   <div class="tab-row" id="tabRow">
     <button class="tab active" id="tabAll" onclick="switchTab('all')">全生徒一覧</button>
     <button class="tab" id="tabDetail" onclick="switchTab('detail')">生徒別詳細</button>
   </div>
-
   <div id="viewAll">
     <div id="loadingAll" class="loading">読み込み中...</div>
     <div id="contentAll" style="display:none">
@@ -94,7 +91,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
       <div class="student-grid" id="studentGrid"></div>
     </div>
   </div>
-
   <div id="viewDetail" style="display:none">
     <select class="student-picker" id="studentPicker" onchange="showDetail(this.value)">
       <option value="">-- 生徒を選択 --</option>
@@ -148,7 +144,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     <div id="detailEmpty" class="empty">生徒を選択してください</div>
   </div>
 </div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
@@ -161,7 +156,11 @@ var rSpinning=false;
 var rCanvas=null;
 var rCtx=null;
 var ROULETTE_THRESHOLD=300;
-var filterStudentName=decodeURIComponent(new URLSearchParams(window.location.search).get('student')||'');
+
+// URLパラメータからスペースを除去して比較用キーを作る
+var rawParam=new URLSearchParams(window.location.search).get('student')||'';
+var filterStudentName=decodeURIComponent(rawParam);
+var filterStudentKey=filterStudentName.replace(/\s/g,'');
 
 var PRIZES=[
   {name:'クオカード 10,000円',rank:'★★★ 激レア',rankBg:'#FAEEDA',rankColor:'#633806',color:'#EF9F27',prob:0.5},
@@ -172,7 +171,7 @@ var PRIZES=[
   {name:'文具プレゼント（下）',rank:'C ノーマル',rankBg:'#F1EFE8',rankColor:'#444441',color:'#D3D1C7',prob:38.5}
 ];
 
-if(filterStudentName){
+if(filterStudentKey){
   document.getElementById('tabRow').style.display='none';
   document.getElementById('kyoshitsuSelect').style.display='none';
   document.getElementById('listTitle').textContent='';
@@ -209,13 +208,17 @@ function buildStudentMap(){
     s.records.sort(function(a,b){return a.date.localeCompare(b.date);});
     s.rawTotal=s.records.reduce(function(sum,r){return sum+r.total;},0);
     s.count=s.records.length;
+    // スペースなしのキーを追加
+    s.nameKey=s.name.replace(/\s/g,'');
   });
 }
 
 function renderAll(){
   var students=Object.values(studentMap);
-  if(filterStudentName){
-    students=students.filter(function(s){return s.name.replace(/\s/g,'')=== filterStudentName.replace(/\s/g,'');});
+
+  if(filterStudentKey){
+    // スペースを無視して比較
+    students=students.filter(function(s){return s.nameKey===filterStudentKey;});
     document.getElementById('metricsRow').style.display='none';
   } else {
     var totalLessons=allRecords.length;
