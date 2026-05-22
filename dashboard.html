@@ -221,6 +221,11 @@ function loadData(){
       buildStudentMap();
       renderAll();
       document.getElementById('lastUpdate').textContent='最終更新：'+new Date().toLocaleTimeString('ja-JP');
+      var params=new URLSearchParams(window.location.search);
+      var studentParam=params.get('student');
+      if(studentParam){
+        handleStudentAccess(studentParam);
+      }
     })
     .catch(function(){
       document.getElementById('loadingAll').innerHTML='<span style="color:#c00">データの読み込みに失敗しました</span>';
@@ -579,17 +584,7 @@ function handleStudentAccess(name){
 loadData();
 
 // URLパラメータ処理
-window.addEventListener('load',function(){
-  var params=new URLSearchParams(window.location.search);
-  var studentParam=params.get('student');
-  if(studentParam){
-    setTimeout(function(){
-      handleStudentAccess(studentParam);
-    },1500);
-    document.getElementById('tabAll').style.display='none';
-    document.getElementById('tabDetail').style.display='none';
-  }
-});
+
 </script>
 </body>
 </html>
