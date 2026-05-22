@@ -246,7 +246,7 @@ function renderAll(){
     card.innerHTML=
       '<div class="s-head"><div class="avatar">'+s.name.slice(0,2)+'</div>'+
       '<div><div class="s-name">'+s.name+'</div><div class="s-grade">'+s.kyoshitsu+' ／ '+s.count+'回</div></div></div>'+
-      '<div class="score-row"><div><span class="score-total">'+s.rawTotal+'</span><span class="score-unit">点</span></div>'+
+      '<div class="score-row"><div><span class="score-total">'+(s.rawTotal-(s.usedScore||0))+'</span><span class="score-unit">点</span></div>'+
       '<div class="score-count">'+s.count+'回分</div></div>'+
       '<div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%"></div></div>';
     card.onclick=function(){
