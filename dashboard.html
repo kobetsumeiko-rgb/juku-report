@@ -158,8 +158,7 @@ var rCtx=null;
 var ROULETTE_THRESHOLD=300;
 
 // URLパラメータからスペースを除去して比較用キーを作る
-var rawParam=new URLSearchParams(window.location.search).get('student')||'';
-var filterStudentName=decodeURIComponent(rawParam);
+var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 var filterStudentKey=filterStudentName.replace(/\s/g,'');
 
 var PRIZES=[
