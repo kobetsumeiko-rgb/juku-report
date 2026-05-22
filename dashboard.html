@@ -215,7 +215,7 @@ function buildStudentMap(){
 function renderAll(){
   var students=Object.values(studentMap);
   if(filterStudentName){
-    students=students.filter(function(s){return s.name===filterStudentName;});
+    students=students.filter(function(s){return s.name.replace(/\s/g,'')=== filterStudentName.replace(/\s/g,'');});
     document.getElementById('metricsRow').style.display='none';
   } else {
     var totalLessons=allRecords.length;
