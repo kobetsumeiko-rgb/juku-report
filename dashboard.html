@@ -561,6 +561,9 @@ function proceedToDetail(name){
   switchTab('detail');
   document.getElementById('studentPicker').value=name;
   showDetail(name);
+  if(new URLSearchParams(window.location.search).get('student')){
+    document.getElementById('studentPicker').style.display='none';
+  }
 }
 
 function handleStudentAccess(name){
