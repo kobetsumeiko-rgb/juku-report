@@ -1068,7 +1068,22 @@ function submitReport(){
     scoreBox.style.display='none';
   }
   window._lastScore={total:total,items:scoreItems,date:date,student:student,kyoshitsu:kyoshitsu,subject:subj,teacher:teacher};
-
+// スコアをKVに保存
+  if(total>0){
+    fetch('https://notion-proxy.kobetsu-meiko.workers.dev/save-score',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        student:student,
+        kyoshitsu:kyoshitsu,
+        date:date,
+        subject:subj,
+        teacher:teacher,
+        total:total,
+        items:scoreItems
+      })
+    }).catch(function(e){console.log('スコア保存エラー:',e);});
+  }
   var box=document.getElementById('previewBox');
   box.style.display='block';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
