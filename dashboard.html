@@ -65,10 +65,32 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 .score-progress-bar{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-top:6px;border:1px solid #e0e0e0}
 .score-progress-fill{height:100%;border-radius:4px;background:#7F77DD}
 .score-progress-labels{display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-top:4px}
+/* PIN認証 */
+.pin-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f4f0;display:flex;align-items:center;justify-content:center;z-index:200}
+.pin-card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.pin-title{font-size:16px;font-weight:500;color:#1a1a1a;margin-bottom:4px}
+.pin-sub{font-size:12px;color:#888;margin-bottom:1.5rem}
+.pin-input{width:100%;height:52px;font-size:28px;text-align:center;letter-spacing:.4em;border:1px solid #ccc;border-radius:8px;font-family:inherit;margin-bottom:1rem;background:#f9f9f9}
+.pin-input:focus{outline:none;border-color:#7F77DD;background:#fff}
+.pin-btn{width:100%;padding:13px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.pin-btn:hover{background:#7F77DD}
+.pin-err{font-size:12px;color:#c00;margin-top:10px;min-height:18px}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- PIN認証画面（保護者URL用） -->
+<div class="pin-screen" id="pinScreen" style="display:none">
+  <div class="pin-card">
+    <div class="pin-title" id="pinTitle"></div>
+    <div class="pin-sub">PINコードを入力してください</div>
+    <input class="pin-input" type="password" id="pinInput" maxlength="4" inputmode="numeric" placeholder="----" onkeydown="if(event.key==='Enter')checkPin()">
+    <button class="pin-btn" onclick="checkPin()">確認</button>
+    <div class="pin-err" id="pinErr"></div>
+  </div>
+</div>
+
+<div class="wrap" id="mainWrap">
   <h1>授業スコアダッシュボード</h1>
   <div class="subtitle">
     <select id="kyoshitsuSelect" onchange="loadData()" style="width:auto;display:inline-block">
@@ -144,6 +166,7 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     <div id="detailEmpty" class="empty">生徒を選択してください</div>
   </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
@@ -157,7 +180,6 @@ var rCanvas=null;
 var rCtx=null;
 var ROULETTE_THRESHOLD=300;
 
-// URLパラメータからスペースを除去して比較用キーを作る
 var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 var filterStudentKey=filterStudentName.replace(/\s/g,'');
 
@@ -170,13 +192,47 @@ var PRIZES=[
   {name:'文具プレゼント（下）',rank:'C ノーマル',rankBg:'#F1EFE8',rankColor:'#444441',color:'#D3D1C7',prob:38.5}
 ];
 
+// 保護者URL判定とPIN認証
 if(filterStudentKey){
   document.getElementById('tabRow').style.display='none';
   document.getElementById('kyoshitsuSelect').style.display='none';
   document.getElementById('listTitle').textContent='';
+  // 認証済みかチェック
+  if(localStorage.getItem('pin_ok_'+filterStudentKey)){
+    loadData();
+  } else {
+    document.getElementById('pinTitle').textContent=filterStudentName+'さんのページ';
+    document.getElementById('pinScreen').style.display='flex';
+  }
+} else {
+  loadData();
 }
 
-loadData();
+function checkPin(){
+  var input=document.getElementById('pinInput').value.trim();
+  if(!input){return;}
+  document.getElementById('pinErr').textContent='';
+  fetch(WORKER_URL+'/check-pin',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student:filterStudentName,pin:input})
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(data.ok){
+      localStorage.setItem('pin_ok_'+filterStudentKey,'1');
+      document.getElementById('pinScreen').style.display='none';
+      loadData();
+    } else {
+      document.getElementById('pinErr').textContent='PINコードが違います';
+      document.getElementById('pinInput').value='';
+    }
+  }).catch(function(){
+    // Worker接続エラーの場合は通す
+    localStorage.setItem('pin_ok_'+filterStudentKey,'1');
+    document.getElementById('pinScreen').style.display='none';
+    loadData();
+  });
+}
 
 function loadData(){
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value;
@@ -217,9 +273,7 @@ function buildStudentMap(){
 
 function renderAll(){
   var students=Object.values(studentMap);
-
   if(filterStudentKey){
-    // スペースを無視して比較
     students=students.filter(function(s){return s.nameKey===filterStudentKey;});
     document.getElementById('metricsRow').style.display='none';
   } else {
@@ -231,22 +285,22 @@ function renderAll(){
       '<div class="metric"><div class="metric-label">総授業回数</div><div class="metric-value">'+totalLessons+'</div><div class="metric-sub">回</div></div>'+
       '<div class="metric"><div class="metric-label">平均累計スコア</div><div class="metric-value">'+avgScore+'<span style="font-size:14px;font-weight:400">点</span></div><div class="metric-sub">最高 '+maxAll+'点</div></div>';
   }
-
-  var maxScore=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):1;
+  var maxScore=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal-(s.usedScore||0);})):1;
+  if(maxScore<=0)maxScore=1;
   var grid=document.getElementById('studentGrid');
   grid.innerHTML='';
   var picker=document.getElementById('studentPicker');
   picker.innerHTML='<option value="">-- 生徒を選択 --</option>';
-
   students.sort(function(a,b){return b.rawTotal-a.rawTotal;});
   students.forEach(function(s){
-    var pct=Math.round(s.rawTotal/maxScore*100);
+    var available=s.rawTotal-(s.usedScore||0);
+    var pct=Math.max(0,Math.round(available/maxScore*100));
     var card=document.createElement('div');
     card.className='student-card';
     card.innerHTML=
       '<div class="s-head"><div class="avatar">'+s.name.slice(0,2)+'</div>'+
       '<div><div class="s-name">'+s.name+'</div><div class="s-grade">'+s.kyoshitsu+' ／ '+s.count+'回</div></div></div>'+
-      '<div class="score-row"><div><span class="score-total">'+(s.rawTotal-(s.usedScore||0))+'</span><span class="score-unit">点</span></div>'+
+      '<div class="score-row"><div><span class="score-total">'+available+'</span><span class="score-unit">点</span></div>'+
       '<div class="score-count">'+s.count+'回分</div></div>'+
       '<div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%"></div></div>';
     card.onclick=function(){
@@ -258,10 +312,9 @@ function renderAll(){
     };
     grid.appendChild(card);
     var opt=document.createElement('option');
-    opt.value=s.name;opt.textContent=s.name+'（'+s.count+'回・'+s.rawTotal+'点）';
+    opt.value=s.name;opt.textContent=s.name+'（'+s.count+'回・'+available+'点）';
     picker.appendChild(opt);
   });
-
   document.getElementById('loadingAll').style.display='none';
   document.getElementById('contentAll').style.display='block';
 }
@@ -275,11 +328,12 @@ function showDetail(name){
   var s=studentMap[name];
   if(!s)return;
   currentStudent=s;
+  var available=s.rawTotal-(s.usedScore||0);
   document.getElementById('detailEmpty').style.display='none';
   document.getElementById('dAvatar').textContent=s.name.slice(0,2);
   document.getElementById('dName').textContent=s.name;
-  document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+(s.rawTotal-(s.usedScore||0))+'点';
-  document.getElementById('dTotal').textContent=s.rawTotal-(s.usedScore||0);
+  document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+available+'点';
+  document.getElementById('dTotal').textContent=available;
 
   var cumulative=[],sum=0;
   var labels=s.records.map(function(r){sum+=r.total;cumulative.push(sum);return r.date.slice(5).replace('-','/');});
@@ -303,7 +357,6 @@ function showDetail(name){
     row.innerHTML='<span class="lesson-date">'+rec.date.slice(5).replace('-','/')+'</span><span class="lesson-subject">'+rec.subject+'</span><span class="lesson-score">+'+rec.total+'点</span>';
     list.appendChild(row);
   });
-
   document.getElementById('detailContent').style.display='block';
   setupRoulette(s);
 }
@@ -312,7 +365,7 @@ function setupRoulette(s){
   var sec=document.getElementById('rouletteSection');
   var available=s.rawTotal-(s.usedScore||0);
   document.getElementById('rCurrentScore').textContent=available+'点';
-  document.getElementById('rProgressFill').style.width=Math.min(100,Math.round(available/ROULETTE_THRESHOLD*100))+'%';
+  document.getElementById('rProgressFill').style.width=Math.min(100,Math.max(0,Math.round(available/ROULETTE_THRESHOLD*100)))+'%';
   if(available<ROULETTE_THRESHOLD){sec.style.display='none';return;}
   sec.style.display='block';
   rCanvas=document.getElementById('rouletteCanvas');
@@ -397,7 +450,9 @@ function finishSpin(prizeIdx){
         s.usedScore=data.usedScore;
         var newAvailable=s.rawTotal-s.usedScore;
         document.getElementById('rCurrentScore').textContent=newAvailable+'点';
-        document.getElementById('rProgressFill').style.width=Math.min(100,Math.round(newAvailable/ROULETTE_THRESHOLD*100))+'%';
+        document.getElementById('rProgressFill').style.width=Math.min(100,Math.max(0,Math.round(newAvailable/ROULETTE_THRESHOLD*100)))+'%';
+        document.getElementById('dTotal').textContent=newAvailable;
+        document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+newAvailable+'点';
       }
     }).catch(function(){});
   showRouletteResult(prize);
