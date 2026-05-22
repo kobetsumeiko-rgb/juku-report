@@ -203,13 +203,17 @@ function buildStudentMap(){
     if(!studentMap[key]){studentMap[key]={name:rec.student,kyoshitsu:rec.kyoshitsu,records:[],usedScore:0};}
     studentMap[key].records.push(rec);
   });
-  Object.values(studentMap).forEach(function(s){
+  var promises=Object.values(studentMap).map(function(s){
     s.records.sort(function(a,b){return a.date.localeCompare(b.date);});
     s.rawTotal=s.records.reduce(function(sum,r){return sum+r.total;},0);
     s.count=s.records.length;
-    // スペースなしのキーを追加
     s.nameKey=s.name.replace(/\s/g,'');
+    return fetch(WORKER_URL+'/get-used-score?student='+encodeURIComponent(s.name))
+      .then(function(r){return r.json();})
+      .then(function(data){s.usedScore=data.usedScore||0;})
+      .catch(function(){s.usedScore=0;});
   });
+  return Promise.all(promises);
 }
 
 function renderAll(){
