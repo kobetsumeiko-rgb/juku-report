@@ -278,8 +278,8 @@ function showDetail(name){
   document.getElementById('detailEmpty').style.display='none';
   document.getElementById('dAvatar').textContent=s.name.slice(0,2);
   document.getElementById('dName').textContent=s.name;
-  document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+s.rawTotal+'点';
-  document.getElementById('dTotal').textContent=s.rawTotal;
+  document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+(s.rawTotal-(s.usedScore||0))+'点';
+  document.getElementById('dTotal').textContent=s.rawTotal-(s.usedScore||0);
 
   var cumulative=[],sum=0;
   var labels=s.records.map(function(r){sum+=r.total;cumulative.push(sum);return r.date.slice(5).replace('-','/');});
