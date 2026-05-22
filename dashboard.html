@@ -48,8 +48,6 @@ h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
 .empty{text-align:center;padding:2rem;color:#aaa;font-size:13px;background:#fff;border:1px solid #e0e0e0;border-radius:12px}
 select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
 .student-picker{width:100%;margin-bottom:1.25rem}
-
-/* PINモーダル */
 .pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100}
 .pin-card{background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center}
 .pin-title{font-size:16px;font-weight:500;color:#1a1a1a;margin-bottom:4px}
@@ -59,8 +57,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 .pin-btn{width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
 .pin-btn:hover{background:#7F77DD}
 .pin-err{font-size:12px;color:#c00;margin-top:8px;display:none}
-
-/* ルーレットセクション */
 .roulette-section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem;text-align:center}
 .roulette-badge{display:inline-block;background:#EEEDFE;color:#3C3489;font-size:18px;font-weight:500;padding:4px 12px;border-radius:20px;margin-bottom:1rem}
 .roulette-area{position:relative;margin:0 auto 1.25rem;width:280px;height:280px}
@@ -83,7 +79,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 </style>
 </head>
 <body>
-<!-- PINモーダル -->
 <div class="pin-overlay" id="pinOverlay" style="display:none">
   <div class="pin-card">
     <div class="pin-title" id="pinStudentName">確認</div>
@@ -106,39 +101,32 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     <span id="lastUpdate" style="margin-left:12px;font-size:12px;color:#aaa"></span>
   </div>
 
-  <div class="tab-row">
+  <div class="tab-row" id="tabRow">
     <button class="tab active" id="tabAll" onclick="switchTab('all')">全生徒一覧</button>
     <button class="tab" id="tabDetail" onclick="switchTab('detail')">生徒別詳細</button>
   </div>
 
-  <!-- 全生徒一覧 -->
   <div id="viewAll">
     <div id="loadingAll" class="loading">読み込み中...</div>
     <div id="contentAll" style="display:none">
       <div class="metrics" id="metricsRow"></div>
-      <div class="section-title">生徒別 累計スコア（カードをタップで詳細表示）</div>
+      <div class="section-title" id="listTitle">生徒別 累計スコア（カードをタップで詳細表示）</div>
       <div class="student-grid" id="studentGrid"></div>
     </div>
   </div>
 
-  <!-- 生徒別詳細 -->
   <div id="viewDetail" style="display:none">
     <select class="student-picker" id="studentPicker" onchange="showDetail(this.value)">
       <option value="">-- 生徒を選択 --</option>
     </select>
     <div id="detailContent" style="display:none">
-
-      <!-- ルーレットセクション -->
       <div class="roulette-section" id="rouletteSection" style="display:none">
         <div class="roulette-badge" id="rouletteBadge">🎡 ルーレットを引けます！</div>
         <div class="score-progress-wrap">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:#888">
-            <span>累計スコア</span>
-            <span id="rCurrentScore"></span>
+            <span>累計スコア</span><span id="rCurrentScore"></span>
           </div>
-          <div class="score-progress-bar">
-            <div class="score-progress-fill" id="rProgressFill"></div>
-          </div>
+          <div class="score-progress-bar"><div class="score-progress-fill" id="rProgressFill"></div></div>
           <div class="score-progress-labels"><span>0</span><span>300点でルーレット1回</span></div>
         </div>
         <div class="roulette-area">
@@ -155,7 +143,6 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
         <button class="btn-roulette" id="rouletteBtn" onclick="spinRoulette()">ルーレットを回す（300点消費）</button>
         <div class="roulette-notice" id="rouletteNotice">結果をスクショして塾に送ってね！</div>
       </div>
-
       <div class="detail-section">
         <div class="detail-head">
           <div class="avatar-lg" id="dAvatar"></div>
@@ -194,6 +181,9 @@ var rSpinning=false;
 var rCanvas=null;
 var rCtx=null;
 var ROULETTE_THRESHOLD=300;
+var pinStudent='';
+var pinAuthenticated={};
+var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 
 var PRIZES=[
   {name:'クオカード 10,000円',rank:'★★★ 激レア',rankBg:'#FAEEDA',rankColor:'#633806',color:'#EF9F27',prob:0.5},
@@ -204,10 +194,11 @@ var PRIZES=[
   {name:'文具プレゼント（下）',rank:'C ノーマル',rankBg:'#F1EFE8',rankColor:'#444441',color:'#D3D1C7',prob:38.5}
 ];
 
-// PIN管理
-var PINS={};
-var pinStudent='';
-var pinAuthenticated={};
+// 保護者用URLの場合、タブと教室選択を非表示
+if(filterStudentName){
+  document.getElementById('tabRow').style.display='none';
+  document.getElementById('kyoshitsuSelect').parentNode.style.display='none';
+}
 
 function loadData(){
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value;
@@ -221,10 +212,8 @@ function loadData(){
       buildStudentMap();
       renderAll();
       document.getElementById('lastUpdate').textContent='最終更新：'+new Date().toLocaleTimeString('ja-JP');
-      var params=new URLSearchParams(window.location.search);
-      var studentParam=params.get('student');
-      if(studentParam){
-        handleStudentAccess(studentParam);
+      if(filterStudentName){
+        handleStudentAccess(filterStudentName);
       }
     })
     .catch(function(){
@@ -243,21 +232,28 @@ function buildStudentMap(){
     s.records.sort(function(a,b){return a.date.localeCompare(b.date);});
     s.rawTotal=s.records.reduce(function(sum,r){return sum+r.total;},0);
     s.count=s.records.length;
-    s.total=s.rawTotal-s.usedScore;
   });
 }
 
 function renderAll(){
   var students=Object.values(studentMap);
-  var totalLessons=allRecords.length;
-  var avgScore=students.length>0?Math.round(students.reduce(function(s,st){return s+st.rawTotal;},0)/students.length):0;
+
+  // 保護者URLの場合はその生徒だけ表示
+  if(filterStudentName){
+    students=students.filter(function(s){return s.name===filterStudentName;});
+    document.getElementById('metricsRow').style.display='none';
+    document.getElementById('listTitle').style.display='none';
+  } else {
+    var totalLessons=allRecords.length;
+    var avgScore=students.length>0?Math.round(students.reduce(function(s,st){return s+st.rawTotal;},0)/students.length):0;
+    var maxScoreAll=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):0;
+    document.getElementById('metricsRow').innerHTML=
+      '<div class="metric"><div class="metric-label">在籍生徒数</div><div class="metric-value">'+students.length+'</div><div class="metric-sub">名</div></div>'+
+      '<div class="metric"><div class="metric-label">総授業回数</div><div class="metric-value">'+totalLessons+'</div><div class="metric-sub">回</div></div>'+
+      '<div class="metric"><div class="metric-label">平均累計スコア</div><div class="metric-value">'+avgScore+'<span style="font-size:14px;font-weight:400">点</span></div><div class="metric-sub">最高 '+maxScoreAll+'点</div></div>';
+  }
+
   var maxScore=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):0;
-
-  document.getElementById('metricsRow').innerHTML=
-    '<div class="metric"><div class="metric-label">在籍生徒数</div><div class="metric-value">'+students.length+'</div><div class="metric-sub">名</div></div>'+
-    '<div class="metric"><div class="metric-label">総授業回数</div><div class="metric-value">'+totalLessons+'</div><div class="metric-sub">回</div></div>'+
-    '<div class="metric"><div class="metric-label">平均累計スコア</div><div class="metric-value">'+avgScore+'<span style="font-size:14px;font-weight:400">点</span></div><div class="metric-sub">最高 '+maxScore+'点</div></div>';
-
   var grid=document.getElementById('studentGrid');
   grid.innerHTML='';
   var picker=document.getElementById('studentPicker');
@@ -301,14 +297,12 @@ function showDetail(name){
   var s=studentMap[name];
   if(!s)return;
   currentStudent=s;
-
   document.getElementById('detailEmpty').style.display='none';
   document.getElementById('dAvatar').textContent=s.name.slice(0,2);
   document.getElementById('dName').textContent=s.name;
   document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+s.rawTotal+'点';
   document.getElementById('dTotal').textContent=s.rawTotal;
 
-  // スコア推移グラフ
   var cumulative=[];var sum=0;
   var labels=s.records.map(function(r){
     sum+=r.total;cumulative.push(sum);
@@ -331,7 +325,6 @@ function showDetail(name){
     }
   });
 
-  // 授業履歴
   var list=document.getElementById('lessonList');
   list.innerHTML='';
   s.records.slice().reverse().slice(0,10).forEach(function(rec){
@@ -344,46 +337,38 @@ function showDetail(name){
   });
 
   document.getElementById('detailContent').style.display='block';
-
-  // ルーレットセクション表示
   setupRoulette(s);
 }
 
 function setupRoulette(s){
   var sec=document.getElementById('rouletteSection');
-  var available=s.rawTotal-s.usedScore;
+  var available=s.rawTotal-(s.usedScore||0);
   var pct=Math.min(100,Math.max(0,Math.round(available/ROULETTE_THRESHOLD*100)));
   document.getElementById('rCurrentScore').textContent=available+'点';
   document.getElementById('rProgressFill').style.width=pct+'%';
-
-  if(available<ROULETTE_THRESHOLD){
-    sec.style.display='none';
-    return;
-  }
+  if(available<ROULETTE_THRESHOLD){sec.style.display='none';return;}
   sec.style.display='block';
-  document.getElementById('rouletteBadge').textContent='🎡 ルーレットを引けます！';
-
-  // ルーレット描画初期化
   rCanvas=document.getElementById('rouletteCanvas');
   rCtx=rCanvas.getContext('2d');
   rSpinning=false;
   rWheelAngle=0;
   drawRoulette(rWheelAngle);
+  document.getElementById('rResultIdle').style.display='block';
+  document.getElementById('rResultRank').style.display='none';
+  document.getElementById('rResultPrize').style.display='none';
+  document.getElementById('rResultCongrats').style.display='none';
+  document.getElementById('rResultBox').style.display='flex';
+  document.getElementById('rAlready').style.display='none';
+  document.getElementById('rouletteBtn').disabled=false;
+  document.getElementById('rouletteBtn').textContent='ルーレットを回す（300点消費）';
+  document.getElementById('rouletteNotice').textContent='結果をスクショして塾に送ってね！';
 
-  // 既に引いた結果があるか確認
-  fetch(WORKER_URL+'/get-roulette?student='+encodeURIComponent(s.name)+'&scoreLevel='+Math.floor(available/ROULETTE_THRESHOLD))
+  var scoreLevel=Math.floor(available/ROULETTE_THRESHOLD);
+  fetch(WORKER_URL+'/get-roulette?student='+encodeURIComponent(s.name)+'&scoreLevel='+scoreLevel)
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data.result){
-        showRouletteAlready(data.result);
-      } else {
-        document.getElementById('rouletteBtn').disabled=false;
-        document.getElementById('rouletteBtn').textContent='ルーレットを回す（300点消費）';
-        document.getElementById('rAlready').style.display='none';
-        document.getElementById('rResultBox').style.display='flex';
-      }
-    })
-    .catch(function(){});
+      if(data.result){showRouletteAlready(data.result);}
+    }).catch(function(){});
 }
 
 function drawRoulette(angle){
@@ -436,7 +421,6 @@ function spinRoulette(){
   document.getElementById('rouletteBtn').disabled=true;
   document.getElementById('rouletteBtn').textContent='回転中...';
   document.getElementById('rResultIdle').textContent='ドキドキ...';
-
   var prizeIdx=getPrizeIdx();
   var n=PRIZES.length;
   var sliceAngle=2*Math.PI/n;
@@ -448,7 +432,6 @@ function spinRoulette(){
   var startAngle=rWheelAngle;
   var start=null;
   var duration=4500;
-
   function animate(ts){
     if(!start)start=ts;
     var elapsed=ts-start;
@@ -464,21 +447,15 @@ function spinRoulette(){
 
 function finishSpin(prizeIdx){
   var s=currentStudent;
-  var available=s.rawTotal-s.usedScore;
+  var available=s.rawTotal-(s.usedScore||0);
   var scoreLevel=Math.floor(available/ROULETTE_THRESHOLD);
   var prize=PRIZES[prizeIdx];
-
-  // KVに結果を保存
   fetch(WORKER_URL+'/save-roulette',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({student:s.name,prizeIdx:prizeIdx,prizeName:prize.name,scoreLevel:scoreLevel})
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student:s.name,prizeIdx:prizeIdx,prizeName:prize.name,rank:prize.rank,scoreLevel:scoreLevel})
   }).catch(function(){});
-
-  // スコア消費を記録
   fetch(WORKER_URL+'/use-score',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({student:s.name,amount:ROULETTE_THRESHOLD})
   }).then(function(r){return r.json();})
   .then(function(data){
@@ -490,20 +467,14 @@ function finishSpin(prizeIdx){
       document.getElementById('rProgressFill').style.width=pct+'%';
     }
   }).catch(function(){});
-
   showRouletteResult(prize);
 }
 
 function showRouletteResult(prize){
   document.getElementById('rResultIdle').style.display='none';
   var rank=document.getElementById('rResultRank');
-  rank.textContent=prize.rank;
-  rank.style.background=prize.rankBg;
-  rank.style.color=prize.rankColor;
-  rank.style.display='inline-block';
-  var pr=document.getElementById('rResultPrize');
-  pr.textContent=prize.name;
-  pr.style.display='block';
+  rank.textContent=prize.rank;rank.style.background=prize.rankBg;rank.style.color=prize.rankColor;rank.style.display='inline-block';
+  var pr=document.getElementById('rResultPrize');pr.textContent=prize.name;pr.style.display='block';
   var cg=document.getElementById('rResultCongrats');
   cg.textContent=prize.prob<=1?'すごい！超レアが出ました！おめでとう！':prize.prob<=20?'やったね！おめでとうございます！':'おめでとうございます！';
   cg.style.display='block';
@@ -514,7 +485,7 @@ function showRouletteResult(prize){
 function showRouletteAlready(result){
   document.getElementById('rResultBox').style.display='none';
   document.getElementById('rAlready').style.display='block';
-  document.getElementById('rAlready').textContent='前回の結果：'+result.prizeName+'（'+result.rank+'）\nすでにルーレットを引いています。';
+  document.getElementById('rAlready').textContent='前回の結果：'+result.prizeName+'\nすでにルーレットを引いています。';
   document.getElementById('rouletteBtn').disabled=true;
   document.getElementById('rouletteBtn').textContent='引き直しはできません';
 }
@@ -530,7 +501,6 @@ function switchTab(name){
   }
 }
 
-// PIN認証
 function showPin(studentName){
   pinStudent=studentName;
   document.getElementById('pinStudentName').textContent=studentName+'さんのページ';
@@ -542,15 +512,14 @@ function showPin(studentName){
 function checkPin(){
   var input=document.getElementById('pinInput').value;
   fetch(WORKER_URL+'/check-pin',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({student:pinStudent,pin:input})
   }).then(function(r){return r.json();})
   .then(function(data){
     if(data.ok){
       pinAuthenticated[pinStudent]=true;
-      document.getElementById('pinOverlay').style.display='none';
       localStorage.setItem('auth_'+pinStudent,'1');
+      document.getElementById('pinOverlay').style.display='none';
       proceedToDetail(pinStudent);
     } else {
       document.getElementById('pinErr').style.display='block';
@@ -563,11 +532,12 @@ function checkPin(){
 }
 
 function proceedToDetail(name){
-  switchTab('detail');
-  document.getElementById('studentPicker').value=name;
-  showDetail(name);
-  if(new URLSearchParams(window.location.search).get('student')){
-    document.getElementById('studentPicker').style.display='none';
+  if(filterStudentName){
+    showDetail(name);
+  } else {
+    switchTab('detail');
+    document.getElementById('studentPicker').value=name;
+    showDetail(name);
   }
 }
 
@@ -580,7 +550,6 @@ function handleStudentAccess(name){
   }
 }
 
-// 初期ロード
 loadData();
 </script>
 </body>
