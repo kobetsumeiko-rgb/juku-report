@@ -48,8 +48,8 @@ h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
 .empty{text-align:center;padding:2rem;color:#aaa;font-size:13px;background:#fff;border:1px solid #e0e0e0;border-radius:12px}
 select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
 .student-picker{width:100%;margin-bottom:1.25rem}
-.pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100}
-.pin-card{background:#fff;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center}
+.pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(245,244,240,1);display:flex;align-items:center;justify-content:center;z-index:100}
+.pin-card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center}
 .pin-title{font-size:16px;font-weight:500;color:#1a1a1a;margin-bottom:4px}
 .pin-sub{font-size:12px;color:#888;margin-bottom:1.25rem}
 .pin-input{width:100%;height:48px;font-size:24px;text-align:center;letter-spacing:.3em;border:1px solid #ccc;border-radius:8px;font-family:inherit;margin-bottom:1rem}
@@ -79,9 +79,11 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 </style>
 </head>
 <body>
+
+<!-- PINオーバーレイ（保護者URL用） -->
 <div class="pin-overlay" id="pinOverlay" style="display:none">
   <div class="pin-card">
-    <div class="pin-title" id="pinStudentName">確認</div>
+    <div class="pin-title" id="pinStudentName"></div>
     <div class="pin-sub">PINコードを入力してください</div>
     <input class="pin-input" type="password" id="pinInput" maxlength="4" inputmode="numeric" placeholder="----">
     <button class="pin-btn" onclick="checkPin()">確認</button>
@@ -89,9 +91,9 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
   </div>
 </div>
 
-<div class="wrap">
+<div class="wrap" id="mainWrap" style="display:none">
   <h1>授業スコアダッシュボード</h1>
-  <div class="subtitle">
+  <div class="subtitle" id="subtitleRow">
     <select id="kyoshitsuSelect" onchange="loadData()" style="width:auto;display:inline-block">
       <option value="">全教室</option>
       <option value="安茂里駅前">安茂里駅前</option>
@@ -106,6 +108,7 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     <button class="tab" id="tabDetail" onclick="switchTab('detail')">生徒別詳細</button>
   </div>
 
+  <!-- 全生徒一覧 -->
   <div id="viewAll">
     <div id="loadingAll" class="loading">読み込み中...</div>
     <div id="contentAll" style="display:none">
@@ -115,13 +118,14 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
     </div>
   </div>
 
+  <!-- 生徒別詳細 -->
   <div id="viewDetail" style="display:none">
     <select class="student-picker" id="studentPicker" onchange="showDetail(this.value)">
       <option value="">-- 生徒を選択 --</option>
     </select>
     <div id="detailContent" style="display:none">
       <div class="roulette-section" id="rouletteSection" style="display:none">
-        <div class="roulette-badge" id="rouletteBadge">🎡 ルーレットを引けます！</div>
+        <div class="roulette-badge">🎡 ルーレットを引けます！</div>
         <div class="score-progress-wrap">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:#888">
             <span>累計スコア</span><span id="rCurrentScore"></span>
@@ -182,7 +186,6 @@ var rCanvas=null;
 var rCtx=null;
 var ROULETTE_THRESHOLD=300;
 var pinStudent='';
-var pinAuthenticated={};
 var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 
 var PRIZES=[
@@ -194,10 +197,48 @@ var PRIZES=[
   {name:'文具プレゼント（下）',rank:'C ノーマル',rankBg:'#F1EFE8',rankColor:'#444441',color:'#D3D1C7',prob:38.5}
 ];
 
-// 保護者用URLの場合、タブと教室選択を非表示
+// 起動処理
 if(filterStudentName){
-  document.getElementById('tabRow').style.display='none';
-  document.getElementById('kyoshitsuSelect').parentNode.style.display='none';
+  // 保護者URL：PIN認証から始める
+  if(localStorage.getItem('auth_'+filterStudentName)){
+    startApp();
+  } else {
+    document.getElementById('pinStudentName').textContent=filterStudentName+'さんのページ';
+    document.getElementById('pinOverlay').style.display='flex';
+  }
+} else {
+  // 塾スタッフURL：そのまま表示
+  startApp();
+}
+
+function startApp(){
+  document.getElementById('pinOverlay').style.display='none';
+  document.getElementById('mainWrap').style.display='block';
+  if(filterStudentName){
+    document.getElementById('tabRow').style.display='none';
+    document.getElementById('kyoshitsuSelect').style.display='none';
+  }
+  loadData();
+}
+
+function checkPin(){
+  var input=document.getElementById('pinInput').value;
+  fetch(WORKER_URL+'/check-pin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student:filterStudentName,pin:input})
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(data.ok){
+      localStorage.setItem('auth_'+filterStudentName,'1');
+      startApp();
+    } else {
+      document.getElementById('pinErr').style.display='block';
+    }
+  }).catch(function(){
+    // Workers接続エラーの場合もとりあえず通す
+    localStorage.setItem('auth_'+filterStudentName,'1');
+    startApp();
+  });
 }
 
 function loadData(){
@@ -213,7 +254,8 @@ function loadData(){
       renderAll();
       document.getElementById('lastUpdate').textContent='最終更新：'+new Date().toLocaleTimeString('ja-JP');
       if(filterStudentName){
-        handleStudentAccess(filterStudentName);
+        // 保護者URLの場合：生徒カードだけ表示（全生徒一覧タブのまま）
+        // カードをタップすると詳細へ
       }
     })
     .catch(function(){
@@ -238,22 +280,22 @@ function buildStudentMap(){
 function renderAll(){
   var students=Object.values(studentMap);
 
-  // 保護者URLの場合はその生徒だけ表示
   if(filterStudentName){
+    // 保護者URL：その生徒だけ表示
     students=students.filter(function(s){return s.name===filterStudentName;});
     document.getElementById('metricsRow').style.display='none';
     document.getElementById('listTitle').style.display='none';
   } else {
     var totalLessons=allRecords.length;
     var avgScore=students.length>0?Math.round(students.reduce(function(s,st){return s+st.rawTotal;},0)/students.length):0;
-    var maxScoreAll=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):0;
+    var maxAll=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):0;
     document.getElementById('metricsRow').innerHTML=
       '<div class="metric"><div class="metric-label">在籍生徒数</div><div class="metric-value">'+students.length+'</div><div class="metric-sub">名</div></div>'+
       '<div class="metric"><div class="metric-label">総授業回数</div><div class="metric-value">'+totalLessons+'</div><div class="metric-sub">回</div></div>'+
-      '<div class="metric"><div class="metric-label">平均累計スコア</div><div class="metric-value">'+avgScore+'<span style="font-size:14px;font-weight:400">点</span></div><div class="metric-sub">最高 '+maxScoreAll+'点</div></div>';
+      '<div class="metric"><div class="metric-label">平均累計スコア</div><div class="metric-value">'+avgScore+'<span style="font-size:14px;font-weight:400">点</span></div><div class="metric-sub">最高 '+maxAll+'点</div></div>';
   }
 
-  var maxScore=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):0;
+  var maxScore=students.length>0?Math.max.apply(null,students.map(function(s){return s.rawTotal;})):1;
   var grid=document.getElementById('studentGrid');
   grid.innerHTML='';
   var picker=document.getElementById('studentPicker');
@@ -261,7 +303,7 @@ function renderAll(){
 
   students.sort(function(a,b){return b.rawTotal-a.rawTotal;});
   students.forEach(function(s){
-    var pct=maxScore>0?Math.round(s.rawTotal/maxScore*100):0;
+    var pct=Math.round(s.rawTotal/maxScore*100);
     var initials=s.name.slice(0,2);
     var card=document.createElement('div');
     card.className='student-card';
@@ -304,10 +346,7 @@ function showDetail(name){
   document.getElementById('dTotal').textContent=s.rawTotal;
 
   var cumulative=[];var sum=0;
-  var labels=s.records.map(function(r){
-    sum+=r.total;cumulative.push(sum);
-    return r.date.slice(5).replace('-','/');
-  });
+  var labels=s.records.map(function(r){sum+=r.total;cumulative.push(sum);return r.date.slice(5).replace('-','/');});
   var perScores=s.records.map(function(r){return r.total;});
   if(chartInst)chartInst.destroy();
   chartInst=new Chart(document.getElementById('scoreChart'),{
@@ -316,13 +355,8 @@ function showDetail(name){
       {label:'累計スコア',data:cumulative,borderColor:'#534AB7',backgroundColor:'rgba(127,119,221,0.08)',tension:.3,pointRadius:4,pointBackgroundColor:'#534AB7',fill:true,yAxisID:'y'},
       {label:'各回スコア',data:perScores,borderColor:'#1D9E75',backgroundColor:'transparent',tension:.3,pointRadius:3,pointBackgroundColor:'#1D9E75',borderDash:[4,3],yAxisID:'y2'}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        y:{position:'left',ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},
-        y2:{position:'right',ticks:{font:{size:11}},grid:{display:false}}
-      }
-    }
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{position:'left',ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}},y2:{position:'right',ticks:{font:{size:11}},grid:{display:false}}}}
   });
 
   var list=document.getElementById('lessonList');
@@ -330,9 +364,7 @@ function showDetail(name){
   s.records.slice().reverse().slice(0,10).forEach(function(rec){
     var row=document.createElement('div');
     row.className='lesson-row';
-    row.innerHTML='<span class="lesson-date">'+rec.date.slice(5).replace('-','/')+'</span>'+
-      '<span class="lesson-subject">'+rec.subject+'</span>'+
-      '<span class="lesson-score">+'+rec.total+'点</span>';
+    row.innerHTML='<span class="lesson-date">'+rec.date.slice(5).replace('-','/')+'</span><span class="lesson-subject">'+rec.subject+'</span><span class="lesson-score">+'+rec.total+'点</span>';
     list.appendChild(row);
   });
 
@@ -343,16 +375,15 @@ function showDetail(name){
 function setupRoulette(s){
   var sec=document.getElementById('rouletteSection');
   var available=s.rawTotal-(s.usedScore||0);
-  var pct=Math.min(100,Math.max(0,Math.round(available/ROULETTE_THRESHOLD*100)));
   document.getElementById('rCurrentScore').textContent=available+'点';
+  var pct=Math.min(100,Math.max(0,Math.round(available/ROULETTE_THRESHOLD*100)));
   document.getElementById('rProgressFill').style.width=pct+'%';
   if(available<ROULETTE_THRESHOLD){sec.style.display='none';return;}
   sec.style.display='block';
   rCanvas=document.getElementById('rouletteCanvas');
   rCtx=rCanvas.getContext('2d');
-  rSpinning=false;
-  rWheelAngle=0;
-  drawRoulette(rWheelAngle);
+  rSpinning=false;rWheelAngle=0;
+  drawRoulette(0);
   document.getElementById('rResultIdle').style.display='block';
   document.getElementById('rResultRank').style.display='none';
   document.getElementById('rResultPrize').style.display='none';
@@ -362,55 +393,33 @@ function setupRoulette(s){
   document.getElementById('rouletteBtn').disabled=false;
   document.getElementById('rouletteBtn').textContent='ルーレットを回す（300点消費）';
   document.getElementById('rouletteNotice').textContent='結果をスクショして塾に送ってね！';
-
   var scoreLevel=Math.floor(available/ROULETTE_THRESHOLD);
   fetch(WORKER_URL+'/get-roulette?student='+encodeURIComponent(s.name)+'&scoreLevel='+scoreLevel)
     .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.result){showRouletteAlready(data.result);}
-    }).catch(function(){});
+    .then(function(data){if(data.result)showRouletteAlready(data.result);})
+    .catch(function(){});
 }
 
 function drawRoulette(angle){
-  var n=PRIZES.length;
-  var sliceAngle=2*Math.PI/n;
-  var cx=140,cy=140,r=135;
+  var n=PRIZES.length,sliceAngle=2*Math.PI/n,cx=140,cy=140,r=135;
   rCtx.clearRect(0,0,280,280);
   for(var i=0;i<n;i++){
-    var start=angle+i*sliceAngle;
-    var end=start+sliceAngle;
-    rCtx.beginPath();
-    rCtx.moveTo(cx,cy);
-    rCtx.arc(cx,cy,r,start,end);
-    rCtx.closePath();
-    rCtx.fillStyle=PRIZES[i].color;
-    rCtx.fill();
-    rCtx.strokeStyle='#fff';
-    rCtx.lineWidth=2;
-    rCtx.stroke();
-    rCtx.save();
-    rCtx.translate(cx,cy);
-    rCtx.rotate(start+sliceAngle/2);
-    rCtx.textAlign='right';
-    rCtx.fillStyle='#1a1a1a';
-    rCtx.font='500 10px Hiragino Sans,sans-serif';
+    var start=angle+i*sliceAngle,end=start+sliceAngle;
+    rCtx.beginPath();rCtx.moveTo(cx,cy);rCtx.arc(cx,cy,r,start,end);rCtx.closePath();
+    rCtx.fillStyle=PRIZES[i].color;rCtx.fill();rCtx.strokeStyle='#fff';rCtx.lineWidth=2;rCtx.stroke();
+    rCtx.save();rCtx.translate(cx,cy);rCtx.rotate(start+sliceAngle/2);rCtx.textAlign='right';
+    rCtx.fillStyle='#1a1a1a';rCtx.font='500 10px Hiragino Sans,sans-serif';
     var parts=PRIZES[i].name.split(' ');
     if(parts.length===1){rCtx.fillText(PRIZES[i].name,r-6,4);}
     else{rCtx.fillText(parts[0],r-6,-3);rCtx.fillText(parts[1],r-6,10);}
     rCtx.restore();
   }
-  rCtx.beginPath();
-  rCtx.arc(cx,cy,16,0,2*Math.PI);
-  rCtx.fillStyle='#fff';
-  rCtx.fill();
-  rCtx.strokeStyle='#534AB7';
-  rCtx.lineWidth=2;
-  rCtx.stroke();
+  rCtx.beginPath();rCtx.arc(cx,cy,16,0,2*Math.PI);rCtx.fillStyle='#fff';rCtx.fill();
+  rCtx.strokeStyle='#534AB7';rCtx.lineWidth=2;rCtx.stroke();
 }
 
 function getPrizeIdx(){
-  var roll=Math.random()*100;
-  var cum=0;
+  var roll=Math.random()*100,cum=0;
   for(var i=0;i<PRIZES.length;i++){cum+=PRIZES[i].prob;if(roll<cum)return i;}
   return PRIZES.length-1;
 }
@@ -422,51 +431,40 @@ function spinRoulette(){
   document.getElementById('rouletteBtn').textContent='回転中...';
   document.getElementById('rResultIdle').textContent='ドキドキ...';
   var prizeIdx=getPrizeIdx();
-  var n=PRIZES.length;
-  var sliceAngle=2*Math.PI/n;
+  var n=PRIZES.length,sliceAngle=2*Math.PI/n;
   var targetCenter=-Math.PI/2-(prizeIdx*sliceAngle+sliceAngle/2);
   var diff=targetCenter-rWheelAngle;
-  diff=diff%(2*Math.PI);
-  if(diff>0)diff-=2*Math.PI;
+  diff=diff%(2*Math.PI);if(diff>0)diff-=2*Math.PI;
   var totalRotation=diff-5*2*Math.PI;
-  var startAngle=rWheelAngle;
-  var start=null;
-  var duration=4500;
+  var startAngle=rWheelAngle,start=null,duration=4500;
   function animate(ts){
     if(!start)start=ts;
-    var elapsed=ts-start;
-    var progress=Math.min(elapsed/duration,1);
+    var elapsed=ts-start,progress=Math.min(elapsed/duration,1);
     var ease=1-Math.pow(1-progress,4);
-    var angle=startAngle+totalRotation*ease;
-    drawRoulette(angle);
+    drawRoulette(startAngle+totalRotation*ease);
     if(progress<1){requestAnimationFrame(animate);}
-    else{rWheelAngle=angle;finishSpin(prizeIdx);}
+    else{rWheelAngle=startAngle+totalRotation;finishSpin(prizeIdx);}
   }
   requestAnimationFrame(animate);
 }
 
 function finishSpin(prizeIdx){
-  var s=currentStudent;
+  var s=currentStudent,prize=PRIZES[prizeIdx];
   var available=s.rawTotal-(s.usedScore||0);
   var scoreLevel=Math.floor(available/ROULETTE_THRESHOLD);
-  var prize=PRIZES[prizeIdx];
-  fetch(WORKER_URL+'/save-roulette',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({student:s.name,prizeIdx:prizeIdx,prizeName:prize.name,rank:prize.rank,scoreLevel:scoreLevel})
-  }).catch(function(){});
-  fetch(WORKER_URL+'/use-score',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({student:s.name,amount:ROULETTE_THRESHOLD})
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    if(data.usedScore!==undefined){
-      s.usedScore=data.usedScore;
-      var newAvailable=s.rawTotal-s.usedScore;
-      document.getElementById('rCurrentScore').textContent=newAvailable+'点';
-      var pct=Math.min(100,Math.max(0,Math.round(newAvailable/ROULETTE_THRESHOLD*100)));
-      document.getElementById('rProgressFill').style.width=pct+'%';
-    }
-  }).catch(function(){});
+  fetch(WORKER_URL+'/save-roulette',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student:s.name,prizeIdx:prizeIdx,prizeName:prize.name,rank:prize.rank,scoreLevel:scoreLevel})}).catch(function(){});
+  fetch(WORKER_URL+'/use-score',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student:s.name,amount:ROULETTE_THRESHOLD})})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.usedScore!==undefined){
+        s.usedScore=data.usedScore;
+        var newAvailable=s.rawTotal-s.usedScore;
+        document.getElementById('rCurrentScore').textContent=newAvailable+'点';
+        document.getElementById('rProgressFill').style.width=Math.min(100,Math.round(newAvailable/ROULETTE_THRESHOLD*100))+'%';
+      }
+    }).catch(function(){});
   showRouletteResult(prize);
 }
 
@@ -500,57 +498,6 @@ function switchTab(name){
     document.getElementById('detailContent').style.display='none';
   }
 }
-
-function showPin(studentName){
-  pinStudent=studentName;
-  document.getElementById('pinStudentName').textContent=studentName+'さんのページ';
-  document.getElementById('pinInput').value='';
-  document.getElementById('pinErr').style.display='none';
-  document.getElementById('pinOverlay').style.display='flex';
-}
-
-function checkPin(){
-  var input=document.getElementById('pinInput').value;
-  fetch(WORKER_URL+'/check-pin',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({student:pinStudent,pin:input})
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    if(data.ok){
-      pinAuthenticated[pinStudent]=true;
-      localStorage.setItem('auth_'+pinStudent,'1');
-      document.getElementById('pinOverlay').style.display='none';
-      proceedToDetail(pinStudent);
-    } else {
-      document.getElementById('pinErr').style.display='block';
-    }
-  }).catch(function(){
-    pinAuthenticated[pinStudent]=true;
-    document.getElementById('pinOverlay').style.display='none';
-    proceedToDetail(pinStudent);
-  });
-}
-
-function proceedToDetail(name){
-  if(filterStudentName){
-    showDetail(name);
-  } else {
-    switchTab('detail');
-    document.getElementById('studentPicker').value=name;
-    showDetail(name);
-  }
-}
-
-function handleStudentAccess(name){
-  if(!name)return;
-  if(pinAuthenticated[name]||localStorage.getItem('auth_'+name)){
-    proceedToDetail(name);
-  } else {
-    showPin(name);
-  }
-}
-
-loadData();
 </script>
 </body>
 </html>
