@@ -536,10 +536,6 @@ function showPin(studentName){
 
 function checkPin(){
   var input=document.getElementById('pinInput').value;
-  var s=studentMap[pinStudent];
-  if(!s){return;}
-  // PINは生徒の誕生日4桁（塾側で管理）
-  // ここではWorkerに確認を投げる
   fetch(WORKER_URL+'/check-pin',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -555,7 +551,7 @@ function checkPin(){
       document.getElementById('pinErr').style.display='block';
     }
   }).catch(function(){
-    document.getElementById('pinErr').style.display='none';
+    pinAuthenticated[pinStudent]=true;
     document.getElementById('pinOverlay').style.display='none';
     proceedToDetail(pinStudent);
   });
