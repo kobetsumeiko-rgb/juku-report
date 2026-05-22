@@ -187,8 +187,7 @@ function loadData(){
     .then(function(r){return r.json();})
     .then(function(data){
       allRecords=data.records||[];
-      buildStudentMap();
-      renderAll();
+      buildStudentMap().then(function(){renderAll();});
       document.getElementById('lastUpdate').textContent='最終更新：'+new Date().toLocaleTimeString('ja-JP');
     })
     .catch(function(){
