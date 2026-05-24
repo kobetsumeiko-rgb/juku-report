@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>体験授業申込 返信メール送信 | 明光義塾</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #f5f5f5; min-height: 100vh; padding: 2rem 1rem; }
+.container { max-width: 560px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+.field { margin-bottom: 1.25rem; }
+label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; color: #1a1a1a; outline: none; }
+input:focus { border-color: #185FA5; }
+.school-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.school-btn { padding: 10px 8px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; font-size: 13px; cursor: pointer; text-align: center; line-height: 1.4; transition: all 0.15s; }
+.school-btn:hover { background: #f0f0f0; }
+.school-btn.selected { border: 2px solid #185FA5; background: #e8f0fb; color: #185FA5; font-weight: 600; }
+.divider { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
+.preview-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+.preview-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 1rem 1.25rem; font-size: 13px; color: #1a1a1a; white-space: pre-wrap; line-height: 1.9; margin-bottom: 1.5rem; }
+.send-btn { width: 100%; padding: 13px; background: #185FA5; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.send-btn:hover { opacity: 0.88; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.status { margin-top: 1rem; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: none; }
+.status.success { background: #e6f4ea; color: #1e7e34; display: block; }
+.status.error { background: #fdecea; color: #c0392b; display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>体験授業申込 返信メール送信</h1>
+  <p class="subtitle">必要事項を入力してください。確認後、送信ボタンを押してください。</p>
+
+  <div class="field">
+    <label>教室を選択 <span style="color:#c0392b">*</span></label>
+    <div class="school-grid">
+      <button class="school-btn" onclick="selectSchool('安茂里駅前教室', '026-225-9455', this)">安茂里駅前<br>教室</button>
+      <button class="school-btn" onclick="selectSchool('屋代教室', '026-273-5402', this)">屋代教室</button>
+      <button class="school-btn" onclick="selectSchool('長野青木島教室', '026-283-2188', this)">長野青木島<br>教室</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>生徒のお名前 <span style="color:#c0392b">*</span></label>
+    <input type="text" id="to_name" placeholder="山田 太郎" oninput="updatePreview()" />
+  </div>
+
+  <div class="field">
+    <label>送信先メールアドレス <span style="color:#c0392b">*</span></label>
+    <input type="email" id="to_email" placeholder="example@email.com" oninput="updatePreview()" />
+  </div>
+
+  <hr class="divider" />
+
+  <div class="preview-label">送信されるメールのプレビュー</div>
+  <div class="preview-box" id="preview">教室・お名前を入力するとプレビューが表示されます。</div>
+
+  <button class="send-btn" id="sendBtn" onclick="sendEmail()" disabled>メールを送信する</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+emailjs.init('EiSv0T7EF_8vii917');
+
+let selectedSchool = '';
+let selectedTel = '';
+
+function selectSchool(name, tel, el) {
+  selectedSchool = name;
+  selectedTel = tel;
+  document.querySelectorAll('.school-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  updatePreview();
+}
+
+function getPreviewText(name, school, tel) {
+  const n = name ? name + '様 保護者様' : '（生徒名）様 保護者様';
+  const s = school || '（教室名）';
+  const t = tel || '（電話番号）';
+  return n + '\n\nこの度は明光義塾へお問い合わせいただき、誠にありがとうございます。\n無料体験授業のお申し込みを承りました。\n\n体験授業の日程につきましては、まず以下のアンケートにご回答いただいた上で、改めてご連絡させていただきます。\n\n━━━━━━━━━━━━━━━━\n■ 事前確認アンケート（約2〜3分）\nhttps://forms.gle/H42F7HcDV2sWW5cX7\n━━━━━━━━━━━━━━━━\n\nアンケートでは以下の内容をお伺いしています。\n・体験授業で希望される科目\n・通塾のご目的\n・向こう2週間以内でご都合の良い曜日・時間帯、悪い曜日・時間帯\n\n【体験当日の流れ】\n\n▶ カウンセリング（40分）\n　保護者様にご同席いただきます。\n\n▶ 体験授業（60分）\n　お子様のみ受講していただきます。\n　保護者様には一度席を外していただき、60分後にお迎えにお越しください。\n\n▶ 所要時間：合計約100分\n\n体験授業後は、教室長より授業のご報告をメールにてお送りいたします。\nあわせて、体験授業のご感想をお伺いするアンケートをお送りしますので、入会のご予定に関わらず、ぜひご回答いただけますと幸いです。\n\nご不明な点がございましたら、お気軽にご連絡ください。\nどうぞよろしくお願いいたします。\n\n━━━━━━━━━━━━━━━━\n明光義塾 ' + s + '\nTEL：' + t + '\n━━━━━━━━━━━━━━━━';
+}
+
+function updatePreview() {
+  const name = document.getElementById('to_name').value.trim();
+  const email = document.getElementById('to_email').value.trim();
+  document.getElementById('preview').textContent = getPreviewText(name, selectedSchool, selectedTel);
+  const ready = name && email && selectedSchool;
+  document.getElementById('sendBtn').disabled = !ready;
+}
+
+async function sendEmail() {
+  const name = document.getElementById('to_name').value.trim();
+  const email = document.getElementById('to_email').value.trim();
+  const btn = document.getElementById('sendBtn');
+  const status = document.getElementById('status');
+  status.className = 'status';
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  try {
+    await emailjs.send('service_bnptuq8', 'template_qr3wq8i', {
+      to_name: name + '様 保護者様',
+      to_email: email,
+      school_name: selectedSchool,
+      school_tel: selectedTel,
+      reply_email: 'kobestu.meiko@gmail.com'
+    });
+    status.textContent = '✓ メールを送信しました！';
+    status.className = 'status success';
+    document.getElementById('to_name').value = '';
+    document.getElementById('to_email').value = '';
+    selectedSchool = '';
+    selectedTel = '';
+    document.querySelectorAll('.school-btn').forEach(b => b.classList.remove('selected'));
+    updatePreview();
+    btn.textContent = 'メールを送信する';
+  } catch (err) {
+    status.textContent = 'エラーが発生しました。もう一度お試しください。';
+    status.className = 'status error';
+    btn.disabled = false;
+    btn.textContent = 'メールを送信する';
+  }
+}
+</script>
+</body>
+</html>
