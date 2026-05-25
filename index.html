@@ -1160,7 +1160,8 @@ function postToNotion(){
   if(!text){alert('先に記録文を生成してください。');return;}
   var student=getStudentName();
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'';
-  var parentPageId=(NOTION_PAGES_BY_KYOSHITSU[kyoshitsu]||{})[student];
+  var isManual=document.getElementById('studentSelect').value==='__other__';
+  var parentPageId=isManual?'36b9977afea280c5812fe1af073860cc':(NOTION_PAGES_BY_KYOSHITSU[kyoshitsu]||{})[student];
   if(!parentPageId||parentPageId==='ページIDをここに入力'){
     alert('「'+student+'」さんのNotionページIDが設定されていません。');
     return;
