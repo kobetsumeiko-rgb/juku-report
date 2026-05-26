@@ -120,6 +120,25 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
   </div>
   <div class="row">
     <div>
+      <label>授業内容の決め方</label>
+      <select id="lessonDecision">
+        <option value="">-- 選択してください --</option>
+        <option value="本人希望">本人希望</option>
+        <option value="講師判断">講師判断</option>
+      </select>
+    </div>
+    <div>
+      <label>授業開始時の机の状態</label>
+      <select id="deskStatus">
+        <option value="">-- 選択してください --</option>
+        <option value="何も置いていない">何も置いていない（0点）</option>
+        <option value="筆記具や教材が置いてある">筆記具や教材が置いてある（1点）</option>
+        <option value="前回内容の教材・ノートが開いてある">前回内容の教材・ノートが開いてある（3点）</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div>
       <label>授業への集中度</label>
       <select id="focusSelect">
         <option value="">-- 選択してください --</option>
@@ -961,6 +980,8 @@ function submitReport(){
   var teacher=document.getElementById('teacherName').value||'（未入力）';
   var grade=document.getElementById('gradeSelect').value||'（未選択）';
   var student=getStudentName();
+  var lessonDecision=document.getElementById('lessonDecision').value||'（未選択）';
+  var deskStatus=document.getElementById('deskStatus').value||'（未選択）';
   var focus=document.getElementById('focusSelect').value||'（未選択）';
   var homework=document.getElementById('homeworkStatus').value||'（未選択）';
   var testCov=document.getElementById('testCoverage').value||'（未選択）';
@@ -1029,12 +1050,16 @@ function submitReport(){
   var rikaChecked=[];
   document.querySelectorAll('#rikaIssueChecks input[type=checkbox]:checked').forEach(function(cb){rikaChecked.push(cb.value);});
   var rikaLine=rikaChecked.length>0?'\n【理科の課題】\n'+rikaChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n教室：'+kyoshitsu+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\nテスト実施：'+testResults+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n教室：'+kyoshitsu+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n授業内容の決め方：'+lessonDecision+'\nテスト実施：'+testResults+'\n授業開始時の机の状態：'+deskStatus+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
 
   // 点数計算
   var scoreItems=[];
   var total=0;
+
+  // 机の状態
+  if(deskStatus==='前回内容の教材・ノートが開いてある'){scoreItems.push('机の状態：3点');total+=3;}
+  else if(deskStatus==='筆記具や教材が置いてある'){scoreItems.push('机の状態：1点');total+=1;}
 
   // 集中度
   if(focus==='集中できていた'){scoreItems.push('集中度：3点');total+=3;}
