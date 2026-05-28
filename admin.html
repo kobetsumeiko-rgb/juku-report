@@ -435,40 +435,63 @@ function addStudent(){
 
 // ===== 生徒編集 =====
 function openEditStudent(k,g,name){
-  // 既存の編集パネルをすべて閉じる
   document.querySelectorAll('.edit-panel.open').forEach(function(p){p.classList.remove('open');});
-  var panelId='edit_'+k+'_'+g+'_'+name.replace(/\s/g,'_');
-  var existing=document.getElementById(panelId);
+  var safeId='ep_'+btoa(encodeURIComponent(k+'__'+g+'__'+name)).replace(/[^a-zA-Z0-9]/g,'');
+  var existing=document.getElementById(safeId);
   if(existing){existing.classList.toggle('open');return;}
-  // 新規パネルを生成
   var notionId=(masterNotionPages[k]||{})[name]||'';
   var pin=masterPins[name]||'';
   var row=document.querySelector('[data-edit-key="'+k+'__'+g+'__'+name+'"]');
   if(!row)return;
   var panel=document.createElement('div');
   panel.className='edit-panel open';
-  panel.id=panelId;
-  panel.innerHTML=
-    '<div class="edit-panel-title">✏️ '+name+'さんの情報を編集</div>'+
-    '<div class="row" style="margin-bottom:10px">'+
-      '<div><label>Notion ページ ID</label>'+
-        '<input type="text" id="ep_notion_'+panelId+'" value="'+notionId+'" placeholder="32桁のID"></div>'+
-      '<div><label>保護者 PIN（4桁）</label>'+
-        '<input type="text" id="ep_pin_'+panelId+'" value="'+pin+'" placeholder="例：1234" maxlength="4"></div>'+
-    '</div>'+
-    '<div style="display:flex;gap:8px;align-items:center">'+
-      '<button class="btn btn-primary btn-sm" onclick="saveEditStudent('+JSON.stringify(k)+','+JSON.stringify(g)+','+JSON.stringify(name)+','+JSON.stringify(panelId)+')">保存する</button>'+
-      '<button class="btn btn-secondary btn-sm" onclick="document.getElementById('+JSON.stringify(panelId)+').classList.remove('open')">キャンセル</button>'+
-      '<span class="status-msg" id="ep_msg_'+panelId+'"></span>'+
-    '</div>';
-  row.parentNode.insertBefore(panel, row.nextSibling);
-  panel.classList.add('open');
+  panel.id=safeId;
+
+  var notionInput=document.createElement('input');
+  notionInput.type='text';notionInput.id='ep_notion_'+safeId;
+  notionInput.value=notionId;notionInput.placeholder='32桁のID';
+  notionInput.style.cssText='width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit';
+
+  var pinInput=document.createElement('input');
+  pinInput.type='text';pinInput.id='ep_pin_'+safeId;
+  pinInput.value=pin;pinInput.placeholder='例：1234';pinInput.maxLength=4;
+  pinInput.style.cssText='width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit';
+
+  var title=document.createElement('div');
+  title.className='edit-panel-title';title.textContent='✏️ '+name+'さんの情報を編集';
+
+  var row1=document.createElement('div');row1.className='row';row1.style.marginBottom='10px';
+  var col1=document.createElement('div');
+  var lbl1=document.createElement('label');lbl1.textContent='Notion ページ ID';
+  col1.appendChild(lbl1);col1.appendChild(notionInput);
+  var col2=document.createElement('div');
+  var lbl2=document.createElement('label');lbl2.textContent='保護者 PIN（4桁）';
+  col2.appendChild(lbl2);col2.appendChild(pinInput);
+  row1.appendChild(col1);row1.appendChild(col2);
+
+  var saveBtn=document.createElement('button');
+  saveBtn.className='btn btn-primary btn-sm';saveBtn.textContent='保存する';
+  saveBtn.onclick=function(){saveEditStudent(k,g,name,safeId);};
+
+  var cancelBtn=document.createElement('button');
+  cancelBtn.className='btn btn-secondary btn-sm';cancelBtn.textContent='キャンセル';
+  cancelBtn.onclick=function(){panel.classList.remove('open');};
+
+  var msgEl=document.createElement('span');
+  msgEl.className='status-msg';msgEl.id='ep_msg_'+safeId;
+
+  var btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:8px;align-items:center';
+  btnRow.appendChild(saveBtn);btnRow.appendChild(cancelBtn);btnRow.appendChild(msgEl);
+
+  panel.appendChild(title);panel.appendChild(row1);panel.appendChild(btnRow);
+  row.parentNode.insertBefore(panel,row.nextSibling);
 }
 
-function saveEditStudent(k,g,name,panelId){
-  var newNotion=document.getElementById('ep_notion_'+panelId).value.trim();
-  var newPin=document.getElementById('ep_pin_'+panelId).value.trim();
-  var msg=document.getElementById('ep_msg_'+panelId);
+function saveEditStudent(k,g,name,safeId){
+  var newNotion=document.getElementById('ep_notion_'+safeId).value.trim();
+  var newPin=document.getElementById('ep_pin_'+safeId).value.trim();
+  var msg=document.getElementById('ep_msg_'+safeId);
   if(!masterNotionPages[k])masterNotionPages[k]={};
   if(newNotion)masterNotionPages[k][name]=newNotion;
   if(newPin)masterPins[name]=newPin;
@@ -480,7 +503,8 @@ function saveEditStudent(k,g,name,panelId){
       }
       msg.textContent='✅ 保存しました';msg.className='status-msg status-ok';
       setTimeout(function(){
-        document.getElementById(panelId).classList.remove('open');
+        var panel=document.getElementById(safeId);
+        if(panel)panel.classList.remove('open');
         renderStudentList();
       },1000);
     });
