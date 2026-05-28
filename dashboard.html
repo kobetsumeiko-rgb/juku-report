@@ -210,6 +210,24 @@ var ROULETTE_THRESHOLD=300;
 var allUnitRecords=[];   // 現在表示中の生徒の単元履歴
 var uhCurrentTab='all';  // 単元履歴タブ状態
 
+
+// KVマスタから教室リストを読み込んで教室セレクトを更新
+(function(){
+  fetch('https://notion-proxy.kobetsu-meiko.workers.dev/get-master?type=kyoshitsu')
+    .then(function(r){return r.json();})
+    .then(function(resp){
+      if(!resp.data)return;
+      var kyoshitsu=resp.data;
+      var sel=document.getElementById('kyoshitsuSelect');
+      if(!sel)return;
+      while(sel.options.length>1)sel.remove(1);
+      kyoshitsu.forEach(function(k){
+        var o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);
+      });
+    })
+    .catch(function(){});
+})();
+
 var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 var filterStudentKey=filterStudentName.replace(/\s/g,'');
 
