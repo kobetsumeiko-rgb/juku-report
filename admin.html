@@ -55,6 +55,9 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 .teacher-tag button{border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;line-height:1;padding:0}
 .teacher-tag button:hover{color:#c00}
 .divider{border:none;border-top:1px solid #eee;margin:1rem 0}
+.edit-panel{background:#EEEDFE;border:1px solid #AFA9EC;border-radius:10px;padding:1rem;margin-top:8px;display:none}
+.edit-panel.open{display:block}
+.edit-panel-title{font-size:12px;font-weight:500;color:#3C3489;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -197,7 +200,7 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
 
 <script>
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
-var ADMIN_PASSWORD='0000'; // ← 必要に応じて変更
+var ADMIN_PASSWORD='meiko2024'; // ← 必要に応じて変更
 
 // マスタデータ（KVから読み込み後に格納）
 var masterStudents={};   // {教室: {学年: [名前,...]}}
@@ -380,7 +383,7 @@ function renderStudentList(){
     var notionId=(masterNotionPages[r.kyoshitsu]||{})[r.name]||'';
     var notionOk=notionId&&notionId!=='ページIDをここに入力';
     var pin=(masterPins[r.name])||'';
-    html+='<div class="student-row">'+
+    html+='<div class="student-row" data-edit-key="'+r.kyoshitsu+'__'+r.grade+'__'+r.name+'">'+
       '<div class="student-name">'+r.name+'</div>'+
       '<span class="badge badge-grade">'+r.grade+'</span>'+
       '<span class="badge badge-ky">'+r.kyoshitsu+'</span>'+
@@ -432,23 +435,54 @@ function addStudent(){
 
 // ===== 生徒編集 =====
 function openEditStudent(k,g,name){
+  // 既存の編集パネルをすべて閉じる
+  document.querySelectorAll('.edit-panel.open').forEach(function(p){p.classList.remove('open');});
+  var panelId='edit_'+k+'_'+g+'_'+name.replace(/\s/g,'_');
+  var existing=document.getElementById(panelId);
+  if(existing){existing.classList.toggle('open');return;}
+  // 新規パネルを生成
   var notionId=(masterNotionPages[k]||{})[name]||'';
   var pin=masterPins[name]||'';
-  var newNotion=window.prompt('【'+name+'】\nNotionページIDを入力してください\n（空欄のままでも可）',notionId);
-  if(newNotion===null)return;
-  var newPin=window.prompt('保護者PINコード（4桁）を入力\n（空欄のままでも可）',pin);
-  if(newPin===null)return;
+  var row=document.querySelector('[data-edit-key="'+k+'__'+g+'__'+name+'"]');
+  if(!row)return;
+  var panel=document.createElement('div');
+  panel.className='edit-panel open';
+  panel.id=panelId;
+  panel.innerHTML=
+    '<div class="edit-panel-title">✏️ '+name+'さんの情報を編集</div>'+
+    '<div class="row" style="margin-bottom:10px">'+
+      '<div><label>Notion ページ ID</label>'+
+        '<input type="text" id="ep_notion_'+panelId+'" value="'+notionId+'" placeholder="32桁のID"></div>'+
+      '<div><label>保護者 PIN（4桁）</label>'+
+        '<input type="text" id="ep_pin_'+panelId+'" value="'+pin+'" placeholder="例：1234" maxlength="4"></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;align-items:center">'+
+      '<button class="btn btn-primary btn-sm" onclick="saveEditStudent('+JSON.stringify(k)+','+JSON.stringify(g)+','+JSON.stringify(name)+','+JSON.stringify(panelId)+')">保存する</button>'+
+      '<button class="btn btn-secondary btn-sm" onclick="document.getElementById('+JSON.stringify(panelId)+').classList.remove('open')">キャンセル</button>'+
+      '<span class="status-msg" id="ep_msg_'+panelId+'"></span>'+
+    '</div>';
+  row.parentNode.insertBefore(panel, row.nextSibling);
+  panel.classList.add('open');
+}
+
+function saveEditStudent(k,g,name,panelId){
+  var newNotion=document.getElementById('ep_notion_'+panelId).value.trim();
+  var newPin=document.getElementById('ep_pin_'+panelId).value.trim();
+  var msg=document.getElementById('ep_msg_'+panelId);
   if(!masterNotionPages[k])masterNotionPages[k]={};
-  if(newNotion.trim())masterNotionPages[k][name]=newNotion.trim();
-  if(newPin.trim())masterPins[name]=newPin.trim();
+  if(newNotion)masterNotionPages[k][name]=newNotion;
+  if(newPin)masterPins[name]=newPin;
   saveMaster('notionPages',masterNotionPages,function(){
     saveMaster('pins',masterPins,function(){
-      if(newPin.trim()){
+      if(newPin){
         fetch(WORKER_URL+'/save-pin',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({student:name,pin:newPin.trim()})}).catch(function(){});
+          body:JSON.stringify({student:name,pin:newPin})}).catch(function(){});
       }
-      renderStudentList();
-      showSaveStatus('保存しました');
+      msg.textContent='✅ 保存しました';msg.className='status-msg status-ok';
+      setTimeout(function(){
+        document.getElementById(panelId).classList.remove('open');
+        renderStudentList();
+      },1000);
     });
   });
 }
