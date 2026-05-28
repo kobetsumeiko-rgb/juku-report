@@ -155,6 +155,10 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
       <select id="subjectSelect" onchange="onSubjectChange()">
         <option value="">-- 先に学年を選択 --</option>
       </select>
+      <div id="multiSubjectWrap" style="display:none;margin-top:6px;background:#f5f4f0;border:1px solid #ddd;border-radius:8px;padding:8px 10px">
+        <div style="font-size:11px;color:#666;margin-bottom:6px">複数選択可（チェックを入れた科目の単元が表示されます）</div>
+        <div id="multiSubjectChecks" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
     </div>
   </div>
   <div class="row">
@@ -615,6 +619,31 @@ function onKyoshitsuChange(){
   });
 }
 
+// 複数科目選択対象の判定
+function isMultiSubjectGrade(g){
+  return g==='高1'||g==='高2'||g==='高3'||g==='小4'||g==='小5'||g==='小6';
+}
+// 高校生に表示する複数選択科目リスト（数学のみ）
+var MULTI_MATH_SUBJECTS=['数学Ⅰ','数学A','数学Ⅱ','数学B','数学Ⅲ','数学C'];
+// 小学算数の複数選択科目リスト
+var MULTI_SANSU_SUBJECTS={
+  '小4':['算数（小4）'],
+  '小5':['算数（小4）','算数（小5）'],
+  '小6':['算数（小4）','算数（小5）','算数（小6）']
+};
+
+function getSelectedSubjects(){
+  var g=document.getElementById('gradeSelect').value;
+  if(isMultiSubjectGrade(g)){
+    var checks=document.querySelectorAll('#multiSubjectChecks input[type=checkbox]:checked');
+    if(checks.length>0){
+      return Array.from(checks).map(function(c){return c.value;});
+    }
+  }
+  var s=document.getElementById('subjectSelect').value;
+  return s?[s]:[];
+}
+
 function onGradeChange(){
   var k=document.getElementById('kyoshitsuSelect').value;
   var g=document.getElementById('gradeSelect').value;
@@ -622,6 +651,8 @@ function onGradeChange(){
   var subj=document.getElementById('subjectSelect');
   ss.innerHTML='<option value="">-- 生徒を選択 --</option>';
   subj.innerHTML='<option value="">-- 科目を選択 --</option>';
+  document.getElementById('multiSubjectWrap').style.display='none';
+  document.getElementById('multiSubjectChecks').innerHTML='';
   document.getElementById('unitSection').style.display='none';
   document.getElementById('studentManual').style.display='none';
   document.getElementById('studentManual').value='';
@@ -736,13 +767,29 @@ function onSubjectChange(){
   var mathSec=document.getElementById('mathIssueSection');
   var rikaSec=document.getElementById('rikaIssueSection');
   var kpSec=document.getElementById('kokugoPointSection');
+
+  // 高校数学・小学算数のとき：チェックボックスUIを表示
+  var isHighMathSubj=MULTI_MATH_SUBJECTS.indexOf(s)>=0;
+  var isSansuSubj=(s==='算数'&&(g==='小4'||g==='小5'||g==='小6'));
+  if(isHighMathSubj){
+    // 高校数学科目を選んだら複数選択UIを表示してチェックボックス再構築
+    buildMultiMathChecks(g,s);
+    return; // 以降の処理はチェックボックス変更時に委譲
+  }
+  if(isSansuSubj){
+    buildMultiSansuChecks(g);
+    return;
+  }
+
+  // 通常の単科目処理
+  document.getElementById('multiSubjectWrap').style.display='none';
   if(!g||!s){sec.style.display='none';return;}
   sec.style.display='block';
   currentTag=null;
   wrap.innerHTML='';
   tabsArea.style.display='none';
   var isEng=(s==="英語");
-  var isMath=(s==="数学"||s==="数学Ⅰ"||s==="数学A"||s==="数学Ⅱ"||s==="数学B"||s==="数学Ⅲ"||s==="数学C"||s==="算数");
+  var isMath=(s==="数学");
   var isRika=(s==="理科");
   var isEngTab=(isEng&&(g==="中2"||g==="中3"||g==="高1"||g==="高2"||g==="高3"));
   var isKokugoJ=(s==="国語"&&(g==="中1"||g==="中2"||g==="中3"));
@@ -762,16 +809,10 @@ function onSubjectChange(){
     tabsArea.style.display='block';
     buildEngTabs(g);
     document.getElementById('unitCount').textContent='タブを選択してください';
-  } else if(HIGH_MATH[s]&&HIGH_MATH[s].length>1){
-    tabsArea.style.display='block';
-    buildHighMathTabs(s);
-    document.getElementById('unitCount').textContent='単元を選択してください';
   } else {
     var key=getSubjectKey(g,s);
     var units;
-    if(HIGH_MATH[s]&&HIGH_MATH[s].length===1){
-      units=HIGH_MATH[s][0].units;
-    } else if(isEng&&g==="中1"){
+    if(isEng&&g==="中1"){
       units=ENG_J1;
     } else {
       units=GENERIC_UNITS[key];
@@ -780,6 +821,135 @@ function onSubjectChange(){
     else{wrap.innerHTML='<div class="empty-msg">この科目の単元は随時追加されます</div>';}
     updateUnitCount();
   }
+}
+
+// 高校数学の複数選択チェックボックスを構築
+function buildMultiMathChecks(g,selectedSubj){
+  var wrap=document.getElementById('multiSubjectWrap');
+  var checksWrap=document.getElementById('multiSubjectChecks');
+  var sec=document.getElementById('unitSection');
+  wrap.style.display='block';
+  // すでに構築済みなら増減しない（科目を変えるたびに再構築）
+  checksWrap.innerHTML='';
+  MULTI_MATH_SUBJECTS.forEach(function(subj){
+    var lbl=document.createElement('label');
+    lbl.style.cssText='display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:4px 10px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#555;user-select:none';
+    var cb=document.createElement('input');
+    cb.type='checkbox';cb.value=subj;
+    cb.style.cssText='width:14px;height:14px;accent-color:#7F77DD';
+    if(subj===selectedSubj)cb.checked=true;
+    cb.addEventListener('change',function(){onMultiSubjectChange(g);});
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(subj));
+    checksWrap.appendChild(lbl);
+  });
+  sec.style.display='block';
+  document.getElementById('mathIssueSection').style.display='block';
+  buildIssueChecks(MATH_ISSUES,'mathIssueChecks','math_issue');
+  onMultiSubjectChange(g);
+}
+
+// 小学算数の複数選択チェックボックスを構築
+function buildMultiSansuChecks(g){
+  var wrap=document.getElementById('multiSubjectWrap');
+  var checksWrap=document.getElementById('multiSubjectChecks');
+  var sec=document.getElementById('unitSection');
+  wrap.style.display='block';
+  checksWrap.innerHTML='';
+  var subjects=MULTI_SANSU_SUBJECTS[g]||[];
+  subjects.forEach(function(subj){
+    var lbl=document.createElement('label');
+    lbl.style.cssText='display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;padding:4px 10px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#555;user-select:none';
+    var cb=document.createElement('input');
+    cb.type='checkbox';cb.value=subj;
+    cb.style.cssText='width:14px;height:14px;accent-color:#7F77DD';
+    cb.addEventListener('change',function(){onMultiSubjectChange(g);});
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(subj));
+    checksWrap.appendChild(lbl);
+  });
+  sec.style.display='block';
+  document.getElementById('mathIssueSection').style.display='block';
+  buildIssueChecks(MATH_ISSUES,'mathIssueChecks','math_issue');
+  onMultiSubjectChange(g);
+}
+
+// 複数科目チェックボックス変更時：選択された科目のパネルを構築
+function onMultiSubjectChange(g){
+  var tabsArea=document.getElementById('mathGradeTabs');
+  var wrap=document.getElementById('unitPanelsWrap');
+  var inner=document.getElementById('gradeTabsInner');
+  var selected=getSelectedSubjects();
+
+  // チェック済みのlabelをハイライト
+  document.querySelectorAll('#multiSubjectChecks label').forEach(function(lbl){
+    var cb=lbl.querySelector('input');
+    if(cb.checked){
+      lbl.style.background='#EEEDFE';lbl.style.borderColor='#AFA9EC';lbl.style.color='#3C3489';lbl.style.fontWeight='500';
+    } else {
+      lbl.style.background='#fff';lbl.style.borderColor='#ccc';lbl.style.color='#555';lbl.style.fontWeight='normal';
+    }
+  });
+
+  wrap.innerHTML='';
+  inner.innerHTML='';
+
+  if(selected.length===0){
+    document.getElementById('unitCount').textContent='科目を選択してください';
+    tabsArea.style.display='none';
+    return;
+  }
+
+  tabsArea.style.display='block';
+  var colors=['active-j1','active-j2','active-j3','active-e1','active-e2','active-e3'];
+  var allGroups=[];
+
+  selected.forEach(function(subj,si){
+    var groups=HIGH_MATH[subj]||[];
+    // 算数の場合はGENERIC_UNITSから
+    if(subj.indexOf('算数')===0){
+      groups=[{label:subj,units:GENERIC_UNITS[subj]||[],tag:'sansu_'+si}];
+    }
+    if(groups.length===0){
+      groups=[{label:subj,units:[],tag:'hm_'+si}];
+    }
+    groups.forEach(function(grp,gi){
+      // tagに科目プレフィックスを付けて衝突回避
+      var safeTag='ms_'+si+'_'+grp.tag;
+      allGroups.push({label:'【'+subj+'】'+grp.label,units:grp.units,tag:safeTag,subj:subj});
+    });
+  });
+
+  allGroups.forEach(function(grp,i){
+    var btn=document.createElement('button');
+    btn.className='grade-tab';
+    btn.id='tab_'+grp.tag;
+    btn.textContent=grp.label;
+    var panel=buildUnitPanel(grp.units,grp.tag);
+    panel.id='panel_'+grp.tag;
+    panel.dataset.subj=grp.subj;
+    wrap.appendChild(panel);
+    var color=colors[i%colors.length];
+    (function(tag,col,groups_){
+      btn.addEventListener('click',function(){
+        groups_.forEach(function(gg){
+          var b=document.getElementById('tab_'+gg.tag);if(!b)return;
+          b.className=gg.tag===tag?'grade-tab '+col:'grade-tab';
+          b.style.opacity=gg.tag===tag?'1':'0.45';
+          var p=document.getElementById('panel_'+gg.tag);
+          if(p)p.style.display=gg.tag===tag?'block':'none';
+        });
+        updateUnitCount();
+      });
+    })(grp.tag,color,allGroups);
+    inner.appendChild(btn);
+  });
+
+  // 最初のタブを自動選択
+  if(allGroups.length>0){
+    document.getElementById('tab_'+allGroups[0].tag).click();
+  }
+  document.getElementById('unitCount').textContent='タブを選択してください';
 }
 
 function buildHighMathTabs(subj){
@@ -1000,7 +1170,7 @@ function submitReport(){
   var policyChecked=[];
   document.querySelectorAll('#basicInfoSection .policy-checks input:checked').forEach(function(cb){policyChecked.push(cb.value);});
   var policyLine=policyChecked.length>0?policyChecked.join('・'):'（未選択）';
-  var subj=document.getElementById('subjectSelect').value||'（未選択）';
+  var subjList=getSelectedSubjects();var subj=subjList.length>0?subjList.join('・'):'（未選択）';
   var homeworkAcc=document.getElementById('homeworkAccuracy').value||'（未選択）';
   var testResults=getTestResults();
   var comment=document.getElementById('commentBox').value||'なし';
@@ -1127,8 +1297,10 @@ function submitReport(){
   // 単元履歴をKVに保存（記録した単元を1件ずつ送信）
   (function(){
     var unitRecords=[];
-    // panel_xxx 形式のパネルから収集（数学・英語など複数タブ）
+    // panel_xxx 形式のパネルから収集（複数科目タブ含む）
+    // data-subjがある場合はそれを科目として使用（複数科目選択時）
     wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
+      var panelSubj=panel.dataset.subj||subj;
       panel.querySelectorAll('tbody tr').forEach(function(tr){
         var unitName=tr.cells[0].textContent.trim();
         var nashi=tr.querySelector('.shidou-btn.on-nashi');
@@ -1138,7 +1310,8 @@ function submitReport(){
           unitRecords.push({
             unitName:unitName,
             hasInstruction:!!ari,
-            rating:subBtn?subBtn.dataset.val:''
+            rating:subBtn?subBtn.dataset.val:'',
+            subjectForSave:panelSubj
           });
         }
       });
@@ -1155,7 +1328,8 @@ function submitReport(){
           unitRecords.push({
             unitName:unitName,
             hasInstruction:!!ari,
-            rating:subBtn?subBtn.dataset.val:''
+            rating:subBtn?subBtn.dataset.val:'',
+            subjectForSave:subj
           });
         }
       });
@@ -1169,7 +1343,7 @@ function submitReport(){
           student:student,
           kyoshitsu:kyoshitsu,
           date:date,
-          subject:subj,
+          subject:u.subjectForSave,
           teacher:teacher,
           unitName:u.unitName,
           hasInstruction:u.hasInstruction,
@@ -1341,7 +1515,7 @@ function postToNotion(){
     return;
   }
 
-  var subject=document.getElementById('subjectSelect').value||'';
+  var subjList2=getSelectedSubjects();var subject=subjList2.length>0?subjList2[0]:'';
   var lines=text.split('\n');
   var headerIdx=lines.findIndex(function(l){return l.startsWith('▶');});
   var headerLine=headerIdx>=0?lines[headerIdx]:'授業報告';
