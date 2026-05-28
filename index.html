@@ -1580,6 +1580,36 @@ function postToNotion(){
   });
 }
 
+
+// ===== KVマスタデータ読み込み（管理画面で登録したデータを反映） =====
+(function(){
+  fetch('https://notion-proxy.kobetsu-meiko.workers.dev/get-master')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.students){
+        STUDENTS_BY_KYOSHITSU=data.students;
+      }
+      if(data.teachers){
+        TEACHERS_BY_KYOSHITSU=data.teachers;
+      }
+      if(data.notionPages){
+        NOTION_PAGES_BY_KYOSHITSU=data.notionPages;
+      }
+      if(data.kyoshitsu){
+        // 教室セレクトを更新
+        var sel=document.getElementById('kyoshitsuSelect');
+        var cur=sel.value;
+        // 既存optionを削除（最初の「-- 選択 --」は残す）
+        while(sel.options.length>1)sel.remove(1);
+        data.kyoshitsu.forEach(function(k){
+          var o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);
+        });
+        if(cur)sel.value=cur;
+      }
+    })
+    .catch(function(){/* KV未接続時は既存データで動作 */});
+})();
+
 var today=new Date();
 document.getElementById('lessonDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 </script>
