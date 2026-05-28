@@ -107,6 +107,25 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 <script>
 var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
 
+// KVマスタから生徒・教室データを読み込み
+(function(){
+  fetch(WORKER_URL+'/get-master')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.students){STUDENTS_BY_KYOSHITSU=data.students;}
+      if(data.kyoshitsu){
+        var sel=document.getElementById('kyoshitsuSel');
+        if(!sel)return;
+        while(sel.options.length>1)sel.remove(1);
+        data.kyoshitsu.forEach(function(k){
+          var o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);
+        });
+      }
+    })
+    .catch(function(){});
+})();
+
+
 // ===== 生徒・科目マスタ =====
 var STUDENTS_BY_KYOSHITSU={
   "安茂里駅前":{
