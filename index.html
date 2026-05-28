@@ -1123,6 +1123,62 @@ function submitReport(){
       })
     }).catch(function(e){console.log('スコア保存エラー:',e);});
   }
+
+  // 単元履歴をKVに保存（記録した単元を1件ずつ送信）
+  (function(){
+    var unitRecords=[];
+    // panel_xxx 形式のパネルから収集（数学・英語など複数タブ）
+    wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
+      panel.querySelectorAll('tbody tr').forEach(function(tr){
+        var unitName=tr.cells[0].textContent.trim();
+        var nashi=tr.querySelector('.shidou-btn.on-nashi');
+        var ari=tr.querySelector('.shidou-btn.on-ari');
+        var subBtn=tr.querySelector('.sub-btn.on');
+        if(nashi||ari){
+          unitRecords.push({
+            unitName:unitName,
+            hasInstruction:!!ari,
+            rating:subBtn?subBtn.dataset.val:''
+          });
+        }
+      });
+    });
+    // IDなしのパネル（理科・社会・国語など単タブ）
+    var nonMathPanel=wrap.querySelector('div:not([id])');
+    if(nonMathPanel){
+      nonMathPanel.querySelectorAll('tbody tr').forEach(function(tr){
+        var unitName=tr.cells[0].textContent.trim();
+        var nashi=tr.querySelector('.shidou-btn.on-nashi');
+        var ari=tr.querySelector('.shidou-btn.on-ari');
+        var subBtn=tr.querySelector('.sub-btn.on');
+        if(nashi||ari){
+          unitRecords.push({
+            unitName:unitName,
+            hasInstruction:!!ari,
+            rating:subBtn?subBtn.dataset.val:''
+          });
+        }
+      });
+    }
+    if(unitRecords.length===0)return;
+    unitRecords.forEach(function(u){
+      fetch('https://notion-proxy.kobetsu-meiko.workers.dev/save-unit-history',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          student:student,
+          kyoshitsu:kyoshitsu,
+          date:date,
+          subject:subj,
+          teacher:teacher,
+          unitName:u.unitName,
+          hasInstruction:u.hasInstruction,
+          rating:u.rating
+        })
+      }).catch(function(e){console.log('単元履歴保存エラー:',e);});
+    });
+  })();
+
   var box=document.getElementById('previewBox');
   box.style.display='block';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
