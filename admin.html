@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理画面 - 明光義塾</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0}
+.wrap{max-width:860px;margin:0 auto;padding:1rem 1rem 4rem}
+h1{font-size:18px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:12px;color:#888;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid #ddd}
+.section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem}
+.section-title{font-size:14px;font-weight:500;color:#1a1a1a;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.section-title span{font-size:11px;color:#888;font-weight:400}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select,input[type=text],input[type=password]{width:100%;height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:560px){.row,.row3{grid-template-columns:1fr}}
+.btn{padding:8px 18px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-primary{background:#534AB7;color:#fff}.btn-primary:hover{background:#7F77DD}
+.btn-secondary{background:#f5f4f0;border:1px solid #ccc;color:#1a1a1a}.btn-secondary:hover{background:#eee}
+.btn-danger{background:#FCEBEB;border:1px solid #F09595;color:#791F1F}.btn-danger:hover{background:#fde0e0}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:6px}
+.student-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.student-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f9f9f9;border-radius:8px;border:1px solid #eee}
+.student-name{flex:1;font-size:13px;font-weight:500}
+.student-meta{font-size:11px;color:#888;flex-shrink:0}
+.student-notion{font-size:11px;color:#aaa;font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notion-ok{color:#1D9E75}.notion-ng{color:#c00}
+.badge{font-size:11px;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.badge-grade{background:#EEEDFE;color:#3C3489}
+.badge-ky{background:#E1F5EE;color:#085041}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.status-msg{font-size:12px;margin-top:8px;min-height:18px}
+.status-ok{color:#1D9E75}.status-err{color:#c00}
+.pin-row{display:flex;align-items:center;gap:8px}
+.pin-val{font-family:monospace;font-size:13px;background:#f5f4f0;padding:2px 8px;border-radius:4px;letter-spacing:.1em}
+.tab-row{display:flex;gap:0;border-bottom:2px solid #e0e0e0;margin-bottom:1.25rem}
+.tab{padding:8px 18px;font-size:13px;cursor:pointer;border:none;background:none;color:#888;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:#534AB7;border-bottom-color:#534AB7;font-weight:500}
+.view{display:none}.view.active{display:block}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f4f0}
+.login-card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2.5rem 2rem;width:320px;text-align:center}
+.login-title{font-size:18px;font-weight:500;margin-bottom:.5rem}
+.login-sub{font-size:12px;color:#888;margin-bottom:1.5rem}
+.login-input{width:100%;height:48px;font-size:20px;text-align:center;letter-spacing:.4em;border:1px solid #ccc;border-radius:8px;font-family:inherit;margin-bottom:1rem;background:#f9f9f9}
+.login-input:focus{outline:none;border-color:#7F77DD;background:#fff}
+.login-btn{width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.login-btn:hover{background:#7F77DD}
+.login-err{font-size:12px;color:#c00;margin-top:8px;min-height:18px}
+.teacher-tag{display:inline-flex;align-items:center;gap:4px;background:#f5f4f0;border:1px solid #ddd;border-radius:6px;padding:3px 8px;font-size:12px;margin:3px}
+.teacher-tag button{border:none;background:none;cursor:pointer;color:#aaa;font-size:14px;line-height:1;padding:0}
+.teacher-tag button:hover{color:#c00}
+.divider{border:none;border-top:1px solid #eee;margin:1rem 0}
+</style>
+</head>
+<body>
+
+<!-- ログイン画面 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-title">管理画面</div>
+    <div class="login-sub">明光義塾 スタッフ専用</div>
+    <input class="login-input" type="password" id="adminPw" maxlength="8" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- メイン画面 -->
+<div class="wrap" id="mainWrap" style="display:none">
+  <h1>管理画面</h1>
+  <div class="subtitle">生徒・講師・教室データの管理　<span id="saveStatus"></span></div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('students')">生徒管理</button>
+    <button class="tab" onclick="switchTab('teachers')">講師管理</button>
+    <button class="tab" onclick="switchTab('kyoshitsu')">教室管理</button>
+  </div>
+
+  <!-- ===== 生徒管理 ===== -->
+  <div class="view active" id="view-students">
+    <div class="section">
+      <div class="section-title">新規生徒を追加</div>
+      <div class="row3">
+        <div>
+          <label>教室</label>
+          <select id="addKyoshitsu" onchange="onAddKyoshitsuChange()">
+            <option value="">-- 選択 --</option>
+          </select>
+        </div>
+        <div>
+          <label>学年</label>
+          <select id="addGrade">
+            <option value="">-- 選択 --</option>
+            <option value="小3">小3</option><option value="小4">小4</option>
+            <option value="小5">小5</option><option value="小6">小6</option>
+            <option value="中1">中1</option><option value="中2">中2</option>
+            <option value="中3">中3</option>
+            <option value="高1">高1</option><option value="高2">高2</option>
+            <option value="高3">高3</option>
+          </select>
+        </div>
+        <div>
+          <label>生徒名</label>
+          <input type="text" id="addName" placeholder="例：山田 太郎">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Notion ページ ID</label>
+          <input type="text" id="addNotionId" placeholder="32桁のID（任意）">
+        </div>
+        <div>
+          <label>保護者 PIN（4桁）</label>
+          <input type="text" id="addPin" placeholder="例：1234" maxlength="4">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="addStudent()">追加する</button>
+        <span class="status-msg" id="addStudentMsg"></span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        生徒一覧
+        <span id="studentCountBadge"></span>
+        <select id="filterKyoshitsu" onchange="renderStudentList()" style="width:auto;height:30px;font-size:12px;margin-left:auto">
+          <option value="">全教室</option>
+        </select>
+        <select id="filterGrade" onchange="renderStudentList()" style="width:auto;height:30px;font-size:12px">
+          <option value="">全学年</option>
+          <option value="小3">小3</option><option value="小4">小4</option>
+          <option value="小5">小5</option><option value="小6">小6</option>
+          <option value="中1">中1</option><option value="中2">中2</option>
+          <option value="中3">中3</option>
+          <option value="高1">高1</option><option value="高2">高2</option>
+          <option value="高3">高3</option>
+        </select>
+      </div>
+      <div id="studentListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== 講師管理 ===== -->
+  <div class="view" id="view-teachers">
+    <div class="section">
+      <div class="section-title">講師を追加</div>
+      <div class="row">
+        <div>
+          <label>教室</label>
+          <select id="teacherKyoshitsu">
+            <option value="">-- 選択 --</option>
+          </select>
+        </div>
+        <div>
+          <label>講師名</label>
+          <input type="text" id="teacherName" placeholder="例：田中 太郎">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="addTeacher()">追加する</button>
+        <span class="status-msg" id="addTeacherMsg"></span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">講師一覧</div>
+      <div id="teacherListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== 教室管理 ===== -->
+  <div class="view" id="view-kyoshitsu">
+    <div class="section">
+      <div class="section-title">教室を追加</div>
+      <div class="row">
+        <div>
+          <label>教室名</label>
+          <input type="text" id="newKyoshitsuName" placeholder="例：松本教室">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="addKyoshitsu()">追加する</button>
+        <span class="status-msg" id="addKyoshitsuMsg"></span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">教室一覧</div>
+      <div id="kyoshitsuListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var WORKER_URL='https://notion-proxy.kobetsu-meiko.workers.dev';
+var ADMIN_PASSWORD='meiko2024'; // ← 必要に応じて変更
+
+// マスタデータ（KVから読み込み後に格納）
+var masterStudents={};   // {教室: {学年: [名前,...]}}
+var masterNotionPages={}; // {教室: {名前: notionId}}
+var masterPins={};        // {名前: pin}
+var masterTeachers={};    // {教室: [講師名,...]}
+var masterKyoshitsu=[];   // [教室名,...]
+
+// デフォルトデータ（KVが空のとき使用）
+var DEFAULT_KYOSHITSU=['安茂里駅前','屋代','長野青木島'];
+var DEFAULT_TEACHERS={
+  '安茂里駅前':['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子'],
+  '屋代':['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子','宮崎久仁子','緑川智洸'],
+  '長野青木島':['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子']
+};
+var GRADES=['小3','小4','小5','小6','中1','中2','中3','高1','高2','高3'];
+
+// ===== ログイン =====
+function doLogin(){
+  var pw=document.getElementById('adminPw').value;
+  if(pw===ADMIN_PASSWORD){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('mainWrap').style.display='block';
+    loadAll();
+  } else {
+    document.getElementById('loginErr').textContent='パスワードが違います';
+    document.getElementById('adminPw').value='';
+  }
+}
+
+// ===== データ読み込み =====
+function loadAll(){
+  fetch(WORKER_URL+'/get-master')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      // 教室リスト
+      masterKyoshitsu=data.kyoshitsu||DEFAULT_KYOSHITSU;
+      // 生徒
+      masterStudents=data.students||{};
+      // Notion
+      masterNotionPages=data.notionPages||{};
+      // PIN
+      masterPins=data.pins||{};
+      // 講師
+      masterTeachers=data.teachers||DEFAULT_TEACHERS;
+      // デフォルト生徒をKVになければマージ（初回のみ）
+      if(!data.students){
+        mergeDefaultStudents();
+      }
+      renderAll();
+    })
+    .catch(function(){
+      // Worker未接続でもデフォルトで動く
+      masterKyoshitsu=DEFAULT_KYOSHITSU;
+      masterTeachers=DEFAULT_TEACHERS;
+      mergeDefaultStudents();
+      renderAll();
+    });
+}
+
+function mergeDefaultStudents(){
+  // 既存index.htmlの生徒データを初期値として設定
+  var defaultStudents={
+    '安茂里駅前':{
+      '小3':[],'小4':[],'小5':['小林 鷹聖'],'小6':['伊藤 祐基'],
+      '中1':['今藤 ほのか','小林 巧実'],
+      '中2':['伊藤 優莉','小林 泰晴','小林 龍世','太田 結翔','酒井 文芽','黒柳 颯真'],
+      '中3':['湯川 智仁','山崎 愛結','海沼 瑞香','長崎 聖也','島田 陽太','笠井 美希','荒井 春輝','佐藤 秀宥','尾芦 涼真'],
+      '高1':['原 貴一','宮本 光史郎','小林 千華','小林 美李','米澤 咲希子','嶌田 柊吾','北村 健琉','山岸 華穂','宮本 歩和','小林 依知可'],
+      '高2':['相澤 千尋','後藤 花梨','剱持 春人'],
+      '高3':['阿部 恵','宮下 英晃','瀧澤 春太朗','松本 怜','笠井 望']
+    },
+    '屋代':{
+      '小3':['原 橙和','丸山 智大'],'小4':[],'小5':[],'小6':['宮澤 周佑','油井 航','若林 さくら'],
+      '中1':['近藤 花音'],'中2':['佐伯 雷虎'],
+      '中3':['中澤 心梛','古家 陽向','小林 真優','西沢 結菜','寺沢 聖','近藤 蒼一郎','塚田 未來','近藤 夕姫','徳嵩 那生','大日方 妃奈'],
+      '高1':[],'高2':['掛川 大緒','白鳥 天翔','目須田 悠斗','武井 彩恵','島田 唯花','若林 穂澄','宮川 凛','宮川 結衣','唐木澤 絢香'],
+      '高3':['和田 咲南','鎌田 陽斗','井本 美緒']
+    },
+    '長野青木島':{
+      '小3':[],'小4':[],'小5':[],'小6':['野池 涼介'],
+      '中1':[],'中2':['松本 蒼太','佐藤 羅奈','藤池 紗矢','木野 薫'],
+      '中3':['傳田 花奈','野池 悠太郎','宮田 悠真'],
+      '高1':['松本 結衣'],'高2':['馬場 啓太郎'],
+      '高3':['口丸 隆正','西川 七瑚','宮田 あすか']
+    }
+  };
+  var defaultNotionPages={
+    '安茂里駅前':{
+      '小林 鷹聖':'3539977afea280d8a5efd1ea35fa5d08','伊藤 祐基':'3609977afea280a9a255d49ebd1e5847',
+      '今藤 ほのか':'3599977afea28016bdace0b36c7caae5','小林 巧実':'35e9977afea2806db349ce0756a170e8',
+      '伊藤 優莉':'3599977afea280beb6abc29d7c3904d3','太田 結翔':'3599977afea2807cb441fed91f8f6f15',
+      '小林 泰晴':'3609977afea280899b00e7e50926b0f8','小林 龍世':'35e9977afea280d4b890fa93aa006ad5',
+      '黒柳 颯真':'36d9977afea28087b7b2e76db8a6cb62','荒井 春輝':'3599977afea280d48fe8dcd6f712101e',
+      '尾芦 涼真':'3599977afea28008a02ec66c54d914aa','海沼 瑞香':'35e9977afea2808ab225c7027692b748',
+      '笠井 美希':'35d9977afea280879c69e1648a1201ee','佐藤 秀宥':'35e9977afea280cf80bcf6465924c5d3',
+      '島田 陽太':'35e9977afea2809baea6e14078753b4c','長崎 聖也':'3599977afea28052a188e701c445b9b5',
+      '山崎 愛結':'35e9977afea28000b787c7a2510fd0f6','湯川 智仁':'3599977afea280469699c21ef388ff18',
+      '嶌田 柊吾':'3609977afea2805fa69fee05ec2bdb38','小林 依知可':'35b9977afea2805caac6eb695f2734d0',
+      '小林 千華':'3609977afea2806eb44cf499d046c782','小林 美李':'3599977afea280069950cb1ebf3de74c',
+      '米澤 咲希子':'35e9977afea28047a22ec668c0245703','宮本 歩和':'3619977afea2808cb0a3d7b46629d826',
+      '宮本 光史郎':'3599977afea280e2a5e8c35d4d1fe121','山岸 華穂':'3599977afea2801c8484d63ec307d588',
+      '原 貴一':'35e9977afea2809ca9f6d9eb06292ddd','相澤 千尋':'35e9977afea280c1bda8f1d5bd703506',
+      '剱持 春人':'35e9977afea28089b992cee455962bba','後藤 花梨':'3599977afea2806dbd90e8a8a0135a4a',
+      '阿部 恵':'3609977afea28092a603d7c7fcbca2e6','笠井 望':'35e9977afea2806dbe00e29d27880b62',
+      '瀧澤 春太朗':'3609977afea280cb9c5fd0fd86841e89','松本 怜':'35e9977afea280d9bb96d428b7de09e1',
+      '宮下 英晃':'35e9977afea280e49667ec48d249419c'
+    },
+    '屋代':{
+      '油井 航':'3649977afea280aba8c9dc64d20171d4','近藤 花音':'3649977afea2801f9a2aeec772fce8e7',
+      '佐伯 雷虎':'3649977afea28032b569e53c2bcabd01','中澤 心梛':'3649977afea28003b564f210f60fc3d1',
+      '古家 陽向':'3649977afea280d18354e65e977670ce','小林 真優':'3649977afea280d680b5f4cc57f2ca33',
+      '西沢 結菜':'3649977afea2804c9de7edf022655df9','寺沢 聖':'3649977afea280d7b5d8c61cf59e8e2e',
+      '近藤 蒼一郎':'3649977afea280aeba35c8ef8784cc5d','塚田 未來':'3649977afea2802daa98e2b86f78c05c',
+      '近藤 夕姫':'3649977afea28061be89e3891c8324df','徳嵩 那生':'3649977afea2800eb979c028a670787f',
+      '大日方 妃奈':'3649977afea280d3ae7edc3fe2d79860','掛川 大緒':'3649977afea2806fb9d0c900ffb861f5',
+      '白鳥 天翔':'3649977afea2805e9527caa3312010b6','目須田 悠斗':'3649977afea28086bff7c735322409ca',
+      '武井 彩恵':'3649977afea28042b863c81262a00c8d','島田 唯花':'3649977afea280e1bcc2df5b8b881b7d',
+      '若林 穂澄':'3649977afea2802085b8d100769fbc94','宮川 凛':'3649977afea2806ca54bc3cb86074402',
+      '宮川 結衣':'3649977afea28054a0f6fadff0cbdb65','和田 咲南':'3649977afea28081a874f881efcece70',
+      '鎌田 陽斗':'3649977afea280e79c6cd94630b89a54','井本 美緒':'3649977afea28071a89dece488f4930a',
+      '唐木澤 絢香':'3649977afea280f8af9aeaec7dfa4e85'
+    },
+    '長野青木島':{
+      '野池 涼介':'3649977afea280ed873ccb6314baf25e','松本 蒼太':'3649977afea2805b985ada965894142a',
+      '佐藤 羅奈':'3649977afea2809cb5bde7bf6742907e','藤池 紗矢':'3649977afea2809e82d2cc092598e1bb',
+      '木野 薫':'3649977afea280049bc5f58dc602b41b','傳田 花奈':'3649977afea28082bf9be04e53e50407',
+      '野池 悠太郎':'3649977afea280b08edbd004d7fe5d5f','宮田 悠真':'3649977afea280bd8a4ed4d3fb5277bb',
+      '松本 結衣':'3649977afea280f5b018c758069b1dda','口丸 隆正':'3649977afea280a49296e053a714412f',
+      '西川 七瑚':'3649977afea280adb39ce0770528e4c9','宮田 あすか':'3649977afea2803bb560d5df979b80c8'
+    }
+  };
+  masterStudents=defaultStudents;
+  masterNotionPages=defaultNotionPages;
+}
+
+function renderAll(){
+  renderKyoshitsuSelects();
+  renderStudentList();
+  renderTeacherList();
+  renderKyoshitsuList();
+}
+
+// ===== 教室selectを全箇所に反映 =====
+function renderKyoshitsuSelects(){
+  ['addKyoshitsu','teacherKyoshitsu','filterKyoshitsu'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var cur=el.value;
+    var isFilter=(id==='filterKyoshitsu');
+    el.innerHTML=isFilter?'<option value="">全教室</option>':'<option value="">-- 選択 --</option>';
+    masterKyoshitsu.forEach(function(k){
+      var o=document.createElement('option');o.value=k;o.textContent=k;el.appendChild(o);
+    });
+    if(cur)el.value=cur;
+  });
+}
+
+// ===== 生徒一覧 =====
+function renderStudentList(){
+  var filterK=document.getElementById('filterKyoshitsu').value;
+  var filterG=document.getElementById('filterGrade').value;
+  var wrap=document.getElementById('studentListWrap');
+  var rows=[];
+  masterKyoshitsu.forEach(function(k){
+    if(filterK&&k!==filterK)return;
+    var kyoStudents=masterStudents[k]||{};
+    GRADES.forEach(function(g){
+      if(filterG&&g!==filterG)return;
+      (kyoStudents[g]||[]).forEach(function(name){
+        rows.push({kyoshitsu:k,grade:g,name:name});
+      });
+    });
+  });
+  var total=rows.length;
+  document.getElementById('studentCountBadge').textContent='計 '+total+' 名';
+  if(total===0){wrap.innerHTML='<div class="empty">生徒が登録されていません</div>';return;}
+  var html='<div class="student-list">';
+  rows.forEach(function(r){
+    var notionId=(masterNotionPages[r.kyoshitsu]||{})[r.name]||'';
+    var notionOk=notionId&&notionId!=='ページIDをここに入力';
+    var pin=(masterPins[r.name])||'';
+    html+='<div class="student-row">'+
+      '<div class="student-name">'+r.name+'</div>'+
+      '<span class="badge badge-grade">'+r.grade+'</span>'+
+      '<span class="badge badge-ky">'+r.kyoshitsu+'</span>'+
+      '<span class="student-notion '+(notionOk?'notion-ok':'notion-ng')+'">'+
+        (notionOk?'Notion✓':'Notion未設定')+
+      '</span>'+
+      '<button class="btn btn-secondary btn-sm" onclick="openEditStudent('+JSON.stringify(r.kyoshitsu)+','+JSON.stringify(r.grade)+','+JSON.stringify(r.name)+')">編集</button>'+
+      '<button class="btn btn-danger btn-sm" onclick="deleteStudent('+JSON.stringify(r.kyoshitsu)+','+JSON.stringify(r.grade)+','+JSON.stringify(r.name)+')">削除</button>'+
+    '</div>';
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+// ===== 生徒追加 =====
+function addStudent(){
+  var k=document.getElementById('addKyoshitsu').value;
+  var g=document.getElementById('addGrade').value;
+  var name=document.getElementById('addName').value.trim();
+  var notionId=document.getElementById('addNotionId').value.trim();
+  var pin=document.getElementById('addPin').value.trim();
+  var msg=document.getElementById('addStudentMsg');
+  if(!k||!g||!name){msg.textContent='教室・学年・生徒名は必須です';msg.className='status-msg status-err';return;}
+  if(!masterStudents[k])masterStudents[k]={};
+  if(!masterStudents[k][g])masterStudents[k][g]=[];
+  if(masterStudents[k][g].indexOf(name)>=0){msg.textContent='その生徒はすでに登録されています';msg.className='status-msg status-err';return;}
+  masterStudents[k][g].push(name);
+  if(notionId){
+    if(!masterNotionPages[k])masterNotionPages[k]={};
+    masterNotionPages[k][name]=notionId;
+  }
+  if(pin){masterPins[name]=pin;}
+  saveMaster('students',masterStudents,function(){
+    saveMaster('notionPages',masterNotionPages,function(){
+      if(pin){
+        saveMaster('pins',masterPins,function(){});
+        // Worker のcheck-pin用にも保存
+        fetch(WORKER_URL+'/save-pin',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({student:name,pin:pin})}).catch(function(){});
+      }
+      msg.textContent='✅ '+name+'さんを追加しました';msg.className='status-msg status-ok';
+      document.getElementById('addName').value='';
+      document.getElementById('addNotionId').value='';
+      document.getElementById('addPin').value='';
+      renderStudentList();
+    });
+  });
+}
+
+// ===== 生徒編集 =====
+function openEditStudent(k,g,name){
+  var notionId=(masterNotionPages[k]||{})[name]||'';
+  var pin=masterPins[name]||'';
+  var newNotion=window.prompt('【'+name+'】\nNotionページIDを入力してください\n（空欄のままでも可）',notionId);
+  if(newNotion===null)return;
+  var newPin=window.prompt('保護者PINコード（4桁）を入力\n（空欄のままでも可）',pin);
+  if(newPin===null)return;
+  if(!masterNotionPages[k])masterNotionPages[k]={};
+  if(newNotion.trim())masterNotionPages[k][name]=newNotion.trim();
+  if(newPin.trim())masterPins[name]=newPin.trim();
+  saveMaster('notionPages',masterNotionPages,function(){
+    saveMaster('pins',masterPins,function(){
+      if(newPin.trim()){
+        fetch(WORKER_URL+'/save-pin',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({student:name,pin:newPin.trim()})}).catch(function(){});
+      }
+      renderStudentList();
+      showSaveStatus('保存しました');
+    });
+  });
+}
+
+// ===== 生徒削除 =====
+function deleteStudent(k,g,name){
+  if(!window.confirm(name+'さんを削除しますか？\n（授業履歴・スコアデータは残ります）'))return;
+  var arr=masterStudents[k][g]||[];
+  var idx=arr.indexOf(name);
+  if(idx>=0)arr.splice(idx,1);
+  saveMaster('students',masterStudents,function(){
+    renderStudentList();
+    showSaveStatus(name+'さんを削除しました');
+  });
+}
+
+// ===== 講師一覧・追加・削除 =====
+function renderTeacherList(){
+  var wrap=document.getElementById('teacherListWrap');
+  var html='';
+  masterKyoshitsu.forEach(function(k){
+    var teachers=masterTeachers[k]||[];
+    html+='<div style="margin-bottom:1rem"><div style="font-size:13px;font-weight:500;color:#666;margin-bottom:6px">'+k+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:4px">';
+    teachers.forEach(function(t){
+      html+='<span class="teacher-tag">'+t+
+        '<button onclick="deleteTeacher('+JSON.stringify(k)+','+JSON.stringify(t)+')">×</button>'+
+        '</span>';
+    });
+    if(teachers.length===0)html+='<span style="font-size:12px;color:#aaa">（登録なし）</span>';
+    html+='</div></div>';
+  });
+  wrap.innerHTML=html||'<div class="empty">教室が登録されていません</div>';
+}
+function addTeacher(){
+  var k=document.getElementById('teacherKyoshitsu').value;
+  var name=document.getElementById('teacherName').value.trim();
+  var msg=document.getElementById('addTeacherMsg');
+  if(!k||!name){msg.textContent='教室と講師名は必須です';msg.className='status-msg status-err';return;}
+  if(!masterTeachers[k])masterTeachers[k]=[];
+  if(masterTeachers[k].indexOf(name)>=0){msg.textContent='その講師はすでに登録されています';msg.className='status-msg status-err';return;}
+  masterTeachers[k].push(name);
+  saveMaster('teachers',masterTeachers,function(){
+    msg.textContent='✅ '+name+'を追加しました';msg.className='status-msg status-ok';
+    document.getElementById('teacherName').value='';
+    renderTeacherList();
+  });
+}
+function deleteTeacher(k,name){
+  if(!window.confirm(name+'を削除しますか？'))return;
+  var arr=masterTeachers[k]||[];
+  var idx=arr.indexOf(name);
+  if(idx>=0)arr.splice(idx,1);
+  saveMaster('teachers',masterTeachers,function(){renderTeacherList();showSaveStatus(name+'を削除しました');});
+}
+
+// ===== 教室一覧・追加・削除 =====
+function renderKyoshitsuList(){
+  var wrap=document.getElementById('kyoshitsuListWrap');
+  if(masterKyoshitsu.length===0){wrap.innerHTML='<div class="empty">教室が登録されていません</div>';return;}
+  var html='<div class="student-list">';
+  masterKyoshitsu.forEach(function(k){
+    var cnt=0;
+    GRADES.forEach(function(g){cnt+=((masterStudents[k]||{})[g]||[]).length;});
+    html+='<div class="student-row">'+
+      '<div class="student-name">'+k+'</div>'+
+      '<span class="badge badge-ky">生徒 '+cnt+' 名</span>'+
+      '<button class="btn btn-danger btn-sm" onclick="deleteKyoshitsu('+JSON.stringify(k)+')">削除</button>'+
+    '</div>';
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+function addKyoshitsu(){
+  var name=document.getElementById('newKyoshitsuName').value.trim();
+  var msg=document.getElementById('addKyoshitsuMsg');
+  if(!name){msg.textContent='教室名は必須です';msg.className='status-msg status-err';return;}
+  if(masterKyoshitsu.indexOf(name)>=0){msg.textContent='その教室はすでに登録されています';msg.className='status-msg status-err';return;}
+  masterKyoshitsu.push(name);
+  saveMaster('kyoshitsu',masterKyoshitsu,function(){
+    msg.textContent='✅ '+name+'を追加しました';msg.className='status-msg status-ok';
+    document.getElementById('newKyoshitsuName').value='';
+    renderAll();
+  });
+}
+function deleteKyoshitsu(name){
+  if(!window.confirm(name+'を削除しますか？\n（この教室の生徒データも削除されます）'))return;
+  var idx=masterKyoshitsu.indexOf(name);
+  if(idx>=0)masterKyoshitsu.splice(idx,1);
+  delete masterStudents[name];
+  delete masterTeachers[name];
+  delete masterNotionPages[name];
+  saveMaster('kyoshitsu',masterKyoshitsu,function(){
+    saveMaster('students',masterStudents,function(){
+      saveMaster('teachers',masterTeachers,function(){
+        saveMaster('notionPages',masterNotionPages,function(){renderAll();showSaveStatus(name+'を削除しました');});
+      });
+    });
+  });
+}
+
+// ===== KVへの保存 =====
+function saveMaster(type,data,cb){
+  fetch(WORKER_URL+'/save-master',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({type:type,data:data})
+  }).then(function(r){return r.json();})
+  .then(function(){if(cb)cb();})
+  .catch(function(e){console.log('保存エラー:',e);if(cb)cb();});
+}
+
+function showSaveStatus(msg){
+  var el=document.getElementById('saveStatus');
+  el.textContent=msg;el.style.color='#1D9E75';
+  setTimeout(function(){el.textContent='';},3000);
+}
+
+// ===== タブ切り替え =====
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    var names=['students','teachers','kyoshitsu'];
+    t.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('.view').forEach(function(v){
+    v.classList.toggle('active',v.id==='view-'+name);
+  });
+}
+function onAddKyoshitsuChange(){}
+</script>
+</body>
+</html>
