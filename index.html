@@ -340,8 +340,17 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
     <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
       <button class="copy-btn" onclick="copyLineText()" id="copyLineBtn">📋 LINE用テキストをコピー</button>
       <button class="copy-btn" onclick="postToNotion()" id="postNotionBtn" style="background:#f0f7ff;border-color:#9ac">📤 Notionに投稿する</button>
+      <button class="copy-btn" onclick="generateMailText()" id="generateMailBtn" style="display:none;background:#f0fff4;border-color:#6c6">✉️ 体験生メール文面を生成</button>
     </div>
     <div id="notionStatus" style="margin-top:.5rem;font-size:12px"></div>
+    <div id="mailGeneratedBox" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem">
+      <div style="font-size:13px;font-weight:500;color:#666;margin-bottom:.5rem">✉️ メール文面</div>
+      <pre id="mailGeneratedText" style="white-space:pre-wrap;font-size:13px;color:#1a1a1a;background:#f0fff4;border-radius:8px;padding:12px;max-height:400px;overflow-y:auto"></pre>
+      <div style="display:flex;gap:8px;margin-top:.8rem;flex-wrap:wrap">
+        <button class="copy-btn" onclick="copyMailText()" id="copyMailBtn">📋 メール文面をコピー</button>
+        <button class="copy-btn" onclick="shareToKyoshitsucho()" id="shareMailBtn" style="background:#fff8e1;border-color:#c9a">📨 教室長にメールで共有</button>
+      </div>
+    </div>
   </div>
 </div>
 </div>
@@ -629,6 +638,7 @@ function onStudentSelectChange(){
   var manual=document.getElementById('studentManual');
   manual.style.display=(val==='__other__')?'block':'none';
   if(val!=='__other__')manual.value='';
+  updateMailBtn();
 }
 
 function onTestDoneChange(){
@@ -1170,6 +1180,89 @@ function generateNotion(){
   });
 }
 
+
+function updateMailBtn(){
+  var isManual=document.getElementById('studentSelect').value==='__other__';
+  var btn=document.getElementById('generateMailBtn');
+  if(btn)btn.style.display=isManual?'':'none';
+}
+
+function generateMailText(){
+  var notionText=window._notionGeneratedText||'';
+  if(!notionText){alert('先にNotion記録用文を生成してください。');return;}
+  var student=getStudentName();
+  var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'';
+
+  // 教室ごとの署名
+  var signatures={
+    '安茂里駅前':'明光義塾 安茂里駅前教室\n教室長 小林 祐介',
+    '屋代':'明光義塾 屋代教室\n教室長 水野 貴志',
+    '長野青木島':'明光義塾 長野青木島教室\n教室長 水野 貴志'
+  };
+  var signature=signatures[kyoshitsu]||'明光義塾';
+
+  var prompt='以下は体験授業の授業レポートです。これをもとに、保護者へのメールの全文を作成してください。\n\n'+
+'【条件】\n'+
+'・冒頭は「'+student+'様・保護者様」で始める\n'+
+'・体験授業へのお礼と、本日のレポートを丁寧に伝える冒頭文を書く\n'+
+'・レポート部分は以下の内容をそのまま含める（改行・絵文字も保持する）\n'+
+'・レポートの後に以下の締めの文を入れる：\n'+
+'「よろしければ下記URLより専用サイトにアクセスして頂き、簡単なアンケートにお答え頂きますようお願いいたします。\nアンケート内容に基づき、教室からの今後のご連絡については誠実に対応させて頂きます。\nよろしくお願いいたします。\nhttps://forms.gle/PT2zqXJkT6LS6YvR9」\n'+
+'・最後の署名は「'+signature+'」にする\n'+
+'・メール全文のみ出力し、余計な説明は不要\n\n'+
+'【授業レポート】\n'+notionText;
+
+  var btn=document.getElementById('generateMailBtn');
+  btn.textContent='生成中…';
+  btn.disabled=true;
+  document.getElementById('mailGeneratedBox').style.display='none';
+
+  fetch(WORKER_URL+'/generate',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:prompt})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.error)throw new Error('Workerエラー：'+JSON.stringify(data.error));
+    var generated=data.content&&data.content[0]&&data.content[0].text;
+    if(!generated)throw new Error('レスポンス異常：'+JSON.stringify(data));
+    window._mailGeneratedText=generated;
+    document.getElementById('mailGeneratedText').textContent=generated;
+    document.getElementById('mailGeneratedBox').style.display='block';
+    btn.textContent='✉️ 体験生メール文面を生成';
+    btn.disabled=false;
+  }).catch(function(e){
+    alert('生成に失敗しました。\n詳細：'+e.message);
+    btn.textContent='✉️ 体験生メール文面を生成';
+    btn.disabled=false;
+  });
+}
+
+
+function shareToKyoshitsucho(){
+  var text=window._mailGeneratedText||'';
+  if(!text){alert('先にメール文面を生成してください。');return;}
+  var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'';
+  var student=getStudentName();
+  var emails={
+    '安茂里駅前':'kobetsu.meiko@gmail.com',
+    '屋代':'aokijima.meiko@gmail.com',
+    '長野青木島':'aokijima.meiko@gmail.com'
+  };
+  var to=emails[kyoshitsu]||'';
+  if(!to){alert('教室を選択してください。');return;}
+  var subject=encodeURIComponent('【体験授業報告】'+student+'様');
+  var body=encodeURIComponent(text);
+  window.location.href='mailto:'+to+'?subject='+subject+'&body='+body;
+}
+function copyMailText(){
+  var text=window._mailGeneratedText||'';
+  if(!text){alert('先にメール文面を生成してください。');return;}
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.getElementById('copyMailBtn');
+    btn.textContent='✅ コピーしました';
+    setTimeout(function(){btn.textContent='📋 メール文面をコピー';},2000);
+  });
+}
 function copyLineText(){
   var text=window._notionGeneratedText||'';
   if(!text){alert('先に記録文を生成してください。');return;}
