@@ -79,6 +79,20 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
 .unit-hist-date{color:#888;width:52px;flex-shrink:0;font-size:12px;padding-top:1px}
 .unit-hist-subj{color:#888;width:60px;flex-shrink:0;font-size:12px;padding-top:1px}
 .unit-hist-name{flex:1;color:#1a1a1a;line-height:1.5}
+/* 本日の報告まとめ */
+.today-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px}
+.today-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.today-name{font-size:15px;font-weight:500;color:#1a1a1a;flex:1;min-width:80px}
+.today-report{white-space:pre-wrap;font-size:13px;line-height:1.75;color:#1a1a1a;background:#f9f9f9;border-radius:8px;padding:12px 14px;margin-bottom:10px;border-left:3px solid #AFA9EC;word-break:break-word}
+.today-copy-btn{padding:7px 18px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.today-copy-btn:hover{background:#7F77DD}
+.today-copy-btn.copied{background:#1D9E75}
+.today-filter{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap}
+.today-filter select{height:34px;font-size:12px;padding:0 8px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
+.today-empty{text-align:center;padding:3rem;color:#aaa;font-size:13px;line-height:2}
+.today-summary{display:flex;gap:12px;margin-bottom:1rem;flex-wrap:wrap}
+.today-summary-item{font-size:12px;color:#666}
+.today-summary-item b{font-size:16px;color:#1a1a1a;font-weight:500}
 /* PIN認証 */
 .pin-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f4f0;display:flex;align-items:center;justify-content:center;z-index:200}
 .pin-card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2rem 1.5rem;width:300px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
@@ -118,6 +132,7 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
   <div class="tab-row" id="tabRow">
     <button class="tab active" id="tabAll" onclick="switchTab('all')">全生徒一覧</button>
     <button class="tab" id="tabDetail" onclick="switchTab('detail')">生徒別詳細</button>
+    <button class="tab" id="tabToday" onclick="switchTab('today')">本日の報告</button>
   </div>
   <div id="viewAll">
     <div id="loadingAll" class="loading">読み込み中...</div>
@@ -126,6 +141,14 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
       <div class="section-title" id="listTitle">生徒別 累計スコア（カードをタップで詳細表示）</div>
       <div class="student-grid" id="studentGrid"></div>
     </div>
+  </div>
+  <div id="viewToday" style="display:none">
+    <div class="today-filter">
+      <select id="todayKyoshitsuFilter" onchange="loadTodayReports()"></select>
+      <input type="date" id="todayDateFilter" style="height:34px;font-size:12px;padding:0 8px;border:1px solid #ccc;border-radius:8px;font-family:inherit" onchange="loadTodayReports()">
+      <span class="today-summary-item" id="todaySummary"></span>
+    </div>
+    <div id="todayReportList"><div class="today-empty">上の教室・日付を選択してください</div></div>
   </div>
   <div id="viewDetail" style="display:none">
     <select class="student-picker" id="studentPicker" onchange="showDetail(this.value)">
@@ -602,12 +625,114 @@ function renderUnitHistory(){
 function switchTab(name){
   document.getElementById('tabAll').classList.toggle('active',name==='all');
   document.getElementById('tabDetail').classList.toggle('active',name==='detail');
+  document.getElementById('tabToday').classList.toggle('active',name==='today');
   document.getElementById('viewAll').style.display=name==='all'?'':'none';
   document.getElementById('viewDetail').style.display=name==='detail'?'':'none';
+  document.getElementById('viewToday').style.display=name==='today'?'':'none';
   if(name==='detail'&&document.getElementById('studentPicker').value===''){
     document.getElementById('detailEmpty').style.display='block';
     document.getElementById('detailContent').style.display='none';
   }
+  if(name==='today')initTodayTab();
+}
+
+// ===== 本日の報告まとめ =====
+function initTodayTab(){
+  var sel=document.getElementById('todayKyoshitsuFilter');
+  if(sel.options.length===0){
+    var ks=document.getElementById('kyoshitsuSelect');
+    var opt0=document.createElement('option');opt0.value='';opt0.textContent='全教室';sel.appendChild(opt0);
+    Array.from(ks.options).forEach(function(o){
+      if(!o.value)return;
+      var opt=document.createElement('option');opt.value=o.value;opt.textContent=o.value;sel.appendChild(opt);
+    });
+    var curKy=ks.value;
+    if(curKy)sel.value=curKy;
+  }
+  var dateEl=document.getElementById('todayDateFilter');
+  if(!dateEl.value){
+    var t=new Date();
+    dateEl.value=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  }
+  loadTodayReports();
+}
+
+function loadTodayReports(){
+  var kyoshitsu=document.getElementById('todayKyoshitsuFilter').value;
+  var date=document.getElementById('todayDateFilter').value;
+  var list=document.getElementById('todayReportList');
+  if(!date){list.innerHTML='<div class="today-empty">日付を選択してください</div>';return;}
+  list.innerHTML='<div class="today-empty">読み込み中...</div>';
+  var qs='?date='+encodeURIComponent(date);
+  if(kyoshitsu)qs+='&kyoshitsu='+encodeURIComponent(kyoshitsu);
+  fetch(WORKER_URL+'/get-reports'+qs)
+    .then(function(r){return r.json();})
+    .then(function(data){renderTodayReports(data.records||[]);})
+    .catch(function(){
+      list.innerHTML='<div class="today-empty">データの取得に失敗しました</div>';
+    });
+}
+
+function renderTodayReports(records){
+  var list=document.getElementById('todayReportList');
+  var summary=document.getElementById('todaySummary');
+  summary.innerHTML='<b>'+records.length+'</b>&thinsp;件の報告';
+  if(records.length===0){
+    list.innerHTML='<div class="today-empty">この日の報告はまだありません<br><span style="font-size:12px">授業報告フォームでNotion投稿が完了すると自動的に表示されます</span></div>';
+    return;
+  }
+  list.innerHTML='';
+  records.forEach(function(rec){
+    var card=document.createElement('div');
+    card.className='today-card';
+    var header=document.createElement('div');
+    header.className='today-card-header';
+    var nameEl=document.createElement('div');nameEl.className='today-name';nameEl.textContent=rec.student;
+    var subjBadge=document.createElement('span');
+    subjBadge.style.cssText='background:#EEEDFE;color:#3C3489;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500';
+    subjBadge.textContent=rec.subject||'';
+    var kyoBadge=document.createElement('span');
+    kyoBadge.style.cssText='background:#E1F5EE;color:#085041;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500';
+    kyoBadge.textContent=rec.kyoshitsu||'';
+    var teacherEl=document.createElement('span');
+    teacherEl.style.cssText='font-size:11px;color:#aaa';
+    teacherEl.textContent='担当：'+(rec.teacher||'');
+    header.appendChild(nameEl);
+    header.appendChild(subjBadge);
+    header.appendChild(kyoBadge);
+    header.appendChild(teacherEl);
+    var reportEl=document.createElement('div');
+    reportEl.className='today-report';
+    reportEl.textContent=rec.reportText||'（報告文なし）';
+    var copyBtn=document.createElement('button');
+    copyBtn.className='today-copy-btn';
+    copyBtn.textContent='📋 コピー';
+    (function(text,btn){
+      btn.onclick=function(){
+        var doFallback=function(){
+          var ta=document.createElement('textarea');
+          ta.value=text;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+          document.body.appendChild(ta);ta.select();
+          try{document.execCommand('copy');}catch(e){}
+          document.body.removeChild(ta);
+          btn.textContent='✅ コピーしました';btn.classList.add('copied');
+          setTimeout(function(){btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+        };
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(function(){
+            btn.textContent='✅ コピーしました';btn.classList.add('copied');
+            setTimeout(function(){btn.textContent='📋 コピー';btn.classList.remove('copied');},2000);
+          }).catch(doFallback);
+        } else {
+          doFallback();
+        }
+      };
+    })(rec.reportText||'',copyBtn);
+    card.appendChild(header);
+    card.appendChild(reportEl);
+    card.appendChild(copyBtn);
+    list.appendChild(card);
+  });
 }
 </script>
 </body>
