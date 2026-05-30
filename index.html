@@ -1294,12 +1294,12 @@ function submitReport(){
   }
 
   // 単元履歴をKVに保存（記録した単元を1件ずつ送信）
-  (function(){
+  (function(currentSubj){
     var unitRecords=[];
     // panel_xxx 形式のパネルから収集（複数科目タブ含む）
     // data-subjがある場合はそれを科目として使用（複数科目選択時）
     wrap.querySelectorAll('div[id^="panel_"]').forEach(function(panel){
-      var panelSubj=panel.dataset.subj||subj;
+      var panelSubj=panel.dataset.subj||currentSubj;
       panel.querySelectorAll('tbody tr').forEach(function(tr){
         var unitName=tr.cells[0].textContent.trim();
         var nashi=tr.querySelector('.shidou-btn.on-nashi');
@@ -1328,7 +1328,7 @@ function submitReport(){
             unitName:unitName,
             hasInstruction:!!ari,
             rating:subBtn?subBtn.dataset.val:'',
-            subjectForSave:subj
+            subjectForSave:currentSubj
           });
         }
       });
@@ -1350,7 +1350,7 @@ function submitReport(){
         })
       }).catch(function(e){console.log('単元履歴保存エラー:',e);});
     });
-  })();
+  })(subj);
 
   var box=document.getElementById('previewBox');
   box.style.display='block';
