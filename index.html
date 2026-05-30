@@ -1564,7 +1564,6 @@ function postToNotion(){
     btn.textContent='投稿中…';
     statusEl.textContent='投稿先ページを確認しました。送信中…';
     statusEl.style.color='#888';
-    // 見つかった科目ページに投稿
     return fetch(WORKER_URL+'/notion',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1576,17 +1575,16 @@ function postToNotion(){
     return r.json();
   })
   .then(function(data){
-    // Notionの正常レスポンス: object="list" かつ results配列が存在
     if(data.object==='error'||data.status){
-      // Notionがエラーを返した場合
       throw new Error('Notion APIエラー：'+(data.message||JSON.stringify(data)));
     }
     if(data.object==='list'&&Array.isArray(data.results)){
       statusEl.style.color='green';
       statusEl.textContent='✅ Notionへの投稿が完了しました！（'+subject+'レポートページ）';
-      // 投稿成功をKVに記録
+      // Notion投稿成功時に報告文をKVに保存（本日の報告まとめ用）
+      var reportText=window._notionGeneratedText||'';
       var scoreData=window._lastScore||{};
-      fetch(WORKER_URL+'/save-score',{
+      fetch(WORKER_URL+'/save-report',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
@@ -1595,12 +1593,10 @@ function postToNotion(){
           date:scoreData.date||date,
           subject:subj,
           teacher:scoreData.teacher||teacher,
-          total:scoreData.total||0,
-          items:scoreData.items||[],
-          notionPosted:true,
-          notionPostedAt:new Date().toISOString()
+          reportText:reportText,
+          savedAt:new Date().toISOString()
         })
-      }).catch(function(){});
+      }).catch(function(e){console.log('報告文保存エラー:',e);});
     } else {
       throw new Error('Notionからの返答が想定外の形式でした：'+JSON.stringify(data).slice(0,100));
     }
@@ -1612,7 +1608,6 @@ function postToNotion(){
     statusEl.textContent='❌ 投稿に失敗しました。もう一度試してください。（'+e.message+')';
     btn.textContent='📤 Notionに投稿する';
     btn.disabled=false;
-    // 失敗をコンソールに詳細記録
     console.error('Notion投稿エラー詳細:', e);
   });
 }
