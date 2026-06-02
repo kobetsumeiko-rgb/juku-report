@@ -96,6 +96,19 @@ select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px 
   </div>
   <div class="row">
     <div><label>授業日</label><input type="date" id="lessonDate"></div>
+    <div>
+      <label>コマ</label>
+      <select id="komaSelect">
+        <option value="">-- 選択 --</option>
+        <option value="Xコマ">Xコマ（9:00〜10:30）</option>
+        <option value="Yコマ">Yコマ（10:40〜12:10）</option>
+        <option value="Zコマ">Zコマ（13:10〜14:40）</option>
+        <option value="Aコマ">Aコマ（14:50〜16:20）</option>
+        <option value="Bコマ">Bコマ（16:30〜18:00）</option>
+        <option value="Cコマ">Cコマ（18:10〜19:40）</option>
+        <option value="Dコマ">Dコマ（19:50〜21:20）</option>
+      </select>
+    </div>
     <div><label>担当講師</label><select id="teacherName">
       <option value="">-- 先に教室を選択 --</option>
     </select></div>
@@ -1155,6 +1168,7 @@ function updateUnitCount(){
 
 function submitReport(){
   var date=document.getElementById('lessonDate').value||'（未入力）';
+  var koma=document.getElementById('komaSelect').value||'（未選択）';
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'（未選択）';
   var teacher=document.getElementById('teacherName').value||'（未入力）';
   var grade=document.getElementById('gradeSelect').value||'（未選択）';
@@ -1229,7 +1243,7 @@ function submitReport(){
   var rikaChecked=[];
   document.querySelectorAll('#rikaIssueChecks input[type=checkbox]:checked').forEach(function(cb){rikaChecked.push(cb.value);});
   var rikaLine=rikaChecked.length>0?'\n【理科の課題】\n'+rikaChecked.map(function(e){return'  ・'+e;}).join('\n'):'';
-  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　担当：'+teacher+'\n教室：'+kyoshitsu+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n授業内容の決め方：'+lessonDecision+'\nテスト実施：'+testResults+'\n授業開始時の机の状態：'+deskStatus+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
+  var text='■ 授業報告\n─────────────────────\n授業日：'+date+'　コマ：'+koma+'　担当：'+teacher+'\n教室：'+kyoshitsu+'\n学年：'+grade+'　生徒：'+student+'\n科目：'+subj+'\n授業方針：'+policyLine+'\n授業内容の決め方：'+lessonDecision+'\nテスト実施：'+testResults+'\n授業開始時の机の状態：'+deskStatus+'\n集中度：'+focus+'\n宿題の実施状況：'+homework+'\n宿題の正答率：'+homeworkAcc+'\nテスト範囲カバー率①現学年範囲：'+testCov+'\nテスト範囲カバー率②前学年以前範囲：'+testCovPrev+'\n─────────────────────\n【単元別記録】（記録した単元のみ）\n'+(lines.length>0?lines.join('\n'):'（記録なし）')+kpLine+engLine+mathLine+rikaLine+'\n─────────────────────\n【前回からの変化】\n'+changeLine+'\n【つまづきの傾向】\n'+tsumazukiLine+'\n【今日の良かった点】\n'+goodLine+'\n【次回予定】\n'+nextPlan+'\n【家庭でのサポートのお願い】\n'+supportLine+'\n─────────────────────\n【コメント】\n'+comment;
   document.getElementById('previewContent').textContent=text;
 
   // 点数計算
@@ -1380,7 +1394,7 @@ function generateNotion(){
     scoreText='\n今回の授業スコア：'+window._lastScore.total+'点（'+window._lastScore.items.join(' ／ ')+'）';
   }
 
-  var prompt=text+scoreText+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n📝【テスト実施】\n[テスト実施が「なし」なら省略。あれば「テスト名：得点／満点」の形で箇条書き]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー。理解の状況の各項目の頭には「・」を使ってください]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n📅【次回予定】\n[次回予定]\n\n🏆【今回の授業スコア】\n[今回の授業スコアの合計点と内訳を記載。スコア情報がない場合は省略]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語・理科の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
+  var prompt=text+scoreText+'\n\nこの授業報告を、保護者がNotionで閲覧するための記録用文に変換してください。絵文字や段落分け・罫線（─────など）を使って見やすく整えてください。以下の書式で作成してください。\n\n[生徒名]さん\n\n▶ [授業日]　[コマ]　[科目]　担当：[講師名]\n\n─────────────────────\n\n📋【授業方針】\n[授業方針]\n\n📌【授業内容の決め方】\n[授業内容の決め方]\n\n📝【テスト実施】\n[テスト実施が「なし」なら省略。あれば「テスト名：得点／満点」の形で箇条書き]\n\n🎯【集中度】\n[集中度]\n\n📝【宿題の実施状況】\n[宿題の実施状況（正答率が未選択でなければ「正答率：○○」も併記）]\n\n📊【テスト範囲カバー率】\n①現学年範囲：[テスト範囲カバー率①]　②前学年以前範囲：[テスト範囲カバー率②（「該当なし」または「未選択」なら省略）]\n\n─────────────────────\n\n📚【今日学んだこと】\n[単元名を箇条書き]\n\n✅【理解の状況】\n[各単元の指導有無と評価結果を保護者向けに分かりやすく説明。凡例：①指導なし→③もともとよくできていた／④次回以降も要フォロー　②指導あり→⑤よくできるようになった／⑥自力正答率はもう一歩／⑦次回以降も要フォロー。理解の状況の各項目の頭には「・」を使ってください]\n\n📈【前回からの変化】\n[前回からの変化。「なし」の場合は省略]\n\n⚠️【つまづきの傾向】\n[つまづきの傾向。「なし」の場合は省略]\n\n⭐【今日の良かった点】\n[今日の良かった点。「なし」の場合は省略]\n\n📅【次回予定】\n[次回予定]\n\n🏆【今回の授業スコア】\n[今回の授業スコアの合計点と内訳を記載。スコア情報がない場合は省略]\n\n💡【これから意識してほしいこと】\n[数学・英語・国語・理科の課題項目を前向きな表現で。なければ省略]\n\n🏠【家庭でのサポートのお願い】\n[家庭でのサポートのお願い。「特に不要」または「なし」の場合は省略]\n\n─────────────────────\n\n✉️【先生からのメッセージ】\n[保護者向けの温かく丁寧なメッセージ。専門用語を避けて分かりやすく。]\n\n※1行目の「[生徒名]さん」はLINEで保護者に送る際の冒頭用です。Notionへの保存は2行目以降（▶から始まる部分）を使ってください。';
 
   var btn=document.getElementById('generateBtn');
   btn.textContent='生成中…';
