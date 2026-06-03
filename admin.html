@@ -74,6 +74,18 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
 .transport-amount{color:#534AB7;font-weight:500;min-width:70px;text-align:right}
 .transport-del{font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid #F09595;background:#FCEBEB;color:#791F1F;cursor:pointer;font-family:inherit}
 .transport-del:hover{background:#fbd8d8}
+.monthly-table{border-collapse:collapse;font-size:12px;min-width:600px}
+.monthly-table th{padding:7px 10px;background:#f5f4f0;border:1px solid #ddd;white-space:nowrap;font-weight:500;color:#555;text-align:center}
+.monthly-table th.teacher-col{text-align:left;min-width:90px}
+.monthly-table td{padding:6px 10px;border:1px solid #eee;vertical-align:top;white-space:nowrap;text-align:center}
+.monthly-table td.teacher-cell{text-align:left;font-weight:500;background:#fafafa;border:1px solid #ddd}
+.monthly-table td.total-cell{background:#EEEDFE;font-weight:500;color:#3C3489;border:1px solid #ddd}
+.monthly-table tr:hover td{background:#f9f8ff}
+.monthly-table tr:hover td.teacher-cell{background:#f0effe}
+.monthly-table tr:hover td.total-cell{background:#dddaf8}
+.time-range{font-size:12px;color:#1a1a1a;line-height:1.4}
+.time-dur{font-size:11px;color:#534AB7;margin-top:1px}
+.no-record{color:#ccc;font-size:12px}
 </style>
 </head>
 <body>
@@ -101,6 +113,7 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
     <button class="tab" id="tab-kyoshitsu" onclick="switchTab('kyoshitsu')">教室管理</button>
     <button class="tab" id="tab-transport" onclick="switchTab('transport')">交通費</button>
     <button class="tab" id="tab-timecard" onclick="switchTab('timecard')">打刻履歴</button>
+    <button class="tab" id="tab-monthly" onclick="switchTab('monthly')">月次集計</button>
   </div>
 
   <!-- 生徒管理 -->
@@ -315,6 +328,35 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
       </div>
     </div>
   </div>
+
+  <!-- 月次集計 -->
+  <div class="view" id="view-monthly">
+    <div class="section">
+      <div class="section-title">集計条件</div>
+      <div class="row">
+        <div>
+          <label>対象月</label>
+          <input type="month" id="monthlyMonth" style="height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit;width:100%">
+        </div>
+        <div>
+          <label>教室</label>
+          <select id="monthlyKyoshitsu">
+            <option value="">-- 選択 --</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="loadMonthlySummary()">表示する</button>
+        <span class="status-msg" id="monthlyMsg"></span>
+      </div>
+    </div>
+    <div class="section" id="monthlySummarySection" style="display:none">
+      <div class="section-title" id="monthlySummaryTitle"></div>
+      <div style="overflow-x:auto">
+        <div id="monthlySummaryWrap"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -456,7 +498,7 @@ function renderAll() {
 }
 
 function renderKyoshitsuSelects() {
-  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu', 'transportKyoshitsu', 'tcFilterKyoshitsu', 'tcAddKyoshitsu'].forEach(function(id) {
+  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu', 'transportKyoshitsu', 'tcFilterKyoshitsu', 'tcAddKyoshitsu', 'monthlyKyoshitsu'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var cur = el.value;
@@ -820,7 +862,7 @@ function showSaveStatus(msg) {
 
 // ===== タブ =====
 function switchTab(name) {
-  ['students','teachers','kyoshitsu','transport','timecard'].forEach(function(n) {
+  ['students','teachers','kyoshitsu','transport','timecard','monthly'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('view-' + n).classList.toggle('active', n === name);
   });
@@ -834,6 +876,14 @@ function switchTab(name) {
       document.getElementById('tcAddDate').value = today;
     }
     loadTimecardHistory();
+  }
+  if (name === 'monthly') {
+    if (!document.getElementById('monthlyMonth').value) {
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('monthlyMonth').value = y + '-' + m;
+    }
   }
 }
 
@@ -913,7 +963,163 @@ function renderTransportList() {
   });
 }
 
-// ===== 打刻新規追加 =====
+// ===== 月次集計 =====
+function loadMonthlySummary() {
+  var month = document.getElementById('monthlyMonth').value;
+  var ky    = document.getElementById('monthlyKyoshitsu').value;
+  var msg   = document.getElementById('monthlyMsg');
+
+  if (!month) { msg.textContent = '対象月を選択してください'; msg.className = 'status-msg status-err'; return; }
+  if (!ky)    { msg.textContent = '教室を選択してください';   msg.className = 'status-msg status-err'; return; }
+
+  msg.textContent = '取得中...'; msg.className = 'status-msg';
+  document.getElementById('monthlySummarySection').style.display = 'none';
+
+  var url = WORKER_URL + '/get-timecard?month=' + month + '&kyoshitsu=' + encodeURIComponent(ky);
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      msg.textContent = '';
+      renderMonthlySummary(data.records || [], month, ky);
+    })
+    .catch(function(){
+      msg.textContent = '⚠️ 取得できませんでした'; msg.className = 'status-msg status-err';
+    });
+}
+
+function renderMonthlySummary(records, month, ky) {
+  // 日付ごと・講師ごとにグループ化（最新の打刻を優先：timestamp降順）
+  // key: teacher+'|'+date → { inTime, outTime }
+  var raw = {}; // teacher+'|'+date → { ins:[{timeStr,ts}], outs:[{timeStr,ts}] }
+  records.forEach(function(rec) {
+    var key = (rec.teacher || '') + '|' + (rec.date || '');
+    if (!raw[key]) raw[key] = { ins: [], outs: [] };
+    if (rec.type === 'in')  raw[key].ins.push({ timeStr: rec.timeStr, ts: rec.timestamp || 0 });
+    if (rec.type === 'out') raw[key].outs.push({ timeStr: rec.timeStr, ts: rec.timestamp || 0 });
+  });
+
+  // 最新のin/outを採用（timestamp最大のものを使う）
+  var grouped = {}; // teacher+'|'+date → { inTime, outTime, workMin }
+  Object.keys(raw).forEach(function(key) {
+    var d = raw[key];
+    var inRec  = d.ins.sort(function(a,b){ return b.ts - a.ts; })[0]  || null;
+    var outRec = d.outs.sort(function(a,b){ return b.ts - a.ts; })[0] || null;
+    var inTime  = inRec  ? inRec.timeStr  : null;
+    var outTime = outRec ? outRec.timeStr : null;
+    var workMin = 0;
+    if (inTime && outTime) {
+      workMin = toTcMinutes(outTime) - toTcMinutes(inTime);
+      if (workMin < 0) workMin = 0;
+    }
+    grouped[key] = { inTime: inTime, outTime: outTime, workMin: workMin };
+  });
+
+  // 月の全日付を生成
+  var year  = parseInt(month.split('-')[0]);
+  var monthN = parseInt(month.split('-')[1]);
+  var daysInMonth = new Date(year, monthN, 0).getDate();
+  var allDates = [];
+  for (var d = 1; d <= daysInMonth; d++) {
+    allDates.push(year + '-' + String(monthN).padStart(2,'0') + '-' + String(d).padStart(2,'0'));
+  }
+
+  // 対象教室の講師リストを取得
+  var teachers = masterTeachers[ky] || [];
+  if (teachers.length === 0) {
+    // recordsから講師名を抽出
+    var seen = {};
+    records.forEach(function(r){ if (r.teacher) seen[r.teacher] = true; });
+    teachers = Object.keys(seen).sort();
+  }
+
+  if (teachers.length === 0) {
+    document.getElementById('monthlySummaryWrap').innerHTML = '<div class="empty">打刻記録がありません</div>';
+    document.getElementById('monthlySummarySection').style.display = 'block';
+    document.getElementById('monthlySummaryTitle').textContent = month.replace('-','年') + '月　' + ky + '　勤務時間一覧';
+    return;
+  }
+
+  // 出勤日のある日だけ列を表示（全日表示すると広すぎるため）
+  var activeDates = allDates.filter(function(dt) {
+    return teachers.some(function(t) {
+      return grouped[t + '|' + dt] && grouped[t + '|' + dt].inTime;
+    });
+  });
+
+  // テーブル生成
+  var table = document.createElement('table');
+  table.className = 'monthly-table';
+
+  // ヘッダ行
+  var thead = document.createElement('thead');
+  var headTr = document.createElement('tr');
+  var thName = document.createElement('th');
+  thName.className = 'teacher-col'; thName.textContent = '講師名';
+  headTr.appendChild(thName);
+  activeDates.forEach(function(dt) {
+    var th = document.createElement('th');
+    var d = parseInt(dt.split('-')[2]);
+    var w = ['日','月','火','水','木','金','土'][new Date(dt).getDay()];
+    th.textContent = d + '/' + (['日','土'].indexOf(w) >= 0 ? w : w);
+    if (w === '日') th.style.color = '#c00';
+    if (w === '土') th.style.color = '#0055cc';
+    headTr.appendChild(th);
+  });
+  var thTotal = document.createElement('th');
+  thTotal.textContent = '月合計'; thTotal.style.background = '#EEEDFE'; thTotal.style.color = '#3C3489';
+  headTr.appendChild(thTotal);
+  thead.appendChild(headTr);
+  table.appendChild(thead);
+
+  // データ行
+  var tbody = document.createElement('tbody');
+  teachers.forEach(function(teacher) {
+    var tr = document.createElement('tr');
+    var tdName = document.createElement('td');
+    tdName.className = 'teacher-cell'; tdName.textContent = teacher;
+    tr.appendChild(tdName);
+
+    var totalMin = 0;
+    activeDates.forEach(function(dt) {
+      var td = document.createElement('td');
+      var rec = grouped[teacher + '|' + dt];
+      if (rec && rec.inTime) {
+        var rangeDiv = document.createElement('div'); rangeDiv.className = 'time-range';
+        rangeDiv.textContent = rec.inTime + '〜' + (rec.outTime || '?');
+        var durDiv = document.createElement('div'); durDiv.className = 'time-dur';
+        durDiv.textContent = rec.workMin > 0 ? '(' + minToHM(rec.workMin) + ')' : '(退勤未記録)';
+        if (!rec.outTime) durDiv.style.color = '#c00';
+        td.appendChild(rangeDiv); td.appendChild(durDiv);
+        totalMin += rec.workMin;
+      } else {
+        td.innerHTML = '<span class="no-record">—</span>';
+      }
+      tr.appendChild(td);
+    });
+
+    var tdTotal = document.createElement('td');
+    tdTotal.className = 'total-cell';
+    tdTotal.textContent = totalMin > 0 ? minToHM(totalMin) : '—';
+    tr.appendChild(tdTotal);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  var wrap = document.getElementById('monthlySummaryWrap');
+  wrap.innerHTML = '';
+  wrap.appendChild(table);
+
+  var titleEl = document.getElementById('monthlySummaryTitle');
+  titleEl.textContent = month.replace('-','年') + '月　' + ky + '　勤務時間一覧';
+  document.getElementById('monthlySummarySection').style.display = 'block';
+}
+
+function minToHM(min) {
+  if (!min || min <= 0) return '0h';
+  var h = Math.floor(min / 60);
+  var m = min % 60;
+  return h + 'h' + (m > 0 ? m + 'm' : '');
+}
 function onTcAddKyoshitsuChange() {
   var ky = document.getElementById('tcAddKyoshitsu').value;
   var sel = document.getElementById('tcAddTeacher');
