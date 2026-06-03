@@ -54,6 +54,26 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
 .login-btn{width:100%;padding:12px;background:#534AB7;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
 .login-btn:hover{background:#7F77DD}
 .login-err{font-size:12px;color:#c00;margin-top:8px;min-height:18px}
+.tc-item{background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.tc-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.tc-name{font-size:13px;font-weight:500;flex:1}
+.tc-ky{font-size:11px;padding:2px 7px;border-radius:4px;background:#EEEDFE;color:#3C3489}
+.tc-date{font-size:11px;color:#888}
+.tc-times{display:flex;gap:14px;font-size:12px;align-items:center;flex-wrap:wrap}
+.tc-time-item{display:flex;align-items:center;gap:4px}
+.tc-badge-in{color:#27500A;background:#EAF3DE;border:1px solid #C0DD97;border-radius:4px;padding:1px 6px;font-size:11px}
+.tc-badge-out{color:#791F1F;background:#FCEBEB;border:1px solid #F09595;border-radius:4px;padding:1px 6px;font-size:11px}
+.tc-badge-working{color:#085041;background:#E1F5EE;border:1px solid #5DCAA5;border-radius:4px;padding:1px 6px;font-size:11px}
+.tc-dur{font-size:11px;color:#888;margin-left:auto}
+.tc-edit-btn{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid #ccc;background:#f5f4f0;color:#444;cursor:pointer;font-family:inherit;margin-left:auto;flex-shrink:0}
+.tc-edit-btn:hover{background:#eee}
+.transport-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #eee;font-size:13px}
+.transport-row:last-child{border-bottom:none}
+.transport-name{flex:1;font-weight:500}
+.transport-ky{font-size:11px;padding:2px 7px;border-radius:4px;background:#E1F5EE;color:#085041;margin-right:4px}
+.transport-amount{color:#534AB7;font-weight:500;min-width:70px;text-align:right}
+.transport-del{font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid #F09595;background:#FCEBEB;color:#791F1F;cursor:pointer;font-family:inherit}
+.transport-del:hover{background:#fbd8d8}
 </style>
 </head>
 <body>
@@ -79,6 +99,8 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
     <button class="tab active" id="tab-students" onclick="switchTab('students')">生徒管理</button>
     <button class="tab" id="tab-teachers" onclick="switchTab('teachers')">講師管理</button>
     <button class="tab" id="tab-kyoshitsu" onclick="switchTab('kyoshitsu')">教室管理</button>
+    <button class="tab" id="tab-transport" onclick="switchTab('transport')">交通費</button>
+    <button class="tab" id="tab-timecard" onclick="switchTab('timecard')">打刻履歴</button>
   </div>
 
   <!-- 生徒管理 -->
@@ -181,6 +203,76 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
     <div class="section">
       <div class="section-title">教室一覧</div>
       <div id="kyoshitsuListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+
+  <!-- 交通費管理 -->
+  <div class="view" id="view-transport">
+    <div class="section">
+      <div class="section-title">交通費を登録・更新</div>
+      <p style="font-size:12px;color:#888;margin-bottom:1rem;line-height:1.7">講師ごとの月次交通費を登録します。給与計算時にここの値が使用されます。</p>
+      <div class="row">
+        <div>
+          <label>教室</label>
+          <select id="transportKyoshitsu" onchange="onTransportKyoshitsuChange()">
+            <option value="">-- 選択 --</option>
+          </select>
+        </div>
+        <div>
+          <label>講師名</label>
+          <select id="transportTeacher">
+            <option value="">-- 先に教室を選択 --</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>交通費（円／月）</label>
+          <input type="text" id="transportAmount" placeholder="例：3000" style="ime-mode:disabled">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" onclick="saveTransport()" style="width:100%">登録・更新する</button>
+        </div>
+      </div>
+      <span class="status-msg" id="transportMsg"></span>
+    </div>
+    <div class="section">
+      <div class="section-title">交通費一覧</div>
+      <div id="transportListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
+
+  <!-- 打刻履歴管理 -->
+  <div class="view" id="view-timecard">
+    <div class="section">
+      <div class="section-title">
+        打刻履歴
+        <select id="tcFilterKyoshitsu" onchange="loadTimecardHistory()" style="width:auto;height:30px;font-size:12px;margin-left:auto">
+          <option value="">全教室</option>
+        </select>
+        <input type="date" id="tcFilterDate" onchange="loadTimecardHistory()" style="height:30px;padding:0 8px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:inherit">
+      </div>
+      <div id="tcListWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+
+    <!-- 打刻修正モーダル風パネル -->
+    <div class="section" id="tcEditSection" style="display:none">
+      <div class="section-title" id="tcEditTitle">打刻を修正</div>
+      <div class="row">
+        <div>
+          <label>出勤時刻</label>
+          <input type="text" id="tcEditIn" placeholder="例：16:30">
+        </div>
+        <div>
+          <label>退勤時刻</label>
+          <input type="text" id="tcEditOut" placeholder="例：21:20">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="applyTimecardEdit()">修正を保存</button>
+        <button class="btn btn-secondary" onclick="cancelTimecardEdit()">キャンセル</button>
+        <span class="status-msg" id="tcEditMsg"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -296,6 +388,7 @@ function loadAll() {
       masterNotionPages = data.notionPages || DEFAULT_NOTION;
       masterPins = data.pins || {};
       masterTeachers = data.teachers || DEFAULT_TEACHERS;
+      masterTransport = data.transport || {};
       if (!data.students) {
         // 初回：デフォルトデータをKVに保存
         saveMaster('students', masterStudents, function(){});
@@ -310,6 +403,7 @@ function loadAll() {
       masterStudents = DEFAULT_STUDENTS;
       masterNotionPages = DEFAULT_NOTION;
       masterTeachers = DEFAULT_TEACHERS;
+      masterTransport = {};
       renderAll();
     });
 }
@@ -322,11 +416,11 @@ function renderAll() {
 }
 
 function renderKyoshitsuSelects() {
-  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu'].forEach(function(id) {
+  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu', 'transportKyoshitsu', 'tcFilterKyoshitsu'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var cur = el.value;
-    var isFilter = (id === 'filterKyoshitsu');
+    var isFilter = (id === 'filterKyoshitsu' || id === 'tcFilterKyoshitsu');
     el.innerHTML = isFilter ? '<option value="">全教室</option>' : '<option value="">-- 選択 --</option>';
     masterKyoshitsu.forEach(function(k) {
       var o = document.createElement('option');
@@ -686,9 +780,251 @@ function showSaveStatus(msg) {
 
 // ===== タブ =====
 function switchTab(name) {
-  ['students','teachers','kyoshitsu'].forEach(function(n) {
+  ['students','teachers','kyoshitsu','transport','timecard'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('view-' + n).classList.toggle('active', n === name);
+  });
+  if (name === 'transport') renderTransportList();
+  if (name === 'timecard') {
+    var today = getTodayStr();
+    if (!document.getElementById('tcFilterDate').value) {
+      document.getElementById('tcFilterDate').value = today;
+    }
+    loadTimecardHistory();
+  }
+}
+
+// ===== 交通費 =====
+var masterTransport = {}; // { 講師名: 金額 }
+
+function onTransportKyoshitsuChange() {
+  var ky = document.getElementById('transportKyoshitsu').value;
+  var sel = document.getElementById('transportTeacher');
+  sel.innerHTML = '<option value="">-- 講師を選択 --</option>';
+  if (!ky) return;
+  var teachers = masterTeachers[ky] || [];
+  teachers.forEach(function(t) {
+    var o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+}
+
+function saveTransport() {
+  var ky = document.getElementById('transportKyoshitsu').value;
+  var teacher = document.getElementById('transportTeacher').value;
+  var amountStr = document.getElementById('transportAmount').value.trim().replace(/[,，]/g,'');
+  var msg = document.getElementById('transportMsg');
+  if (!ky || !teacher) { msg.textContent = '教室と講師を選択してください'; msg.className = 'status-msg status-err'; return; }
+  var amount = parseInt(amountStr);
+  if (isNaN(amount) || amount < 0) { msg.textContent = '金額は0以上の数字で入力してください'; msg.className = 'status-msg status-err'; return; }
+  masterTransport[teacher] = amount;
+  saveMaster('transport', masterTransport, function() {
+    msg.textContent = '✅ ' + teacher + ' の交通費を ' + amount.toLocaleString() + ' 円で登録しました';
+    msg.className = 'status-msg status-ok';
+    document.getElementById('transportAmount').value = '';
+    renderTransportList();
+  });
+}
+
+function deleteTransport(teacher) {
+  if (!confirm(teacher + ' の交通費を削除しますか？')) return;
+  delete masterTransport[teacher];
+  saveMaster('transport', masterTransport, function() {
+    renderTransportList();
+    showSaveStatus(teacher + ' の交通費を削除しました');
+  });
+}
+
+function renderTransportList() {
+  var wrap = document.getElementById('transportListWrap');
+  var keys = Object.keys(masterTransport);
+  if (keys.length === 0) {
+    wrap.innerHTML = '<div class="empty">交通費が登録されていません</div>';
+    return;
+  }
+  // 教室ごとにグループ化して表示
+  wrap.innerHTML = '';
+  masterKyoshitsu.forEach(function(ky) {
+    var teachers = masterTeachers[ky] || [];
+    var rows = teachers.filter(function(t) { return masterTransport[t] !== undefined; });
+    if (rows.length === 0) return;
+    var block = document.createElement('div');
+    block.style.marginBottom = '1rem';
+    var ttl = document.createElement('div');
+    ttl.style.cssText = 'font-size:12px;font-weight:500;color:#666;margin-bottom:4px';
+    ttl.textContent = ky;
+    block.appendChild(ttl);
+    rows.forEach(function(t) {
+      var row = document.createElement('div');
+      row.className = 'transport-row';
+      var kyBadge = document.createElement('span'); kyBadge.className = 'transport-ky'; kyBadge.textContent = ky;
+      var name = document.createElement('span'); name.className = 'transport-name'; name.textContent = t;
+      var amt = document.createElement('span'); amt.className = 'transport-amount'; amt.textContent = masterTransport[t].toLocaleString() + ' 円';
+      var del = document.createElement('button'); del.className = 'transport-del'; del.textContent = '削除';
+      (function(t2){ del.onclick = function(){ deleteTransport(t2); }; })(t);
+      row.appendChild(kyBadge); row.appendChild(name); row.appendChild(amt); row.appendChild(del);
+      block.appendChild(row);
+    });
+    wrap.appendChild(block);
+  });
+}
+
+// ===== 打刻履歴管理 =====
+var _tcEditing = null; // 現在編集中のグループキー情報
+
+function getTodayStr() {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth()+1).padStart(2,'0');
+  var d = String(now.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + d;
+}
+
+function loadTimecardHistory() {
+  var ky = document.getElementById('tcFilterKyoshitsu').value;
+  var date = document.getElementById('tcFilterDate').value;
+  var url = WORKER_URL + '/get-timecard?';
+  var params = [];
+  if (ky) params.push('kyoshitsu=' + encodeURIComponent(ky));
+  if (date) params.push('date=' + date);
+  url += params.join('&');
+
+  document.getElementById('tcListWrap').innerHTML = '<div class="empty">読み込み中...</div>';
+  document.getElementById('tcEditSection').style.display = 'none';
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){ renderTimecardList(data.records || []); })
+    .catch(function(){ document.getElementById('tcListWrap').innerHTML = '<div class="empty">取得できませんでした</div>'; });
+}
+
+function renderTimecardList(records) {
+  var wrap = document.getElementById('tcListWrap');
+  if (records.length === 0) { wrap.innerHTML = '<div class="empty">打刻記録はありません</div>'; return; }
+
+  // グループ化：日付+教室+講師
+  var groups = {};
+  records.forEach(function(rec) {
+    var key = rec.date + '|' + rec.kyoshitsu + '|' + rec.teacher;
+    if (!groups[key]) groups[key] = { date: rec.date, kyoshitsu: rec.kyoshitsu, teacher: rec.teacher, ins: [], outs: [], rawKeys: [] };
+    if (rec.type === 'in') groups[key].ins.push(rec.timeStr);
+    else groups[key].outs.push(rec.timeStr);
+  });
+
+  var keys = Object.keys(groups).sort(function(a,b){ return b.localeCompare(a); });
+  wrap.innerHTML = '';
+
+  keys.forEach(function(key) {
+    var g = groups[key];
+    var inTime = g.ins[0] || null;
+    var outTime = g.outs[0] || null;
+    var isWorking = inTime && !outTime;
+
+    var item = document.createElement('div');
+    item.className = 'tc-item';
+
+    var header = document.createElement('div');
+    header.className = 'tc-header';
+    var nameEl = document.createElement('span'); nameEl.className = 'tc-name'; nameEl.textContent = g.teacher;
+    var kyEl = document.createElement('span'); kyEl.className = 'tc-ky'; kyEl.textContent = g.kyoshitsu;
+    var dateEl = document.createElement('span'); dateEl.className = 'tc-date'; dateEl.textContent = g.date;
+    var editBtn = document.createElement('button'); editBtn.className = 'tc-edit-btn'; editBtn.textContent = '修正';
+    (function(g2){ editBtn.onclick = function(){ openTimecardEdit(g2); }; })(g);
+    header.appendChild(nameEl); header.appendChild(kyEl); header.appendChild(dateEl); header.appendChild(editBtn);
+
+    var times = document.createElement('div');
+    times.className = 'tc-times';
+
+    var inEl = document.createElement('div'); inEl.className = 'tc-time-item';
+    var inBadge = document.createElement('span'); inBadge.className = 'tc-badge-in'; inBadge.textContent = '出勤';
+    var inVal = document.createElement('span'); inVal.textContent = inTime || '---';
+    inEl.appendChild(inBadge); inEl.appendChild(inVal);
+
+    var outEl = document.createElement('div'); outEl.className = 'tc-time-item';
+    var outBadge = document.createElement('span');
+    var outVal = document.createElement('span');
+    if (isWorking) {
+      outBadge.className = 'tc-badge-working'; outBadge.textContent = '勤務中';
+      outVal.textContent = '';
+    } else {
+      outBadge.className = 'tc-badge-out'; outBadge.textContent = '退勤';
+      outVal.textContent = outTime || '---';
+    }
+    outEl.appendChild(outBadge); outEl.appendChild(outVal);
+
+    var durEl = document.createElement('span'); durEl.className = 'tc-dur';
+    if (inTime && outTime) {
+      var diff = toTcMinutes(outTime) - toTcMinutes(inTime);
+      if (diff > 0) durEl.textContent = Math.floor(diff/60) + 'h' + (diff%60) + 'm';
+    }
+
+    times.appendChild(inEl); times.appendChild(outEl); times.appendChild(durEl);
+    item.appendChild(header); item.appendChild(times);
+    wrap.appendChild(item);
+  });
+}
+
+function toTcMinutes(t) {
+  var p = t.split(':');
+  return parseInt(p[0]) * 60 + parseInt(p[1]);
+}
+
+function openTimecardEdit(g) {
+  _tcEditing = g;
+  document.getElementById('tcEditTitle').textContent = g.teacher + '（' + g.date + '）の打刻を修正';
+  document.getElementById('tcEditIn').value = g.ins[0] || '';
+  document.getElementById('tcEditOut').value = g.outs[0] || '';
+  document.getElementById('tcEditMsg').textContent = '';
+  document.getElementById('tcEditSection').style.display = 'block';
+  document.getElementById('tcEditSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelTimecardEdit() {
+  _tcEditing = null;
+  document.getElementById('tcEditSection').style.display = 'none';
+}
+
+function applyTimecardEdit() {
+  if (!_tcEditing) return;
+  var inTime = document.getElementById('tcEditIn').value.trim();
+  var outTime = document.getElementById('tcEditOut').value.trim();
+  var msg = document.getElementById('tcEditMsg');
+
+  if (inTime && !/^\d{1,2}:\d{2}$/.test(inTime)) { msg.textContent = '出勤時刻の形式が正しくありません（例：16:30）'; msg.className = 'status-msg status-err'; return; }
+  if (outTime && !/^\d{1,2}:\d{2}$/.test(outTime)) { msg.textContent = '退勤時刻の形式が正しくありません（例：21:20）'; msg.className = 'status-msg status-err'; return; }
+
+  var g = _tcEditing;
+  var ts = Date.now();
+  var promises = [];
+
+  // 修正版を保存：既存レコードは上書きできないためtype+suffixで別保存し、
+  // Worker側で最新の修正を優先させる（今回はシンプルに追記する方式）
+  if (inTime) {
+    promises.push(fetch(WORKER_URL + '/clock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kyoshitsu: g.kyoshitsu, teacher: g.teacher, date: g.date, type: 'in', timeStr: inTime, timestamp: ts, edited: true })
+    }));
+  }
+  if (outTime) {
+    promises.push(fetch(WORKER_URL + '/clock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kyoshitsu: g.kyoshitsu, teacher: g.teacher, date: g.date, type: 'out', timeStr: outTime, timestamp: ts + 1, edited: true })
+    }));
+  }
+
+  Promise.all(promises).then(function() {
+    msg.textContent = '✅ 修正を保存しました';
+    msg.className = 'status-msg status-ok';
+    setTimeout(function() {
+      cancelTimecardEdit();
+      loadTimecardHistory();
+    }, 1200);
+  }).catch(function() {
+    msg.textContent = '⚠️ 保存に失敗しました';
+    msg.className = 'status-msg status-err';
   });
 }
 </script>
