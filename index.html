@@ -1167,6 +1167,23 @@ function updateUnitCount(){
 }
 
 function submitReport(){
+  // ===== バリデーション =====
+  var _kyoshitsu=document.getElementById('kyoshitsuSelect').value;
+  var _koma=document.getElementById('komaSelect').value;
+  var _teacher=document.getElementById('teacherName').value.trim();
+  var _grade=document.getElementById('gradeSelect').value;
+  var _student=getStudentName();
+  var _errors=[];
+  if(!_kyoshitsu) _errors.push('・教室を選択してください');
+  if(!_koma)      _errors.push('・コマを選択してください');
+  if(!_teacher)   _errors.push('・講師名を入力してください');
+  if(!_grade)     _errors.push('・学年を選択してください');
+  if(!_student)   _errors.push('・生徒名を選択または入力してください');
+  if(_errors.length>0){
+    alert('以下の項目を入力してから送信してください。\n\n'+_errors.join('\n'));
+    return;
+  }
+  // ===== ここから通常処理 =====
   var date=document.getElementById('lessonDate').value||'（未入力）';
   var koma=document.getElementById('komaSelect').value||'（未選択）';
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value||'（未選択）';
@@ -1301,6 +1318,8 @@ function submitReport(){
         date:date,
         subject:subj,
         teacher:teacher,
+        koma:koma,
+        grade:grade,
         total:total,
         items:scoreItems
       })
