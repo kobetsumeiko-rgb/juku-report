@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給与計算 - 明光義塾</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0}
+.wrap{max-width:860px;margin:0 auto;padding:1rem 1rem 4rem}
+h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:12px;color:#888;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid #ddd}
+.section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:#666;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select,input[type=text],input[type=month]{width:100%;height:40px;padding:0 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:14px;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:560px){.row,.row3{grid-template-columns:1fr}}
+.btn{padding:10px 22px;border-radius:8px;border:none;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-primary{background:#534AB7;color:#fff}.btn-primary:hover{background:#7F77DD}
+.btn-secondary{background:#f5f4f0;border:1px solid #ccc;color:#1a1a1a}.btn-secondary:hover{background:#eee}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:6px}
+.btn-pdf{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-pdf:hover{background:#d5ebc5}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.loading{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.status-msg{font-size:12px;min-height:18px}
+.status-ok{color:#1D9E75}.status-err{color:#c00}
+
+/* 集計カード */
+.teacher-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;margin-bottom:1rem;overflow:hidden}
+.teacher-card-header{padding:1rem 1.25rem;background:#f9f8ff;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.teacher-card-name{font-size:16px;font-weight:500;flex:1}
+.teacher-card-ky{font-size:11px;padding:2px 8px;border-radius:4px;background:#EEEDFE;color:#3C3489}
+.teacher-card-total{font-size:18px;font-weight:500;color:#534AB7;margin-left:auto}
+.teacher-card-body{padding:1rem 1.25rem}
+
+/* 明細テーブル */
+.detail-table{width:100%;border-collapse:collapse;margin-bottom:1rem}
+.detail-table th{font-size:11px;color:#888;font-weight:500;padding:6px 10px;border-bottom:2px solid #eee;text-align:left;white-space:nowrap}
+.detail-table td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;vertical-align:middle}
+.detail-table tr:last-child td{border-bottom:none}
+.detail-table .subtotal-row td{background:#f5f4f0;font-weight:500;font-size:12px}
+.detail-table .total-row td{background:#EEEDFE;font-weight:500;color:#3C3489}
+.amount-col{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.minus{color:#888}
+
+/* コマバッジ */
+.koma-badge{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;background:#E6F1FB;color:#0C447C;margin:1px}
+
+/* 高校生加算内訳 */
+.hs-detail{font-size:11px;color:#888;margin-top:4px;line-height:1.7}
+
+/* サマリー行 */
+.summary-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.summary-chip{background:#f5f4f0;border:1px solid #e0e0e0;border-radius:8px;padding:6px 12px;font-size:12px;text-align:center;flex:1;min-width:90px}
+.summary-chip-label{color:#888;font-size:11px;margin-bottom:2px}
+.summary-chip-val{font-size:15px;font-weight:500;color:#1a1a1a}
+
+/* 警告 */
+.warn-badge{background:#FAEEDA;color:#633806;border:1px solid #EF9F27;border-radius:4px;padding:2px 8px;font-size:11px}
+
+/* 印刷 */
+@media print {
+  body{background:#fff}
+  .no-print{display:none!important}
+  .wrap{padding:0;max-width:100%}
+  .teacher-card{break-inside:avoid;border:1px solid #ccc;margin-bottom:1.5rem}
+  h1,.subtitle{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>給与計算</h1>
+  <div class="subtitle">明光義塾 給与明細作成</div>
+
+  <!-- 検索条件 -->
+  <div class="section no-print">
+    <div class="section-title">集計条件</div>
+    <div class="row3">
+      <div>
+        <label>対象月</label>
+        <input type="month" id="targetMonth">
+      </div>
+      <div>
+        <label>教室（任意・絞り込み）</label>
+        <select id="filterKyoshitsu">
+          <option value="">全教室</option>
+          <option value="安茂里駅前">安茂里駅前</option>
+          <option value="屋代">屋代</option>
+          <option value="長野青木島">長野青木島</option>
+        </select>
+      </div>
+      <div>
+        <label>講師（任意・絞り込み）</label>
+        <select id="filterTeacher">
+          <option value="">全講師</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="calcPayroll()">▶ 集計する</button>
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨 印刷</button>
+      <span class="status-msg" id="calcMsg"></span>
+    </div>
+  </div>
+
+  <!-- 単価表示 -->
+  <div class="section no-print" style="padding:.875rem 1.25rem">
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#666">
+      <span>授業時給：<strong style="color:#1a1a1a">1,500円</strong>（1コマ90分＝2,250円）</span>
+      <span>授業外時給：<strong style="color:#1a1a1a">1,500円</strong></span>
+      <span>高1加算：<strong style="color:#1a1a1a">100円/人</strong></span>
+      <span>高2加算：<strong style="color:#1a1a1a">150円/人</strong></span>
+      <span>高3加算：<strong style="color:#1a1a1a">200円/人</strong></span>
+    </div>
+  </div>
+
+  <!-- 集計結果 -->
+  <div id="resultWrap"></div>
+</div>
+
+<script>
+var WORKER_URL = 'https://notion-proxy.kobetsu-meiko.workers.dev';
+
+var HS_BONUS = { '高1': 100, '高2': 150, '高3': 200 };
+var HOURLY = 1500;
+var KOMA_MIN = 90; // 1コマ=90分
+
+var masterTeachers = {};
+var masterKyoshitsu = [];
+var masterTransport = {};
+
+// ===== 初期化 =====
+(function init() {
+  // 今月をデフォルトに
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth() + 1).padStart(2, '0');
+  document.getElementById('targetMonth').value = y + '-' + m;
+
+  fetch(WORKER_URL + '/get-master')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      masterKyoshitsu = data.kyoshitsu || ['安茂里駅前','屋代','長野青木島'];
+      masterTeachers  = data.teachers  || {};
+      masterTransport = data.transport || {};
+      buildTeacherSelect();
+    })
+    .catch(function(){});
+})();
+
+function buildTeacherSelect() {
+  var sel = document.getElementById('filterTeacher');
+  sel.innerHTML = '<option value="">全講師</option>';
+  var seen = {};
+  masterKyoshitsu.forEach(function(ky) {
+    (masterTeachers[ky] || []).forEach(function(t) {
+      if (!seen[t]) { seen[t] = true; var o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); }
+    });
+  });
+}
+
+// ===== 集計メイン =====
+async function calcPayroll() {
+  var month   = document.getElementById('targetMonth').value;
+  var filterKy = document.getElementById('filterKyoshitsu').value;
+  var filterT  = document.getElementById('filterTeacher').value;
+  var msg = document.getElementById('calcMsg');
+
+  if (!month) { msg.textContent = '対象月を選択してください'; msg.className = 'status-msg status-err'; return; }
+  msg.textContent = '集計中...'; msg.className = 'status-msg';
+  document.getElementById('resultWrap').innerHTML = '<div class="loading">データ取得中...</div>';
+
+  try {
+    // スコアデータ取得（月の全日分）
+    var scoreRecords = await fetchScores(month, filterKy);
+    // タイムカード取得
+    var tcRecords = await fetchTimecard(month, filterKy);
+    // 集計
+    var result = aggregate(scoreRecords, tcRecords, month, filterKy, filterT);
+    renderResult(result, month);
+    msg.textContent = '';
+  } catch(e) {
+    msg.textContent = '⚠️ データ取得に失敗しました';
+    msg.className = 'status-msg status-err';
+    document.getElementById('resultWrap').innerHTML = '';
+  }
+}
+
+// ===== データ取得 =====
+async function fetchScores(month, filterKy) {
+  var url = WORKER_URL + '/get-scores?month=' + month;
+  if (filterKy) url += '&kyoshitsu=' + encodeURIComponent(filterKy);
+  var r = await fetch(url);
+  var data = await r.json();
+  return data.scores || [];
+}
+
+async function fetchTimecard(month, filterKy) {
+  var url = WORKER_URL + '/get-timecard?month=' + month;
+  if (filterKy) url += '&kyoshitsu=' + encodeURIComponent(filterKy);
+  var r = await fetch(url);
+  var data = await r.json();
+  return data.records || [];
+}
+
+// ===== 集計ロジック =====
+function aggregate(scores, tcRecords, month, filterKy, filterT) {
+  // 講師×教室ごとにデータをまとめる
+  // key = teacher + '|' + kyoshitsu
+  var teacherMap = {}; // { key: { teacher, kyoshitsu, days: { date: { komas: Set, hsStudents: [], rawScores: [] } } } }
+
+  scores.forEach(function(sc) {
+    var t  = sc.teacher || '';
+    var ky = sc.kyoshitsu || '';
+    var dt = sc.date || '';
+    var koma  = sc.koma  || '';
+    var grade = sc.grade || '';
+    if (!t || !ky || !dt) return;
+    if (filterT && t !== filterT) return;
+    if (filterKy && ky !== filterKy) return;
+    // 月フィルタ（scoreデータにはすでに月フィルタがかかっているはずだが念のため）
+    if (dt.slice(0, 7) !== month) return;
+
+    var key = t + '|' + ky;
+    if (!teacherMap[key]) teacherMap[key] = { teacher: t, kyoshitsu: ky, days: {} };
+    if (!teacherMap[key].days[dt]) teacherMap[key].days[dt] = { komas: {}, hsStudents: [] };
+
+    // コマ登録（同一コマは1回だけカウント）
+    if (koma && koma !== '（未選択）') teacherMap[key].days[dt].komas[koma] = true;
+
+    // 高校生加算
+    if (HS_BONUS[grade]) {
+      teacherMap[key].days[dt].hsStudents.push({ grade: grade, student: sc.student || '' });
+    }
+  });
+
+  // タイムカードを講師×教室×日付でグループ化
+  var tcMap = {}; // { teacher+'|'+kyoshitsu+'|'+date: { inTime, outTime } }
+  // 同日に複数打刻がある場合は最初のin・最後のoutを使う
+  var tcTemp = {};
+  tcRecords.forEach(function(rec) {
+    var t  = rec.teacher || '';
+    var ky = rec.kyoshitsu || '';
+    var dt = rec.date || '';
+    if (!t || !ky || !dt) return;
+    if (filterT && t !== filterT) return;
+    if (dt.slice(0, 7) !== month) return;
+    var key = t + '|' + ky + '|' + dt;
+    if (!tcTemp[key]) tcTemp[key] = { ins: [], outs: [] };
+    if (rec.type === 'in')  tcTemp[key].ins.push(rec.timeStr);
+    if (rec.type === 'out') tcTemp[key].outs.push(rec.timeStr);
+  });
+  Object.keys(tcTemp).forEach(function(key) {
+    var d = tcTemp[key];
+    var inTime  = d.ins.sort()[0]  || null;
+    var outTime = d.outs.sort().slice(-1)[0] || null;
+    tcMap[key] = { inTime: inTime, outTime: outTime };
+  });
+
+  // 各講師の給与計算
+  var results = [];
+  Object.keys(teacherMap).forEach(function(key) {
+    var tm = teacherMap[key];
+    var teacher   = tm.teacher;
+    var kyoshitsu = tm.kyoshitsu;
+    var transport = masterTransport[teacher] || 0;
+
+    var totalKomaCount  = 0;
+    var totalHsPay      = 0;
+    var hsDetails       = []; // 表示用
+    var dailyDetails    = []; // 日次詳細
+    var totalWorkMin    = 0;  // タイムカード総勤務分
+    var totalLessonMin  = 0;  // 授業時間合計分
+    var missingTc       = []; // タイムカードなしの日
+
+    // 日付でソート
+    var dates = Object.keys(tm.days).sort();
+    dates.forEach(function(dt) {
+      var day = tm.days[dt];
+      var komaList = Object.keys(day.komas);
+      var komaCount = komaList.length;
+      var lessonMin = komaCount * KOMA_MIN;
+      totalKomaCount += komaCount;
+      totalLessonMin += lessonMin;
+
+      // 高校生加算
+      var dayHsPay = 0;
+      var dayHsDetail = [];
+      day.hsStudents.forEach(function(s) {
+        var bonus = HS_BONUS[s.grade] || 0;
+        dayHsPay += bonus;
+        dayHsDetail.push(s.grade + '(' + bonus + '円)');
+      });
+      totalHsPay += dayHsPay;
+      if (dayHsDetail.length > 0) hsDetails.push(dt + ': ' + dayHsDetail.join(', '));
+
+      // タイムカード
+      var tcKey = teacher + '|' + kyoshitsu + '|' + dt;
+      var tc = tcMap[tcKey] || null;
+      var workMin = 0;
+      var inTime = null, outTime = null;
+      if (tc && tc.inTime && tc.outTime) {
+        inTime  = tc.inTime;
+        outTime = tc.outTime;
+        workMin = toMin(outTime) - toMin(inTime);
+        if (workMin < 0) workMin = 0;
+        totalWorkMin += workMin;
+      } else {
+        missingTc.push(dt);
+      }
+
+      var nonLessonMin = Math.max(workMin - lessonMin, 0);
+      var dayLessonPay  = Math.round(lessonMin  / 60 * HOURLY);
+      var dayNonPay     = Math.round(nonLessonMin / 60 * HOURLY);
+
+      dailyDetails.push({
+        date: dt,
+        komaList: komaList,
+        komaCount: komaCount,
+        inTime: inTime,
+        outTime: outTime,
+        workMin: workMin,
+        lessonMin: lessonMin,
+        nonLessonMin: nonLessonMin,
+        lessonPay: dayLessonPay,
+        nonPay: dayNonPay,
+        hsPay: dayHsPay,
+        hsDetail: dayHsDetail
+      });
+    });
+
+    // 月合計
+    var totalNonLessonMin = Math.max(totalWorkMin - totalLessonMin, 0);
+    var lessonPay    = Math.round(totalLessonMin    / 60 * HOURLY);
+    var nonLessonPay = Math.round(totalNonLessonMin / 60 * HOURLY);
+    var grandTotal   = lessonPay + nonLessonPay + totalHsPay + transport;
+
+    results.push({
+      teacher, kyoshitsu, transport,
+      totalKomaCount,
+      totalWorkMin, totalLessonMin, totalNonLessonMin,
+      lessonPay, nonLessonPay, totalHsPay, transport,
+      grandTotal,
+      hsDetails, dailyDetails, missingTc
+    });
+  });
+
+  // 教室→講師名でソート
+  results.sort(function(a, b) {
+    if (a.kyoshitsu !== b.kyoshitsu) return a.kyoshitsu.localeCompare(b.kyoshitsu);
+    return a.teacher.localeCompare(b.teacher);
+  });
+
+  return results;
+}
+
+// ===== 描画 =====
+function renderResult(results, month) {
+  var wrap = document.getElementById('resultWrap');
+  if (results.length === 0) {
+    wrap.innerHTML = '<div class="empty">対象期間のデータが見つかりませんでした</div>';
+    return;
+  }
+
+  var frag = document.createDocumentFragment();
+
+  // 月表示ヘッダ
+  var monthHeader = document.createElement('div');
+  monthHeader.style.cssText = 'font-size:15px;font-weight:500;color:#534AB7;margin-bottom:1rem;padding:.5rem 0';
+  monthHeader.textContent = '📋 ' + month.replace('-', '年') + '月分　給与明細';
+  frag.appendChild(monthHeader);
+
+  results.forEach(function(r) {
+    var card = document.createElement('div');
+    card.className = 'teacher-card';
+
+    // ヘッダ
+    var header = document.createElement('div');
+    header.className = 'teacher-card-header';
+    var nameEl = document.createElement('span'); nameEl.className = 'teacher-card-name'; nameEl.textContent = r.teacher;
+    var kyEl   = document.createElement('span'); kyEl.className   = 'teacher-card-ky';   kyEl.textContent   = r.kyoshitsu;
+    var totalEl = document.createElement('span'); totalEl.className = 'teacher-card-total';
+    totalEl.textContent = '合計 ' + r.grandTotal.toLocaleString() + ' 円';
+    header.appendChild(nameEl); header.appendChild(kyEl); header.appendChild(totalEl);
+    card.appendChild(header);
+
+    var body = document.createElement('div');
+    body.className = 'teacher-card-body';
+
+    // サマリーチップ
+    var summary = document.createElement('div');
+    summary.className = 'summary-row';
+    [
+      { label: '授業コマ数', val: r.totalKomaCount + ' コマ' },
+      { label: '総勤務時間', val: minToHM(r.totalWorkMin) },
+      { label: '授業時間',   val: minToHM(r.totalLessonMin) },
+      { label: '授業外時間', val: minToHM(r.totalNonLessonMin) }
+    ].forEach(function(c) {
+      var chip = document.createElement('div'); chip.className = 'summary-chip';
+      chip.innerHTML = '<div class="summary-chip-label">' + c.label + '</div><div class="summary-chip-val">' + c.val + '</div>';
+      summary.appendChild(chip);
+    });
+    body.appendChild(summary);
+
+    // タイムカードなし警告
+    if (r.missingTc.length > 0) {
+      var warn = document.createElement('div');
+      warn.style.cssText = 'margin-bottom:1rem;font-size:12px;color:#633806;background:#FAEEDA;border:1px solid #EF9F27;border-radius:6px;padding:8px 12px';
+      warn.innerHTML = '⚠️ タイムカードなし（授業外時間が計算できない日）: ' + r.missingTc.join(', ');
+      body.appendChild(warn);
+    }
+
+    // 日次明細テーブル
+    var tbl = document.createElement('table');
+    tbl.className = 'detail-table';
+    tbl.innerHTML = '<thead><tr>' +
+      '<th>日付</th><th>コマ</th><th>出勤</th><th>退勤</th>' +
+      '<th>授業時間</th><th>授業外時間</th><th class="amount-col">授業代</th>' +
+      '<th class="amount-col">授業外</th><th class="amount-col">高校生加算</th>' +
+      '</tr></thead>';
+    var tbody = document.createElement('tbody');
+
+    r.dailyDetails.forEach(function(d) {
+      var tr = document.createElement('tr');
+      var komaHtml = d.komaList.length > 0
+        ? d.komaList.map(function(k){ return '<span class="koma-badge">' + k.replace('コマ','') + '</span>'; }).join('')
+        : '<span class="minus">—</span>';
+      var hsHtml = d.hsPay > 0
+        ? '+' + d.hsPay.toLocaleString() + '<div class="hs-detail">' + d.hsDetail.join('<br>') + '</div>'
+        : '<span class="minus">—</span>';
+      tr.innerHTML =
+        '<td>' + d.date.slice(5).replace('-','/') + '</td>' +
+        '<td>' + komaHtml + '</td>' +
+        '<td>' + (d.inTime  || '<span class="minus">—</span>') + '</td>' +
+        '<td>' + (d.outTime || '<span class="minus">—</span>') + '</td>' +
+        '<td>' + minToHM(d.lessonMin)    + '</td>' +
+        '<td>' + minToHM(d.nonLessonMin) + '</td>' +
+        '<td class="amount-col">' + d.lessonPay.toLocaleString() + '</td>' +
+        '<td class="amount-col">' + (d.nonPay > 0 ? d.nonPay.toLocaleString() : '<span class="minus">—</span>') + '</td>' +
+        '<td class="amount-col">' + hsHtml + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    // 小計行
+    var subtotal = document.createElement('tr');
+    subtotal.className = 'subtotal-row';
+    subtotal.innerHTML =
+      '<td colspan="6">小計</td>' +
+      '<td class="amount-col">' + r.lessonPay.toLocaleString()    + ' 円</td>' +
+      '<td class="amount-col">' + r.nonLessonPay.toLocaleString() + ' 円</td>' +
+      '<td class="amount-col">' + r.totalHsPay.toLocaleString()   + ' 円</td>';
+    tbody.appendChild(subtotal);
+
+    tbl.appendChild(tbody);
+    body.appendChild(tbl);
+
+    // 合計明細
+    var totalTbl = document.createElement('table');
+    totalTbl.className = 'detail-table';
+    totalTbl.style.marginTop = '.5rem';
+    var totalTbody = document.createElement('tbody');
+
+    var rows = [
+      ['授業代', r.lessonPay.toLocaleString() + ' 円'],
+      ['授業外勤務代', r.nonLessonPay.toLocaleString() + ' 円'],
+      ['高校生加算', r.totalHsPay.toLocaleString() + ' 円'],
+      ['交通費', r.transport.toLocaleString() + ' 円']
+    ];
+    rows.forEach(function(row) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td style="color:#666;font-size:12px">' + row[0] + '</td><td class="amount-col">' + row[1] + '</td>';
+      totalTbody.appendChild(tr);
+    });
+
+    var totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.innerHTML = '<td style="font-size:14px">合計支給額</td><td class="amount-col" style="font-size:16px">' + r.grandTotal.toLocaleString() + ' 円</td>';
+    totalTbody.appendChild(totalRow);
+
+    totalTbl.appendChild(totalTbody);
+    body.appendChild(totalTbl);
+    card.appendChild(body);
+    frag.appendChild(card);
+  });
+
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
+}
+
+// ===== ユーティリティ =====
+function toMin(timeStr) {
+  if (!timeStr) return 0;
+  var p = timeStr.split(':');
+  return parseInt(p[0]) * 60 + parseInt(p[1]);
+}
+
+function minToHM(min) {
+  if (!min || min <= 0) return '<span class="minus">—</span>';
+  var h = Math.floor(min / 60);
+  var m = min % 60;
+  return h + 'h' + (m > 0 ? m + 'm' : '');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイムカード - 明光義塾</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0}
+.wrap{max-width:560px;margin:0 auto;padding:1rem 1rem 4rem}
+h1{font-size:20px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:12px;color:#888;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid #ddd}
+.section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:13px;font-weight:500;color:#666;margin-bottom:.875rem}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select{width:100%;height:44px;padding:0 12px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:15px;font-family:inherit}
+select:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.clock-display{text-align:center;padding:1.25rem 0 .5rem;font-size:36px;font-weight:300;color:#1a1a1a;letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.date-display{text-align:center;font-size:13px;color:#888;margin-bottom:1.25rem}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:.5rem}
+.btn-in{height:64px;border:none;border-radius:12px;font-size:17px;font-weight:500;cursor:pointer;font-family:inherit;background:#EAF3DE;color:#27500A;border:1px solid #C0DD97;transition:background .15s}
+.btn-in:hover{background:#d5ebc5}
+.btn-in:active{transform:scale(.97)}
+.btn-out{height:64px;border:none;border-radius:12px;font-size:17px;font-weight:500;cursor:pointer;font-family:inherit;background:#FCEBEB;color:#791F1F;border:1px solid #F09595;transition:background .15s}
+.btn-out:hover{background:#fbd8d8}
+.btn-out:active{transform:scale(.97)}
+.btn-in:disabled,.btn-out:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.status-card{background:#f5f4f0;border:1px solid #e0e0e0;border-radius:10px;padding:.875rem 1rem;margin-top:1rem}
+.status-card-title{font-size:11px;color:#888;margin-bottom:.5rem}
+.status-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-in{background:#27500A}
+.dot-out{background:#aaa}
+.dot-working{background:#1D9E75;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.time-stamp{color:#666;font-size:12px;margin-left:auto}
+.history-section{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.history-title{font-size:13px;font-weight:500;color:#666;margin-bottom:.875rem;display:flex;align-items:center;gap:8px}
+.filter-row{display:flex;gap:8px;margin-bottom:.875rem;flex-wrap:wrap}
+.filter-select{height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:#1a1a1a;flex:1;min-width:80px}
+.history-list{display:flex;flex-direction:column;gap:6px}
+.history-item{background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:10px 12px}
+.history-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.h-name{font-size:13px;font-weight:500;flex:1}
+.h-ky{font-size:11px;padding:2px 7px;border-radius:4px;background:#EEEDFE;color:#3C3489}
+.h-date{font-size:11px;color:#888}
+.h-times{display:flex;gap:16px;font-size:12px;color:#555}
+.h-time-item{display:flex;align-items:center;gap:4px}
+.h-badge-in{color:#27500A;background:#EAF3DE;border:1px solid #C0DD97;border-radius:4px;padding:1px 6px;font-size:11px}
+.h-badge-out{color:#791F1F;background:#FCEBEB;border:1px solid #F09595;border-radius:4px;padding:1px 6px;font-size:11px}
+.h-badge-working{color:#085041;background:#E1F5EE;border:1px solid #5DCAA5;border-radius:4px;padding:1px 6px;font-size:11px}
+.h-duration{font-size:11px;color:#888;margin-left:auto}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:13px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1}
+.loading{text-align:center;padding:1.5rem;color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>タイムカード</h1>
+  <div class="subtitle">明光義塾 打刻システム</div>
+
+  <!-- 打刻セクション -->
+  <div class="section">
+    <div class="clock-display" id="clockDisplay">--:--:--</div>
+    <div class="date-display" id="dateDisplay">----年--月--日（-）</div>
+
+    <div class="row">
+      <div>
+        <label>教室</label>
+        <select id="kyoshitsuSelect" onchange="onKyoshitsuChange()">
+          <option value="">-- 教室を選択 --</option>
+          <option value="安茂里駅前">安茂里駅前</option>
+          <option value="屋代">屋代</option>
+          <option value="長野青木島">長野青木島</option>
+        </select>
+      </div>
+      <div>
+        <label>講師名</label>
+        <select id="teacherSelect">
+          <option value="">-- 先に教室を選択 --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-in" id="btnIn" onclick="doClock('in')" disabled>▶ 出勤</button>
+      <button class="btn-out" id="btnOut" onclick="doClock('out')" disabled>■ 退勤</button>
+    </div>
+
+    <div class="status-card" id="statusCard" style="display:none">
+      <div class="status-card-title">本日の打刻状況</div>
+      <div id="statusContent"></div>
+    </div>
+  </div>
+
+  <!-- 打刻履歴 -->
+  <div class="history-section">
+    <div class="history-title">
+      打刻履歴
+      <select class="filter-select" id="filterKyoshitsu" onchange="loadHistory()" style="width:auto;margin-left:auto">
+        <option value="">全教室</option>
+        <option value="安茂里駅前">安茂里駅前</option>
+        <option value="屋代">屋代</option>
+        <option value="長野青木島">長野青木島</option>
+      </select>
+      <input type="date" id="filterDate" onchange="loadHistory()" style="height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:#1a1a1a">
+    </div>
+    <div id="historyList"><div class="loading">読み込み中...</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var WORKER_URL = 'https://notion-proxy.kobetsu-meiko.workers.dev';
+
+var TEACHERS = {
+  '安茂里駅前': ['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子'],
+  '屋代': ['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子','宮崎久仁子','緑川智洸'],
+  '長野青木島': ['小林祐介','高澤雅樹','水野貴志','原口葵','浅村結良','小山陽樹','藤田雅子']
+};
+
+var WEEKDAYS = ['日','月','火','水','木','金','土'];
+
+// ===== 時計 =====
+function updateClock() {
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2,'0');
+  var m = String(now.getMinutes()).padStart(2,'0');
+  var s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clockDisplay').textContent = h + ':' + m + ':' + s;
+  var y = now.getFullYear();
+  var mo = now.getMonth() + 1;
+  var d = now.getDate();
+  var w = WEEKDAYS[now.getDay()];
+  document.getElementById('dateDisplay').textContent = y + '年' + mo + '月' + d + '日（' + w + '）';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== 今日の日付 =====
+function getTodayStr() {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = String(now.getMonth() + 1).padStart(2,'0');
+  var d = String(now.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + d;
+}
+
+// ===== 教室変更 =====
+function onKyoshitsuChange() {
+  var ky = document.getElementById('kyoshitsuSelect').value;
+  var sel = document.getElementById('teacherSelect');
+  sel.innerHTML = '';
+  if (!ky) {
+    sel.innerHTML = '<option value="">-- 先に教室を選択 --</option>';
+    updateButtons();
+    return;
+  }
+  sel.innerHTML = '<option value="">-- 講師を選択 --</option>';
+  // マスタから取得 or デフォルト
+  var teachers = (window._masterTeachers && window._masterTeachers[ky]) || TEACHERS[ky] || [];
+  teachers.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  sel.onchange = function() {
+    updateButtons();
+    loadTodayStatus();
+  };
+  updateButtons();
+}
+
+function updateButtons() {
+  var ky = document.getElementById('kyoshitsuSelect').value;
+  var t = document.getElementById('teacherSelect').value;
+  var ok = ky && t;
+  document.getElementById('btnIn').disabled = !ok;
+  document.getElementById('btnOut').disabled = !ok;
+  if (ok) loadTodayStatus();
+  else document.getElementById('statusCard').style.display = 'none';
+}
+
+// ===== 本日の打刻状況 =====
+function loadTodayStatus() {
+  var ky = document.getElementById('kyoshitsuSelect').value;
+  var teacher = document.getElementById('teacherSelect').value;
+  if (!ky || !teacher) return;
+  var today = getTodayStr();
+  fetch(WORKER_URL + '/get-timecard?kyoshitsu=' + encodeURIComponent(ky) + '&teacher=' + encodeURIComponent(teacher) + '&date=' + today)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      renderTodayStatus(data.records || []);
+    })
+    .catch(function() {
+      renderTodayStatus([]);
+    });
+}
+
+function renderTodayStatus(records) {
+  var card = document.getElementById('statusCard');
+  var content = document.getElementById('statusContent');
+  if (records.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  content.innerHTML = '';
+  records.forEach(function(rec) {
+    var row = document.createElement('div');
+    row.className = 'status-row';
+    row.style.marginBottom = '4px';
+    var dot = document.createElement('span');
+    var typeLabel = rec.type === 'in' ? '出勤' : '退勤';
+    dot.className = 'dot ' + (rec.type === 'in' ? 'dot-working' : 'dot-out');
+    var label = document.createElement('span');
+    label.textContent = typeLabel;
+    var ts = document.createElement('span');
+    ts.className = 'time-stamp';
+    ts.textContent = rec.timeStr || '';
+    row.appendChild(dot); row.appendChild(label); row.appendChild(ts);
+    content.appendChild(row);
+  });
+}
+
+// ===== 打刻 =====
+function doClock(type) {
+  var ky = document.getElementById('kyoshitsuSelect').value;
+  var teacher = document.getElementById('teacherSelect').value;
+  if (!ky || !teacher) return;
+
+  var typeLabel = type === 'in' ? '出勤' : '退勤';
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2,'0');
+  var m = String(now.getMinutes()).padStart(2,'0');
+  var timeStr = h + ':' + m;
+  var date = getTodayStr();
+  var ts = now.getTime();
+
+  if (!confirm('【' + typeLabel + '】\n' + teacher + ' さん\n' + ky + '　' + timeStr + '\n\nこの内容で打刻しますか？')) return;
+
+  var payload = {
+    kyoshitsu: ky,
+    teacher: teacher,
+    date: date,
+    type: type,
+    timeStr: timeStr,
+    timestamp: ts
+  };
+
+  document.getElementById('btnIn').disabled = true;
+  document.getElementById('btnOut').disabled = true;
+
+  fetch(WORKER_URL + '/clock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function() {
+    showToast('✅ ' + typeLabel + '打刻しました（' + timeStr + '）');
+    loadTodayStatus();
+    loadHistory();
+  })
+  .catch(function() {
+    showToast('⚠️ 通信エラーが発生しました');
+  })
+  .finally(function() {
+    document.getElementById('btnIn').disabled = false;
+    document.getElementById('btnOut').disabled = false;
+  });
+}
+
+// ===== 履歴 =====
+function loadHistory() {
+  var ky = document.getElementById('filterKyoshitsu').value;
+  var date = document.getElementById('filterDate').value;
+  var url = WORKER_URL + '/get-timecard?';
+  var params = [];
+  if (ky) params.push('kyoshitsu=' + encodeURIComponent(ky));
+  if (date) params.push('date=' + date);
+  url += params.join('&');
+
+  document.getElementById('historyList').innerHTML = '<div class="loading">読み込み中...</div>';
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      renderHistory(data.records || []);
+    })
+    .catch(function() {
+      document.getElementById('historyList').innerHTML = '<div class="empty">取得できませんでした</div>';
+    });
+}
+
+function renderHistory(records) {
+  var wrap = document.getElementById('historyList');
+  if (records.length === 0) {
+    wrap.innerHTML = '<div class="empty">打刻記録はありません</div>';
+    return;
+  }
+
+  // 日付・教室・講師ごとにグループ化
+  var groups = {};
+  records.forEach(function(rec) {
+    var key = rec.date + '|' + rec.kyoshitsu + '|' + rec.teacher;
+    if (!groups[key]) groups[key] = { date: rec.date, kyoshitsu: rec.kyoshitsu, teacher: rec.teacher, ins: [], outs: [] };
+    if (rec.type === 'in') groups[key].ins.push(rec.timeStr);
+    else groups[key].outs.push(rec.timeStr);
+  });
+
+  // 日付降順でソート
+  var keys = Object.keys(groups).sort(function(a,b){ return b.localeCompare(a); });
+
+  wrap.innerHTML = '';
+  var list = document.createElement('div');
+  list.className = 'history-list';
+
+  keys.forEach(function(key) {
+    var g = groups[key];
+    var inTime = g.ins[0] || null;
+    var outTime = g.outs[0] || null;
+
+    var item = document.createElement('div');
+    item.className = 'history-item';
+
+    var header = document.createElement('div');
+    header.className = 'history-header';
+    var nameEl = document.createElement('span'); nameEl.className = 'h-name'; nameEl.textContent = g.teacher;
+    var kyEl = document.createElement('span'); kyEl.className = 'h-ky'; kyEl.textContent = g.kyoshitsu;
+    var dateEl = document.createElement('span'); dateEl.className = 'h-date'; dateEl.textContent = g.date;
+    header.appendChild(nameEl); header.appendChild(kyEl); header.appendChild(dateEl);
+
+    var times = document.createElement('div');
+    times.className = 'h-times';
+
+    // 出勤
+    var inEl = document.createElement('div'); inEl.className = 'h-time-item';
+    var inBadge = document.createElement('span'); inBadge.className = 'h-badge-in'; inBadge.textContent = '出勤';
+    var inVal = document.createElement('span'); inVal.textContent = inTime || '---';
+    inEl.appendChild(inBadge); inEl.appendChild(inVal);
+
+    // 退勤
+    var outEl = document.createElement('div'); outEl.className = 'h-time-item';
+    var outBadge = document.createElement('span');
+    var outVal = document.createElement('span');
+    if (inTime && !outTime) {
+      outBadge.className = 'h-badge-working'; outBadge.textContent = '勤務中';
+      outVal.textContent = '';
+    } else {
+      outBadge.className = 'h-badge-out'; outBadge.textContent = '退勤';
+      outVal.textContent = outTime || '---';
+    }
+    outEl.appendChild(outBadge); outEl.appendChild(outVal);
+
+    // 勤務時間
+    var durEl = document.createElement('span'); durEl.className = 'h-duration';
+    if (inTime && outTime) {
+      var inMin = toMinutes(inTime);
+      var outMin = toMinutes(outTime);
+      var diff = outMin - inMin;
+      if (diff > 0) {
+        durEl.textContent = Math.floor(diff/60) + 'h' + (diff%60) + 'm';
+      }
+    }
+
+    times.appendChild(inEl); times.appendChild(outEl); times.appendChild(durEl);
+    item.appendChild(header); item.appendChild(times);
+    list.appendChild(item);
+  });
+
+  wrap.appendChild(list);
+}
+
+function toMinutes(timeStr) {
+  var parts = timeStr.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+// ===== トースト =====
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// ===== 初期化 =====
+(function init() {
+  // 今日の日付をフィルタにセット
+  document.getElementById('filterDate').value = getTodayStr();
+
+  // マスタから講師リストを取得（取得できなければデフォルト使用）
+  fetch(WORKER_URL + '/get-master')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.teachers) window._masterTeachers = data.teachers;
+    })
+    .catch(function(){});
+
+  loadHistory();
+})();
+</script>
+</body>
+</html>
