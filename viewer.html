@@ -85,12 +85,13 @@ function onKyoshitsuChange() {
   if (!ky) return;
 
   var students = Object.keys(masterNotionPages[ky] || {});
-  // 生徒リストはmasterStudentsからも補完
-  if (masterStudents[ky]) {
-    masterStudents[ky].forEach(function(s) {
+  // masterStudentsは { 学年: [生徒名] } の構造なので全学年フラットに展開して補完
+  var kyStudents = masterStudents[ky] || {};
+  Object.keys(kyStudents).forEach(function(grade) {
+    (kyStudents[grade] || []).forEach(function(s) {
       if (students.indexOf(s) < 0) students.push(s);
     });
-  }
+  });
   students.sort();
   students.forEach(function(s) {
     var o = document.createElement('option');
