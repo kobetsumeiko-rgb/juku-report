@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生徒ページ - 明光義塾</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2rem 1.5rem;width:100%;max-width:400px;margin:1rem}
+h1{font-size:18px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:12px;color:#888;margin-bottom:1.75rem;padding-bottom:.75rem;border-bottom:1px solid #eee}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px}
+select{width:100%;height:44px;padding:0 12px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;font-size:15px;font-family:inherit;margin-bottom:1rem}
+select:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.15)}
+.btn{width:100%;height:50px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;background:#534AB7;color:#fff;transition:background .15s}
+.btn:hover{background:#7F77DD}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.msg{font-size:12px;color:#c00;margin-top:.75rem;min-height:18px;text-align:center}
+.loading{text-align:center;color:#aaa;font-size:13px;padding:1rem 0}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>生徒ページを開く</h1>
+  <div class="subtitle">明光義塾</div>
+
+  <div id="loadingMsg" class="loading">読み込み中...</div>
+
+  <div id="formArea" style="display:none">
+    <label>教室</label>
+    <select id="kyoshitsuSelect" onchange="onKyoshitsuChange()">
+      <option value="">-- 教室を選択 --</option>
+    </select>
+
+    <label>生徒名</label>
+    <select id="studentSelect">
+      <option value="">-- 先に教室を選択 --</option>
+    </select>
+
+    <button class="btn" id="openBtn" onclick="openNotion()" disabled>Notionページを開く ↗</button>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script>
+var WORKER_URL = 'https://notion-proxy.kobetsu-meiko.workers.dev';
+var NOTION_BASE = 'https://www.notion.so/';
+
+var masterKyoshitsu  = [];
+var masterStudents   = {};
+var masterNotionPages = {};
+
+// ===== 初期化 =====
+fetch(WORKER_URL + '/get-master')
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    masterKyoshitsu   = data.kyoshitsu   || ['安茂里駅前','屋代','長野青木島'];
+    masterStudents    = data.students    || {};
+    masterNotionPages = data.notionPages || {};
+    buildKyoshitsuSelect();
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('formArea').style.display = 'block';
+  })
+  .catch(function() {
+    document.getElementById('loadingMsg').textContent = '⚠️ データの取得に失敗しました。再読み込みしてください。';
+  });
+
+function buildKyoshitsuSelect() {
+  var sel = document.getElementById('kyoshitsuSelect');
+  masterKyoshitsu.forEach(function(k) {
+    var o = document.createElement('option');
+    o.value = k; o.textContent = k;
+    sel.appendChild(o);
+  });
+}
+
+// ===== 教室変更 =====
+function onKyoshitsuChange() {
+  var ky = document.getElementById('kyoshitsuSelect').value;
+  var sel = document.getElementById('studentSelect');
+  sel.innerHTML = '<option value="">-- 生徒を選択 --</option>';
+  document.getElementById('openBtn').disabled = true;
+  if (!ky) return;
+
+  var students = Object.keys(masterNotionPages[ky] || {});
+  // 生徒リストはmasterStudentsからも補完
+  if (masterStudents[ky]) {
+    masterStudents[ky].forEach(function(s) {
+      if (students.indexOf(s) < 0) students.push(s);
+    });
+  }
+  students.sort();
+  students.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  sel.onchange = function() {
+    document.getElementById('openBtn').disabled = !sel.value;
+    document.getElementById('msg').textContent = '';
+  };
+}
+
+// ===== Notionを開く =====
+function openNotion() {
+  var ky      = document.getElementById('kyoshitsuSelect').value;
+  var student = document.getElementById('studentSelect').value;
+  var msg     = document.getElementById('msg');
+
+  if (!ky || !student) { msg.textContent = '教室と生徒を選択してください'; return; }
+
+  var pageId = (masterNotionPages[ky] || {})[student];
+  if (!pageId) { msg.textContent = 'このページのNotionIDが登録されていません'; return; }
+
+  // NotionのページIDをURLに変換（ハイフンなしIDをそのまま使用）
+  var notionId = pageId.replace(/-/g, '');
+  var url = NOTION_BASE + notionId;
+  window.open(url, '_blank');
+}
+</script>
+</body>
+</html>
