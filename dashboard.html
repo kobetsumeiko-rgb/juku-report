@@ -253,6 +253,7 @@ var uhCurrentTab='all';  // 単元履歴タブ状態
 
 var filterStudentName=new URLSearchParams(window.location.search).get('student')||'';
 var filterStudentKey=filterStudentName.replace(/\s/g,'');
+var filterKyoshitsu=new URLSearchParams(window.location.search).get('kyoshitsu')||'';
 
 var PRIZES=[
   {name:'クオカード 10,000円',rank:'★★★ 激レア',rankBg:'#FAEEDA',rankColor:'#633806',color:'#EF9F27',prob:0.5},
@@ -306,7 +307,7 @@ function checkPin(){
 }
 
 function loadData(){
-  var kyoshitsu=document.getElementById('kyoshitsuSelect').value;
+  var kyoshitsu = filterKyoshitsu || document.getElementById('kyoshitsuSelect').value;
   var params=[];
   if(kyoshitsu) params.push('kyoshitsu='+encodeURIComponent(kyoshitsu));
   if(filterStudentName) params.push('student='+encodeURIComponent(filterStudentName));
