@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>授業レポート登録 - 明光義塾</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;font-size:14px;color:#1a1a1a;background:#f5f4f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:2rem 1.5rem;width:100%;max-width:400px;margin:1rem}
+h1{font-size:18px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:12px;color:#888;margin-bottom:1.75rem;padding-bottom:.75rem;border-bottom:1px solid #eee}
+.step{font-size:12px;color:#888;margin-bottom:.75rem}
+.desc{font-size:13px;color:#555;line-height:1.7;margin-bottom:1.25rem}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px;margin-top:.875rem}
+input[type=number]{width:100%;height:44px;padding:0 12px;border:1px solid #ccc;border-radius:8px;font-size:20px;font-family:inherit;letter-spacing:.3em;text-align:center}
+input:focus{outline:none;border-color:#06C755;box-shadow:0 0 0 2px rgba(6,199,85,.15)}
+.btn-line{width:100%;height:52px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;background:#06C755;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:1.25rem}
+.btn-line:hover{background:#05b34d}
+.btn-primary{width:100%;height:52px;border:none;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;background:#534AB7;color:#fff;margin-top:1.25rem}
+.btn-primary:hover{background:#7F77DD}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-add{width:100%;height:48px;border:1px solid #534AB7;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;background:#fff;color:#534AB7;margin-top:.75rem}
+.btn-add:hover{background:#f0effe}
+.btn-back{width:100%;height:44px;border:1px solid #ccc;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;background:#f5f4f0;color:#666;margin-top:.75rem}
+.msg{font-size:13px;margin-top:.875rem;min-height:18px;line-height:1.6}
+.msg-ok{color:#1D9E75}
+.msg-err{color:#c00}
+.loading{text-align:center;color:#aaa;font-size:13px;padding:2rem 0}
+.user-info{background:#f5f4f0;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.user-name{font-size:13px;font-weight:500}
+.confirm-box{background:#f5f4f0;border-radius:10px;padding:1.25rem;margin:.875rem 0;text-align:center}
+.confirm-name{font-size:20px;font-weight:500;margin-bottom:.25rem}
+.confirm-ky{font-size:12px;color:#888}
+.registered-list{margin:.875rem 0}
+.registered-item{display:flex;align-items:center;padding:10px 12px;background:#f5f4f0;border-radius:8px;margin-bottom:6px;font-size:13px}
+.registered-item-name{font-weight:500;flex:1}
+.registered-item-ky{font-size:11px;color:#888;margin-left:8px}
+.done-icon{font-size:48px;text-align:center;margin:1rem 0}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>授業レポート登録</h1>
+  <div class="subtitle">明光義塾</div>
+  <div id="mainArea"><div class="loading">読み込み中...</div></div>
+</div>
+<script>
+var CLIENT_ID    = '2010459789';
+var REDIRECT_URI = 'https://kobetsumeiko-rgb.github.io/juku-report/line-auth.html';
+var WORKER_URL   = 'https://notion-proxy.kobetsu-meiko.workers.dev';
+
+var lineUserId      = null;
+var lineProfile     = null;
+var foundStudent    = null;
+var foundKy         = null;
+var existingStudents = []; // すでに登録済みの生徒リスト
+
+(function init() {
+  var params = new URLSearchParams(location.search);
+  var code = params.get('code');
+  if (code) {
+    handleCallback(code);
+  } else {
+    showStep1();
+  }
+})();
+
+// ===== STEP1：LINEログイン =====
+function showStep1() {
+  document.getElementById('mainArea').innerHTML =
+    '<p class="step">STEP 1 / 3　LINEアカウントで本人確認</p>' +
+    '<p class="desc">お子様の授業レポートをLINEから確認できるようにします。まずLINEアカウントで本人確認を行ってください。</p>' +
+    '<button class="btn-line" onclick="doLineLogin()">' +
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.03 2 11c0 3.07 1.68 5.78 4.24 7.5L5.5 22l3.76-1.97C10.3 20.65 11.14 21 12 21c5.52 0 10-4.03 10-9S17.52 2 12 2z"/></svg>' +
+    'LINEでログイン</button>';
+}
+
+function doLineLogin() {
+  var state = Math.random().toString(36).slice(2);
+  sessionStorage.setItem('line_state', state);
+  location.href = 'https://access.line.me/oauth2/v2.1/authorize' +
+    '?response_type=code&client_id=' + CLIENT_ID +
+    '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+    '&state=' + state + '&scope=profile%20openid';
+}
+
+// ===== LINEコールバック =====
+function handleCallback(code) {
+  document.getElementById('mainArea').innerHTML = '<div class="loading">認証中...</div>';
+  fetch(WORKER_URL + '/line-auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: code, redirectUri: REDIRECT_URI })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (!data.userId) throw new Error();
+    lineUserId  = data.userId;
+    lineProfile = data;
+    // すでに登録済みの生徒を取得
+    return fetch(WORKER_URL + '/get-line-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lineUserId: lineUserId })
+    });
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    existingStudents = data.students || [];
+    showStep2();
+  })
+  .catch(function() {
+    document.getElementById('mainArea').innerHTML =
+      '<div class="msg msg-err">⚠️ 認証に失敗しました。もう一度お試しください。</div>' +
+      '<button class="btn-back" onclick="showStep1()" style="margin-top:1rem">戻る</button>';
+  });
+}
+
+// ===== STEP2：PIN入力 =====
+function showStep2() {
+  var userHtml = '';
+  if (lineProfile) {
+    userHtml = '<div class="user-info">' +
+      (lineProfile.pictureUrl ? '<img class="user-avatar" src="' + lineProfile.pictureUrl + '">' : '') +
+      '<div><div class="user-name">' + (lineProfile.displayName || '') + '</div>' +
+      '<div style="font-size:11px;color:#888">でログイン中</div></div></div>';
+  }
+
+  // 登録済み生徒を表示
+  var existingHtml = '';
+  if (existingStudents.length > 0) {
+    existingHtml = '<p style="font-size:12px;font-weight:500;color:#666;margin-bottom:6px">登録済みのお子様</p>' +
+      '<div class="registered-list">';
+    existingStudents.forEach(function(s) {
+      existingHtml += '<div class="registered-item">' +
+        '<span class="registered-item-name">' + s.student + '</span>' +
+        '<span class="registered-item-ky">' + s.kyoshitsu + '</span>' +
+        '</div>';
+    });
+    existingHtml += '</div>';
+  }
+
+  document.getElementById('mainArea').innerHTML =
+    '<p class="step">STEP 2 / 3　PINコードを入力</p>' +
+    userHtml +
+    existingHtml +
+    '<p class="desc">追加するお子様の4桁のPINコードを入力してください。</p>' +
+    '<label>PINコード（4桁）</label>' +
+    '<input type="number" id="pinInput" maxlength="4" placeholder="0000" inputmode="numeric" ' +
+    'oninput="if(this.value.length>4)this.value=this.value.slice(0,4)">' +
+    '<button class="btn-primary" onclick="checkPin()">次へ</button>' +
+    '<div class="msg" id="pinMsg"></div>';
+}
+
+function checkPin() {
+  var pin = document.getElementById('pinInput').value.trim();
+  var msg = document.getElementById('pinMsg');
+  if (!pin || pin.length < 4) {
+    msg.textContent = '4桁のPINを入力してください';
+    msg.className = 'msg msg-err';
+    return;
+  }
+  msg.textContent = '確認中...'; msg.className = 'msg';
+
+  fetch(WORKER_URL + '/find-student-by-pin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pin: pin })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.student && data.kyoshitsu) {
+      // すでに登録済みかチェック
+      var alreadyRegistered = existingStudents.some(function(s) {
+        return s.student === data.student;
+      });
+      if (alreadyRegistered) {
+        msg.textContent = 'このお子様はすでに登録されています。';
+        msg.className = 'msg msg-err';
+        return;
+      }
+      foundStudent = data.student;
+      foundKy      = data.kyoshitsu;
+      showStep3();
+    } else {
+      msg.textContent = 'PINが正しくありません。もう一度確認してください。';
+      msg.className = 'msg msg-err';
+    }
+  })
+  .catch(function() {
+    msg.textContent = '⚠️ 通信エラーが発生しました。';
+    msg.className = 'msg msg-err';
+  });
+}
+
+// ===== STEP3：確認・登録 =====
+function showStep3() {
+  document.getElementById('mainArea').innerHTML =
+    '<p class="step">STEP 3 / 3　内容を確認して登録</p>' +
+    '<p class="desc">以下のお子様を追加登録します。よろしいですか？</p>' +
+    '<div class="confirm-box">' +
+    '<div class="confirm-name">' + foundStudent + '</div>' +
+    '<div class="confirm-ky">' + foundKy + '</div>' +
+    '</div>' +
+    '<button class="btn-primary" id="regBtn" onclick="doRegister()">この内容で登録する</button>' +
+    '<button class="btn-back" onclick="showStep2()">戻る</button>' +
+    '<div class="msg" id="regMsg"></div>';
+}
+
+function doRegister() {
+  var msg = document.getElementById('regMsg');
+  msg.textContent = '登録中...'; msg.className = 'msg';
+  document.getElementById('regBtn').disabled = true;
+
+  fetch(WORKER_URL + '/save-line-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lineUserId: lineUserId, kyoshitsu: foundKy, student: foundStudent })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (!data.ok) throw new Error();
+    existingStudents.push({ student: foundStudent, kyoshitsu: foundKy });
+    showDone();
+  })
+  .catch(function() {
+    msg.textContent = '⚠️ 登録に失敗しました。もう一度お試しください。';
+    msg.className = 'msg msg-err';
+    document.getElementById('regBtn').disabled = false;
+  });
+}
+
+// ===== 完了 =====
+function showDone() {
+  var listHtml = '<div class="registered-list">';
+  existingStudents.forEach(function(s) {
+    listHtml += '<div class="registered-item">' +
+      '<span class="registered-item-name">' + s.student + '</span>' +
+      '<span class="registered-item-ky">' + s.kyoshitsu + '</span>' +
+      '</div>';
+  });
+  listHtml += '</div>';
+
+  document.getElementById('mainArea').innerHTML =
+    '<div class="done-icon">✅</div>' +
+    '<p style="text-align:center;font-size:15px;font-weight:500;margin-bottom:.75rem">登録完了</p>' +
+    '<p style="font-size:12px;font-weight:500;color:#666;margin-bottom:6px">登録済みのお子様</p>' +
+    listHtml +
+    '<p style="font-size:13px;color:#666;line-height:1.7;margin-top:1rem">別のお子様を追加する場合は、再度このページを開いてPINを入力してください。</p>' +
+    '<button class="btn-add" onclick="showStep2()">別のお子様を追加する</button>';
+}
+</script>
+</body>
+</html>
