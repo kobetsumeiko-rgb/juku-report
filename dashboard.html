@@ -307,7 +307,10 @@ function checkPin(){
 
 function loadData(){
   var kyoshitsu=document.getElementById('kyoshitsuSelect').value;
-  var url=WORKER_URL+'/get-scores'+(kyoshitsu?'?kyoshitsu='+encodeURIComponent(kyoshitsu):'');
+  var params=[];
+  if(kyoshitsu) params.push('kyoshitsu='+encodeURIComponent(kyoshitsu));
+  if(filterStudentName) params.push('student='+encodeURIComponent(filterStudentName));
+  var url=WORKER_URL+'/get-scores'+(params.length?'?'+params.join('&'):'');
   document.getElementById('loadingAll').style.display='block';
   document.getElementById('contentAll').style.display='none';
   fetch(url)
