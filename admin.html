@@ -114,6 +114,7 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
     <button class="tab" id="tab-transport" onclick="switchTab('transport')">交通費</button>
     <button class="tab" id="tab-timecard" onclick="switchTab('timecard')">打刻履歴</button>
     <button class="tab" id="tab-monthly" onclick="switchTab('monthly')">月次集計</button>
+    <button class="tab" id="tab-jishu" onclick="switchTab('jishu')">自習ポイント</button>
   </div>
 
   <!-- 生徒管理 -->
@@ -357,6 +358,53 @@ select:focus,input:focus{outline:none;border-color:#7F77DD}
       </div>
     </div>
   </div>
+
+  <!-- 自習ポイント付与 -->
+  <div class="view" id="view-jishu">
+    <div class="section">
+      <div class="section-title">自習ポイントを付与</div>
+      <div class="row">
+        <div>
+          <label>教室</label>
+          <select id="jishuKyoshitsu" onchange="onJishuKyoshitsuChange()">
+            <option value="">-- 選択 --</option>
+          </select>
+        </div>
+        <div>
+          <label>生徒名</label>
+          <select id="jishuStudent">
+            <option value="">-- 先に教室を選択 --</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>ポイント数</label>
+          <input type="number" id="jishuPoint" placeholder="例：10" min="1" style="height:40px;padding:0 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit;width:100%">
+        </div>
+        <div>
+          <label>理由（任意）</label>
+          <input type="text" id="jishuReason" placeholder="例：自習1時間" style="height:40px;padding:0 10px;border:1px solid #ccc;border-radius:8px;font-size:14px;font-family:inherit;width:100%">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="saveJishuPoint()">付与する</button>
+        <span class="status-msg" id="jishuMsg"></span>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">付与履歴</div>
+      <div style="display:flex;gap:8px;margin-bottom:.875rem;flex-wrap:wrap">
+        <select id="jishuFilterKy" onchange="loadJishuHistory()" style="height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+          <option value="">全教室</option>
+        </select>
+        <select id="jishuFilterStudent" onchange="loadJishuHistory()" style="height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;flex:1">
+          <option value="">全生徒</option>
+        </select>
+      </div>
+      <div id="jishuHistoryWrap"><div class="empty">読み込み中...</div></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -498,7 +546,7 @@ function renderAll() {
 }
 
 function renderKyoshitsuSelects() {
-  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu', 'transportKyoshitsu', 'tcFilterKyoshitsu', 'tcAddKyoshitsu', 'monthlyKyoshitsu'].forEach(function(id) {
+  ['addKyoshitsu', 'teacherKyoshitsu', 'filterKyoshitsu', 'transportKyoshitsu', 'tcFilterKyoshitsu', 'tcAddKyoshitsu', 'monthlyKyoshitsu', 'jishuKyoshitsu', 'jishuFilterKy'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     var cur = el.value;
@@ -862,29 +910,24 @@ function showSaveStatus(msg) {
 
 // ===== タブ =====
 function switchTab(name) {
-  ['students','teachers','kyoshitsu','transport','timecard','monthly'].forEach(function(n) {
+  ['students','teachers','kyoshitsu','transport','timecard','monthly','jishu'].forEach(function(n) {
     document.getElementById('tab-' + n).classList.toggle('active', n === name);
     document.getElementById('view-' + n).classList.toggle('active', n === name);
   });
   if (name === 'transport') renderTransportList();
   if (name === 'timecard') {
     var today = getTodayStr();
-    if (!document.getElementById('tcFilterDate').value) {
-      document.getElementById('tcFilterDate').value = today;
-    }
-    if (!document.getElementById('tcAddDate').value) {
-      document.getElementById('tcAddDate').value = today;
-    }
+    if (!document.getElementById('tcFilterDate').value) document.getElementById('tcFilterDate').value = today;
+    if (!document.getElementById('tcAddDate').value) document.getElementById('tcAddDate').value = today;
     loadTimecardHistory();
   }
   if (name === 'monthly') {
     if (!document.getElementById('monthlyMonth').value) {
       var now = new Date();
-      var y = now.getFullYear();
-      var m = String(now.getMonth() + 1).padStart(2, '0');
-      document.getElementById('monthlyMonth').value = y + '-' + m;
+      document.getElementById('monthlyMonth').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
     }
   }
+  if (name === 'jishu') loadJishuHistory();
 }
 
 // ===== 交通費 =====
@@ -963,7 +1006,95 @@ function renderTransportList() {
   });
 }
 
-// ===== 月次集計 =====
+// ===== 自習ポイント =====
+function onJishuKyoshitsuChange() {
+  var ky = document.getElementById('jishuKyoshitsu').value;
+  var sel = document.getElementById('jishuStudent');
+  sel.innerHTML = '<option value="">-- 生徒を選択 --</option>';
+  if (!ky) return;
+  var kyStudents = masterStudents[ky] || {};
+  var names = [];
+  Object.values(kyStudents).forEach(function(arr) { names = names.concat(arr); });
+  names.sort().forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+  // フィルタ用生徒セレクトも更新
+  var fsel = document.getElementById('jishuFilterStudent');
+  var cur = fsel.value;
+  fsel.innerHTML = '<option value="">全生徒</option>';
+  names.forEach(function(n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n; fsel.appendChild(o);
+  });
+  if (cur) fsel.value = cur;
+}
+
+function saveJishuPoint() {
+  var ky      = document.getElementById('jishuKyoshitsu').value;
+  var student = document.getElementById('jishuStudent').value;
+  var point   = parseInt(document.getElementById('jishuPoint').value);
+  var reason  = document.getElementById('jishuReason').value.trim();
+  var msg     = document.getElementById('jishuMsg');
+  if (!ky || !student) { msg.textContent = '教室と生徒を選択してください'; msg.className = 'status-msg status-err'; return; }
+  if (!point || point < 1) { msg.textContent = 'ポイント数を入力してください'; msg.className = 'status-msg status-err'; return; }
+
+  msg.textContent = '付与中...'; msg.className = 'status-msg';
+  fetch(WORKER_URL + '/save-jishu', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kyoshitsu: ky, student: student, point: point, reason: reason, date: getTodayStr() })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (!data.ok) throw new Error();
+    msg.textContent = '✅ ' + student + ' に ' + point + 'pt 付与しました';
+    msg.className = 'status-msg status-ok';
+    document.getElementById('jishuPoint').value = '';
+    document.getElementById('jishuReason').value = '';
+    loadJishuHistory();
+  })
+  .catch(function() { msg.textContent = '⚠️ 付与に失敗しました'; msg.className = 'status-msg status-err'; });
+}
+
+function loadJishuHistory() {
+  var ky      = document.getElementById('jishuFilterKy').value;
+  var student = document.getElementById('jishuFilterStudent').value;
+  var url = WORKER_URL + '/get-jishu?';
+  var params = [];
+  if (ky) params.push('kyoshitsu=' + encodeURIComponent(ky));
+  if (student) params.push('student=' + encodeURIComponent(student));
+  url += params.join('&');
+  document.getElementById('jishuHistoryWrap').innerHTML = '<div class="empty">読み込み中...</div>';
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){ renderJishuHistory(data.records || []); })
+    .catch(function(){ document.getElementById('jishuHistoryWrap').innerHTML = '<div class="empty">取得できませんでした</div>'; });
+}
+
+function renderJishuHistory(records) {
+  var wrap = document.getElementById('jishuHistoryWrap');
+  if (records.length === 0) { wrap.innerHTML = '<div class="empty">付与記録はありません</div>'; return; }
+  var html = '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+    '<thead><tr style="border-bottom:2px solid #eee">' +
+    '<th style="padding:6px 8px;text-align:left;color:#888;font-weight:500">日付</th>' +
+    '<th style="padding:6px 8px;text-align:left;color:#888;font-weight:500">生徒</th>' +
+    '<th style="padding:6px 8px;text-align:left;color:#888;font-weight:500">教室</th>' +
+    '<th style="padding:6px 8px;text-align:right;color:#888;font-weight:500">ポイント</th>' +
+    '<th style="padding:6px 8px;text-align:left;color:#888;font-weight:500">理由</th>' +
+    '</tr></thead><tbody>';
+  records.slice().reverse().forEach(function(r) {
+    html += '<tr style="border-bottom:1px solid #f0f0f0">' +
+      '<td style="padding:8px 8px;color:#888">' + r.date + '</td>' +
+      '<td style="padding:8px 8px;font-weight:500">' + r.student + '</td>' +
+      '<td style="padding:8px 8px;font-size:11px;color:#888">' + r.kyoshitsu + '</td>' +
+      '<td style="padding:8px 8px;text-align:right;color:#534AB7;font-weight:500">+' + r.point + 'pt</td>' +
+      '<td style="padding:8px 8px;color:#555">' + (r.reason || '—') + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+
 function loadMonthlySummary() {
   var month = document.getElementById('monthlyMonth').value;
   var ky    = document.getElementById('monthlyKyoshitsu').value;
