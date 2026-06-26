@@ -186,8 +186,19 @@ select{height:36px;padding:0 10px;border:1px solid #ccc;border-radius:8px;backgr
             <div class="detail-meta" id="dMeta"></div>
           </div>
           <div style="margin-left:auto;text-align:right">
-            <div style="font-size:28px;font-weight:500;color:#534AB7" id="dTotal"></div>
-            <div style="font-size:11px;color:#888">累計スコア</div>
+            <div style="display:flex;gap:16px;align-items:flex-end;justify-content:flex-end">
+              <div style="text-align:center">
+                <div style="font-size:11px;color:#888;margin-bottom:2px">授業スコア</div>
+                <div style="font-size:24px;font-weight:500;color:#534AB7" id="dTotal"></div>
+                <div style="font-size:10px;color:#aaa">点</div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:11px;color:#888;margin-bottom:2px">自習スコア</div>
+                <div style="font-size:24px;font-weight:500;color:#1D9E75" id="dJishu">0</div>
+                <div style="font-size:10px;color:#aaa">点</div>
+              </div>
+            </div>
+            <div style="font-size:13px;color:#534AB7;font-weight:500;margin-top:6px;text-align:right">合計 <span id="dGrandTotal"></span> 点</div>
           </div>
         </div>
         <div class="section-title">スコア推移</div>
@@ -409,6 +420,21 @@ function showDetail(name){
   document.getElementById('dName').textContent=s.name;
   document.getElementById('dMeta').textContent=s.kyoshitsu+' ／ 授業'+s.count+'回 ／ 累計'+available+'点';
   document.getElementById('dTotal').textContent=available;
+  document.getElementById('dJishu').textContent='読込中';
+  document.getElementById('dGrandTotal').textContent='...';
+
+  // 自習スコアを取得
+  fetch(WORKER_URL+'/get-jishu?student='+encodeURIComponent(s.name)+(s.kyoshitsu?'&kyoshitsu='+encodeURIComponent(s.kyoshitsu):''))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var jishuTotal=(data.records||[]).reduce(function(sum,r){return sum+(r.point||0);},0);
+      document.getElementById('dJishu').textContent=jishuTotal;
+      document.getElementById('dGrandTotal').textContent=available+jishuTotal;
+    })
+    .catch(function(){
+      document.getElementById('dJishu').textContent=0;
+      document.getElementById('dGrandTotal').textContent=available;
+    });
 
   var cumulative=[],sum=0;
   var labels=s.records.map(function(r){sum+=r.total;cumulative.push(sum);return r.date.slice(5).replace('-','/');});
