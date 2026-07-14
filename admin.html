@@ -705,7 +705,17 @@ function saveEditStudent(k, g, name) {
   var msg = document.getElementById('ef_msg_' + k + '_' + g + '_' + name);
   if (!masterNotionPages[k]) masterNotionPages[k] = {};
   if (newNotion) masterNotionPages[k][name] = newNotion;
-  if (newPin) masterPins[name] = newPin;
+  if (newPin) {
+    // PINの重複チェック（自分自身は除く）
+    var duplicatePin = Object.entries(masterPins).find(function(entry) {
+      return entry[1] === newPin && entry[0] !== name;
+    });
+    if (duplicatePin) {
+      msg.textContent = 'このPIN（' + newPin + '）はすでに「' + duplicatePin[0] + '」に使われています。別のPINを設定してください。';
+      msg.className = 'status-msg status-err'; return;
+    }
+    masterPins[name] = newPin;
+  }
   saveMaster('notionPages', masterNotionPages, function() {
     saveMaster('pins', masterPins, function() {
       if (newPin) {
@@ -743,6 +753,16 @@ function addStudent() {
   if (masterStudents[k][g].indexOf(name) >= 0) {
     msg.textContent = 'その生徒はすでに登録されています';
     msg.className = 'status-msg status-err'; return;
+  }
+  if (pin) {
+    // PINの重複チェック
+    var duplicatePin = Object.entries(masterPins).find(function(entry) {
+      return entry[1] === pin && entry[0] !== name;
+    });
+    if (duplicatePin) {
+      msg.textContent = 'このPIN（' + pin + '）はすでに「' + duplicatePin[0] + '」に使われています。別のPINを設定してください。';
+      msg.className = 'status-msg status-err'; return;
+    }
   }
   masterStudents[k][g].push(name);
   if (notionId) {
